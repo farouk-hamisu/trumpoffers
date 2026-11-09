@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rewards — Trump Offers</title>
+  <meta name="description" content="Review your fixed $30,000 simulated reward balance and begin a multi-step demonstration claim.">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://trumpoffers.com/rewards.html">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/cormorant-garamond-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="rewards">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="app-shell">
+    <aside class="app-sidebar" id="app-sidebar"></aside>
+    <div class="app-main">
+      <header class="app-topbar" id="app-topbar"></header>
+      <main class="app-content" id="main">
+        <div class="app-heading" data-reveal="fade">
+          <div>
+            <p class="app-heading__eyebrow">Rewards experience</p>
+            <h1>The reward, <em>considered.</em></h1>
+            <p class="app-heading__sub">A fixed demonstration balance, a transparent claim and a processing window you can follow.</p>
+          </div>
+          <div class="app-heading__actions">
+            <a class="btn btn--ghost btn--sm" href="dashboard.html">Back to overview</a>
+            <a class="btn btn--ghost btn--sm" href="withdraw.html">Withdraw</a>
+          </div>
+        </div>
+
+        <section class="reward-console" aria-labelledby="reward-title" data-reveal>
+          <div class="reward-console__head">
+            <div>
+              <span class="badge">Simulated reward</span>
+              <h2 class="reward-console__title" id="reward-title">A demonstration balance, <em>clearly labelled.</em></h2>
+            </div>
+            <div class="reward-console__amount">
+              <div class="reward-console__amount-label">Simulation balance</div>
+              <div class="reward-console__amount-value" data-reward-balance>$30,000</div>
+            </div>
+          </div>
+          <div class="reward-console__body">
+            <div class="reward-console__checklist">
+              <div class="checkline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4.5 12.5 5 5 10-11"/></svg><span>Fixed at $30,000 in this demonstration environment.</span></div>
+              <div class="checkline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4.5 12.5 5 5 10-11"/></svg><span>Processing is simulated between 5 and 10 hours with a unique reference.</span></div>
+              <div class="checkline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4.5 12.5 5 5 10-11"/></svg><span>No real funds are held, transferred or withdrawable.</span></div>
+              <div class="checkline"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4.5 12.5 5 5 10-11"/></svg><span>Only one claim may be in progress at a time.</span></div>
+            </div>
+            <div class="reward-console__action">
+              <button class="btn btn--gold" type="button" data-claim-open>Begin reward claim</button>
+              <p data-claim-hint>Available now. The claim takes about two minutes to submit.</p>
+            </div>
+          </div>
+        </section>
+
+        <div class="dash-grid">
+          <div class="dash-stack">
+            <section class="panel" aria-labelledby="history-title" data-reveal>
+              <div class="panel__head">
+                <div>
+                  <h2 class="panel__title" id="history-title">Claim history</h2>
+                  <p class="panel__sub">Every demonstration claim associated with your account.</p>
+                </div>
+                <span class="badge badge--plain" data-claim-count>0 claims</span>
+              </div>
+              <div data-claim-history>
+                <div class="skeleton" style="height:120px"></div>
+              </div>
+            </section>
+
+            <section class="panel" aria-labelledby="claim-process-title" data-reveal>
+              <div class="panel__head">
+                <div>
+                  <h2 class="panel__title" id="claim-process-title">What happens next</h2>
+                  <p class="panel__sub">The same four stages, every time.</p>
+                </div>
+              </div>
+              <div class="claim-steps" style="margin-bottom:0;border-top:0;padding-top:0">
+                <div class="claim-step is-done"><span class="claim-step__num"><span>1</span></span>Review</div>
+                <div class="claim-step is-done"><span class="claim-step__num"><span>2</span></span>Confirm</div>
+                <div class="claim-step is-active"><span class="claim-step__num"><span>3</span></span>Verification</div>
+                <div class="claim-step"><span class="claim-step__num"><span>4</span></span>Decision</div>
+              </div>
+              <p class="fine" style="margin-top:18px;max-width:62ch">The demonstration claim is reviewed automatically. Your dashboard and notifications update as the status moves from verifying to processing and finally completed.</p>
+            </section>
+          </div>
+
+          <div class="dash-stack">
+            <section class="panel panel--gold" data-reveal>
+              <div class="panel__head">
+                <div>
+                  <h2 class="panel__title">Current request</h2>
+                  <p class="panel__sub">Live status of your active claim.</p>
+                </div>
+              </div>
+              <div data-active-claim>
+                <div class="skeleton" style="height:100px"></div>
+              </div>
+            </section>
+
+            <section class="panel" data-reveal>
+              <div class="panel__head" style="margin-bottom:14px">
+                <div>
+                  <h2 class="panel__title">Withdrawal note</h2>
+                </div>
+              </div>
+              <div class="withdraw-note" style="margin-top:0">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></svg>
+                <span>Once a claim is completed, the balance remains a demonstration figure. Withdrawals are simulated and never reach a real bank, wallet or card.</span>
+              </div>
+              <a class="btn btn--ghost btn--sm btn--block" href="withdraw.html" style="margin-top:16px">Open withdrawal desk</a>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="claim-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="claim-modal-title">
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__panel">
+      <button class="modal__close" type="button" data-modal-close aria-label="Close claim">✕</button>
+      <div class="claim-steps" id="claim-steps">
+        <div class="claim-step is-active" data-step="1"><span class="claim-step__num"><span>1</span></span>Review</div>
+        <div class="claim-step" data-step="2"><span class="claim-step__num"><span>2</span></span>Confirm</div>
+        <div class="claim-step" data-step="3"><span class="claim-step__num"><span>3</span></span>Verify</div>
+        <div class="claim-step" data-step="4"><span class="claim-step__num"><span>4</span></span>Received</div>
+      </div>
+
+      <div data-claim-alert></div>
+
+      <section class="claim-stage is-active" data-stage="1">
+        <div class="claim-stage__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="9" width="17" height="11.5" rx="1"/><path d="M2.5 6h19v3h-19zM12 6v14.5M12 6C10.5 2.5 6 3 6 5.4 6 7 9 6 12 6Zm0 0c1.5-3.5 6-3 6-.6C18 7 15 6 12 6Z"/></svg>
+        </div>
+        <h3 id="claim-modal-title">Review your reward</h3>
+        <p>This is a demonstration reward of $30,000. Nothing is transferred. The claim exists to show how a transparent, referenced process works.</p>
+        <dl class="claim-review">
+          <div class="claim-review__row"><dt>Reward amount</dt><dd><strong>$30,000</strong> USD</dd></div>
+          <div class="claim-review__row"><dt>Environment</dt><dd>Demonstration only</dd></div>
+          <div class="claim-review__row"><dt>Estimated processing</dt><dd>5–10 hours</dd></div>
+          <div class="claim-review__row"><dt>Reference</dt><dd>Generated on submission</dd></div>
+        </dl>
+        <div style="margin-top:24px;display:flex;flex-direction:column;gap:12px">
+          <label class="checkbox"><input type="checkbox" data-claim-check="simulated"> I understand the reward and all balances are simulated.</label>
+          <label class="checkbox"><input type="checkbox" data-claim-check="terms"> I have read the demonstration terms and privacy policy.</label>
+        </div>
+        <div class="modal__actions">
+          <button class="btn btn--ghost btn--sm" type="button" data-modal-close>Cancel</button>
+          <button class="btn btn--gold btn--sm" type="button" data-claim-next disabled>Continue</button>
+        </div>
+      </section>
+
+      <section class="claim-stage" data-stage="2">
+        <div class="claim-stage__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-3.2 7-9V5l-7-2.5L5 5v7c0 5.8 7 9 7 9Z"/><path d="m9 11.5 2 2 4-4.5"/></svg>
+        </div>
+        <h3>Confirm the request</h3>
+        <p>Please confirm the account and amount. This creates a demonstration record only; it does not move money.</p>
+        <dl class="claim-review">
+          <div class="claim-review__row"><dt>Member</dt><dd data-claim-name>—</dd></div>
+          <div class="claim-review__row"><dt>Email</dt><dd data-claim-email>—</dd></div>
+          <div class="claim-review__row"><dt>Amount</dt><dd>$30,000 USD</dd></div>
+          <div class="claim-review__row"><dt>Processing window</dt><dd>5–10 hours</dd></div>
+        </dl>
+        <div class="modal__actions">
+          <button class="btn btn--ghost btn--sm" type="button" data-claim-back>Back</button>
+          <button class="btn btn--gold btn--sm" type="button" data-claim-submit>Submit demonstration claim</button>
+        </div>
+      </section>
+
+      <section class="claim-stage" data-stage="3">
+        <div class="claim-stage__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+        </div>
+        <h3>Verifying the record</h3>
+        <p>We are creating your unique reference and beginning the simulated verification window. Please keep this window open.</p>
+        <div class="claim-pulse"><span class="claim-pulse__ring"></span> Creating demonstration record…</div>
+        <div class="claim-progress">
+          <div class="claim-progress__top"><span>Verification</span><span>22%</span></div>
+          <div class="claim-progress__bar"><span style="width:22%"></span></div>
+        </div>
+      </section>
+
+      <section class="claim-stage" data-stage="4">
+        <div class="claim-success">
+          <span class="claim-success__seal">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4.5 12.5 5 5 10-11"/></svg>
+          </span>
+          <div class="claim-success__body">
+            <h3>Claim received</h3>
+            <p>Your demonstration claim is now in verification. You will find it on your dashboard and in notifications.</p>
+            <div class="claim-reference"><span data-claim-ref>TO-RW-26-000000</span><button type="button" data-claim-copy aria-label="Copy reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div>
+          </div>
+        </div>
+        <div class="claim-note" data-claim-estimate>Estimated completion in 5–10 hours.</div>
+        <div class="modal__actions">
+          <a class="btn btn--ghost btn--sm" href="dashboard.html">View dashboard</a>
+          <button class="btn btn--gold btn--sm" type="button" data-modal-close>Done</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="assets/vendor/supabase.js"></script>
+  <script src="js/env.js"></script>
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/pages/rewards.js"></script>
+</body>
+</html>

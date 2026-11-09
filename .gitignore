@@ -1,0 +1,35 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Supabase CLI local state
+supabase/.branches/
+supabase/.temp/
+supabase/.env
+
+# Editors & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Logs & test artefacts
+*.log
+test-results/
+playwright-report/
+/tmp/
+
+# Build output
+dist/
+.env.generated
+
+# Unreferenced source imagery (WebP derivatives are committed)
+assets/images/orig/

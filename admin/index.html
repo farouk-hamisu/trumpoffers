@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administrator Console — Trump Offers</title>
+  <meta name="description" content="Manage members, rewards, recruitment, demonstration cards and site configuration.">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="../assets/fonts/cormorant-garamond-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="../assets/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="../css/fonts.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/layout.css">
+  <link rel="stylesheet" href="../css/app.css">
+  <link rel="stylesheet" href="../css/admin.css">
+</head>
+<body class="admin-body">
+  <a class="skip-link" href="#admin-content">Skip to console</a>
+  <div class="admin-shell">
+    <aside class="admin-sidebar" id="admin-sidebar" aria-label="Administrator navigation">
+      <div class="admin-sidebar__brand">
+        <a class="brand" href="../index.html" aria-label="Trump Offers — home">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.1"><path d="M24 2.5 45.5 24 24 45.5 2.5 24Z"/><path d="M15 15.5h18M24 15.5v17" stroke-width="1.6"/></svg>
+          <span class="brand__text"><span class="brand__name">TRUMP</span><span class="brand__sub">OFFERS</span></span>
+        </a>
+        <span class="admin-sidebar__badge">Administrator</span>
+      </div>
+      <nav class="admin-nav">
+        <div class="admin-nav__label">Operations</div>
+        <a class="admin-nav__link" href="#overview" data-view-link="overview" data-icon="dashboard"><span>Overview</span></a>
+        <a class="admin-nav__link" href="#users" data-view-link="users" data-icon="users"><span>Members</span></a>
+        <a class="admin-nav__link" href="#rewards" data-view-link="rewards" data-icon="gift"><span>Rewards &amp; withdrawals</span><span class="admin-nav__count" data-count="activeClaims" hidden>0</span></a>
+        <div class="admin-nav__label">Recruitment</div>
+        <a class="admin-nav__link" href="#recruitment" data-view-link="recruitment" data-icon="briefcase"><span>Vacancies</span></a>
+        <a class="admin-nav__link" href="#applications" data-view-link="applications" data-icon="file"><span>Applications</span><span class="admin-nav__count" data-count="pendingApplications" hidden>0</span></a>
+        <div class="admin-nav__label">Studio &amp; desk</div>
+        <a class="admin-nav__link" href="#cards" data-view-link="cards" data-icon="card"><span>Card requests</span><span class="admin-nav__count" data-count="pendingCards" hidden>0</span></a>
+        <a class="admin-nav__link" href="#messages" data-view-link="messages" data-icon="mail"><span>Messages</span><span class="admin-nav__count" data-count="newMessages" hidden>0</span></a>
+        <div class="admin-nav__label">Configuration</div>
+        <a class="admin-nav__link" href="#settings" data-view-link="settings" data-icon="settings"><span>Website &amp; video</span></a>
+      </nav>
+      <div class="admin-sidebar__foot">
+        <div class="admin-sidebar__user">
+          <span class="avatar" data-admin-initials>—</span>
+          <div class="admin-sidebar__user-meta">
+            <div class="admin-sidebar__user-name" data-admin-name>Administrator</div>
+            <div class="admin-sidebar__user-role">Full access</div>
+          </div>
+          <button class="admin-sidebar__out" type="button" data-admin-signout aria-label="Sign out" data-icon-btn="logout"></button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="admin-topbar__left">
+          <button class="admin-menu-btn" type="button" data-admin-menu aria-label="Open navigation" aria-expanded="false" data-icon-btn="menu"></button>
+          <span class="admin-topbar__crumb">Console <strong data-topbar-title>Overview</strong></span>
+        </div>
+        <div class="admin-topbar__right">
+          <a class="topbar-icon" href="../index.html" aria-label="View public site" data-icon-btn="globe"></a>
+          <a class="topbar-icon" href="../dashboard.html" aria-label="Member dashboard" data-icon-btn="dashboard"></a>
+          <button class="topbar-icon" type="button" data-admin-refresh aria-label="Refresh data" data-icon-btn="refresh"></button>
+        </div>
+      </header>
+
+      <div class="admin-content" id="admin-content">
+        <!-- Overview -->
+        <section class="admin-view" data-view="overview" aria-labelledby="overview-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Console overview</p>
+              <h1 id="overview-title">Good <em>morning</em>, <span data-admin-first>Administrator</span>.</h1>
+              <p>A live view of the demonstration platform. Figures refresh when you open a view or press refresh.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <a class="btn btn--ghost btn--sm" href="../index.html" target="_blank" rel="noopener">View site</a>
+              <button class="btn btn--gold btn--sm" type="button" data-admin-refresh>Refresh figures</button>
+            </div>
+          </div>
+
+          <div class="admin-stats">
+            <article class="admin-stat">
+              <div class="admin-stat__top"><span class="admin-stat__label">Members</span><span class="admin-stat__icon" data-icon-btn="users"></span></div>
+              <div class="admin-stat__value" data-stat="users">—</div>
+              <div class="admin-stat__foot"><span class="up">Registered accounts</span></div>
+            </article>
+            <article class="admin-stat">
+              <div class="admin-stat__top"><span class="admin-stat__label">Reward claims</span><span class="admin-stat__icon" data-icon-btn="gift"></span></div>
+              <div class="admin-stat__value" data-stat="claims">—</div>
+              <div class="admin-stat__foot"><span class="warn"><span data-stat="activeClaims">0</span> in progress</span></div>
+            </article>
+            <article class="admin-stat">
+              <div class="admin-stat__top"><span class="admin-stat__label">Applications</span><span class="admin-stat__icon" data-icon-btn="briefcase"></span></div>
+              <div class="admin-stat__value" data-stat="applications">—</div>
+              <div class="admin-stat__foot"><span class="warn"><span data-stat="pendingApplications">0</span> awaiting review</span></div>
+            </article>
+            <article class="admin-stat">
+              <div class="admin-stat__top"><span class="admin-stat__label">Card requests</span><span class="admin-stat__icon" data-icon-btn="card"></span></div>
+              <div class="admin-stat__value" data-stat="cards">—</div>
+              <div class="admin-stat__foot"><span class="warn"><span data-stat="pendingCards">0</span> pending approval</span></div>
+            </article>
+          </div>
+
+          <div class="admin-grid">
+            <section class="admin-panel">
+              <div class="admin-panel__head">
+                <div>
+                  <h2 class="admin-panel__title">Six-month activity</h2>
+                  <p class="admin-panel__sub">Claims and member registrations by month</p>
+                </div>
+                <a class="admin-panel__link" href="#rewards" data-view-link="rewards">Rewards register</a>
+              </div>
+              <div class="admin-chart" data-chart role="img" aria-label="Claims and registrations over the last six months"></div>
+              <div class="admin-chart__labels" data-chart-labels></div>
+            </section>
+            <section class="admin-panel">
+              <div class="admin-panel__head">
+                <div>
+                  <h2 class="admin-panel__title">Recent activity</h2>
+                  <p class="admin-panel__sub">Latest administrative and member events</p>
+                </div>
+              </div>
+              <div class="admin-activity" data-activity></div>
+            </section>
+          </div>
+
+          <div class="admin-grid admin-grid--even">
+            <section class="admin-panel admin-panel--flush">
+              <div class="admin-panel__head admin-panel__head--padded">
+                <div>
+                  <h2 class="admin-panel__title">Awaiting a decision</h2>
+                  <p class="admin-panel__sub">Card requests and applications that need attention</p>
+                </div>
+              </div>
+              <div data-overview-queue></div>
+            </section>
+            <section class="admin-panel">
+              <div class="admin-panel__head">
+                <div>
+                  <h2 class="admin-panel__title">Desk inbox</h2>
+                  <p class="admin-panel__sub">New concierge enquiries</p>
+                </div>
+                <a class="admin-panel__link" href="#messages" data-view-link="messages">Open inbox</a>
+              </div>
+              <div class="admin-activity" data-overview-messages></div>
+            </section>
+          </div>
+        </section>
+
+        <!-- Users -->
+        <section class="admin-view" data-view="users" aria-labelledby="users-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Membership</p>
+              <h1 id="users-title">Member <em>register.</em></h1>
+              <p>Every registered member, their status and their account history. Suspending an account blocks sign-in immediately.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <div class="admin-filters">
+            <div class="admin-filters__search">
+              <span data-icon-btn="search"></span>
+              <input type="search" placeholder="Search name or email" data-users-search autocomplete="off">
+            </div>
+            <select data-users-role aria-label="Filter by role">
+              <option value="">All roles</option>
+              <option value="user">Members</option>
+              <option value="admin">Administrators</option>
+            </select>
+            <select data-users-status aria-label="Filter by status">
+              <option value="">All statuses</option>
+              <option value="active">Active</option>
+              <option value="suspended">Suspended</option>
+            </select>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Member</th><th>Contact</th><th>Location</th><th>Role</th><th>Status</th><th>Joined</th><th>Action</th></tr></thead>
+                <tbody data-users-body></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- Rewards -->
+        <section class="admin-view" data-view="rewards" aria-labelledby="rewards-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Rewards ledger</p>
+              <h1 id="rewards-title">Claims &amp; <em>withdrawals.</em></h1>
+              <p>All demonstrations are simulated. Advancing a status sends the member a notification and records an activity entry.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <div class="admin-filters">
+            <div class="admin-filters__search">
+              <span data-icon-btn="search"></span>
+              <input type="search" placeholder="Search reference, member or email" data-claims-search autocomplete="off">
+            </div>
+            <select data-claims-status aria-label="Filter claims by status">
+              <option value="">All claim statuses</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="verifying">Verifying</option>
+              <option value="processing">Processing</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <section class="admin-panel admin-panel--flush" style="margin-bottom:16px">
+            <div class="admin-panel__head admin-panel__head--padded">
+              <div>
+                <h2 class="admin-panel__title">Reward claims</h2>
+                <p class="admin-panel__sub">Fixed demonstration balance of $30,000 per member</p>
+              </div>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Reference</th><th>Member</th><th>Reward</th><th>Amount</th><th>Status</th><th>Created</th><th>Action</th></tr></thead>
+                <tbody data-claims-body></tbody>
+              </table>
+            </div>
+          </section>
+
+          <div class="admin-filters">
+            <div class="admin-filters__search">
+              <span data-icon-btn="search"></span>
+              <input type="search" placeholder="Search withdrawal reference, member or method" data-withdrawals-search autocomplete="off">
+            </div>
+            <select data-withdrawals-status aria-label="Filter withdrawals by status">
+              <option value="">All withdrawal statuses</option>
+              <option value="pending">Pending</option>
+              <option value="reviewing">In review</option>
+              <option value="processing">Processing</option>
+              <option value="paid">Completed</option>
+              <option value="rejected">Declined</option>
+            </select>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-panel__head admin-panel__head--padded">
+              <div>
+                <h2 class="admin-panel__title">Withdrawal requests</h2>
+                <p class="admin-panel__sub">Simulated payouts — no banking details are collected</p>
+              </div>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Reference</th><th>Member</th><th>Method</th><th>Amount</th><th>Status</th><th>Requested</th><th>Action</th></tr></thead>
+                <tbody data-withdrawals-body></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- Recruitment -->
+        <section class="admin-view" data-view="recruitment" aria-labelledby="recruitment-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Recruitment</p>
+              <h1 id="recruitment-title">Open <em>vacancies.</em></h1>
+              <p>Publish, edit and retire roles. Applications are reviewed separately under Applications.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--gold btn--sm" type="button" data-new-job>Add a role</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Role</th><th>Department</th><th>Location</th><th>Type</th><th>Status</th><th>Applications</th><th>Action</th></tr></thead>
+                <tbody data-jobs-body></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- Applications -->
+        <section class="admin-view" data-view="applications" aria-labelledby="applications-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Recruitment</p>
+              <h1 id="applications-title">Candidate <em>applications.</em></h1>
+              <p>Review submissions, download resumes through short-lived links, and move candidates through the process.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <div class="admin-filters">
+            <div class="admin-filters__search">
+              <span data-icon-btn="search"></span>
+              <input type="search" placeholder="Search reference, candidate, email or role" data-apps-search autocomplete="off">
+            </div>
+            <select data-apps-status aria-label="Filter applications by status">
+              <option value="">All statuses</option>
+              <option value="submitted">Submitted</option>
+              <option value="under_review">Under review</option>
+              <option value="shortlisted">Shortlisted</option>
+              <option value="interview">Interview</option>
+              <option value="accepted">Accepted</option>
+              <option value="rejected">Not selected</option>
+            </select>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Reference</th><th>Candidate</th><th>Role</th><th>Status</th><th>Resume</th><th>Submitted</th><th>Action</th></tr></thead>
+                <tbody data-apps-body></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- Cards -->
+        <section class="admin-view" data-view="cards" aria-labelledby="cards-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Card studio</p>
+              <h1 id="cards-title">Card <em>requests.</em></h1>
+              <p>Approve or decline fictional card designs. Approval activates the public verification result for the reference.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <div class="admin-filters">
+            <div class="admin-filters__search">
+              <span data-icon-btn="search"></span>
+              <input type="search" placeholder="Search reference, member or design" data-cards-search autocomplete="off">
+            </div>
+            <select data-cards-status aria-label="Filter cards by status">
+              <option value="">All statuses</option>
+              <option value="submitted">Submitted</option>
+              <option value="under_review">Under review</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Declined</option>
+            </select>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Reference</th><th>Member</th><th>Design</th><th>Cardholder</th><th>Status</th><th>Requested</th><th>Action</th></tr></thead>
+                <tbody data-cards-body></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- Messages -->
+        <section class="admin-view" data-view="messages" aria-labelledby="messages-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Concierge desk</p>
+              <h1 id="messages-title">Member <em>messages.</em></h1>
+              <p>Enquiries from the contact form. Mark as read once opened, then archive when resolved.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <div class="admin-filters">
+            <div class="admin-filters__search">
+              <span data-icon-btn="search"></span>
+              <input type="search" placeholder="Search name, email, subject or message" data-messages-search autocomplete="off">
+            </div>
+            <select data-messages-status aria-label="Filter messages by status">
+              <option value="">All statuses</option>
+              <option value="new">New</option>
+              <option value="read">Read</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>From</th><th>Subject</th><th>Preview</th><th>Status</th><th>Received</th><th>Action</th></tr></thead>
+                <tbody data-messages-body></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- Settings -->
+        <section class="admin-view" data-view="settings" aria-labelledby="settings-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Configuration</p>
+              <h1 id="settings-title">Website &amp; <em>video.</em></h1>
+              <p>Public contact details, announcement copy and the full-screen introduction video used on the homepage.</p>
+            </div>
+          </div>
+          <div class="settings-grid">
+            <form class="admin-panel" data-settings-form novalidate>
+              <div class="settings-section">
+                <h2 class="settings-section__title">Identity &amp; contact</h2>
+                <p class="settings-section__sub">Shown in the site header, footer and legal pages.</p>
+                <div class="form-grid">
+                  <div class="field"><label class="field__label" for="set-name">Site name</label><input class="input" id="set-name" name="site_name" type="text"></div>
+                  <div class="field"><label class="field__label" for="set-tagline">Tagline</label><input class="input" id="set-tagline" name="tagline" type="text"></div>
+                  <div class="field"><label class="field__label" for="set-email">Support email</label><input class="input" id="set-email" name="support_email" type="email"></div>
+                  <div class="field"><label class="field__label" for="set-phone">Support phone</label><input class="input" id="set-phone" name="support_phone" type="tel"></div>
+                  <div class="field span-2"><label class="field__label" for="set-address">Office address</label><input class="input" id="set-address" name="address" type="text"></div>
+                  <div class="field"><label class="field__label" for="set-hours">Office hours</label><input class="input" id="set-hours" name="office_hours" type="text"></div>
+                  <div class="field"><label class="field__label" for="set-announcement">Announcement</label><input class="input" id="set-announcement" name="announcement" type="text" placeholder="Optional banner text"></div>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h2 class="settings-section__title">Introduction video</h2>
+                <p class="settings-section__sub">The full-screen film shown before the homepage. Members can always skip.</p>
+                <div class="video-config">
+                  <div class="video-config__preview" data-video-preview>
+                    <div class="placeholder">
+                      <div><span data-icon-btn="video"></span>No video configured. Add a hosted URL or upload an MP4.</div>
+                    </div>
+                  </div>
+                  <div class="form-grid">
+                    <div class="field span-2"><label class="field__label" for="set-video">Video URL</label><input class="input" id="set-video" name="intro_video_url" type="text" placeholder="assets/videos/trump-intro.mp4"></div>
+                    <div class="field"><label class="field__label" for="set-video-file">Upload MP4</label><input class="input" id="set-video-file" type="file" accept="video/mp4" data-video-file><span class="field__hint" data-video-hint>Requires a connected Supabase project.</span></div>
+                    <div class="field"><label class="field__label" for="set-autoplay">Playback</label>
+                      <select class="select" id="set-autoplay" name="intro_autoplay"><option value="true">Autoplay with sound control</option><option value="false">Require a play tap</option></select>
+                    </div>
+                  </div>
+                  <label class="checkbox" style="margin-top:14px"><input type="checkbox" name="intro_video_enabled"><span>Show the introduction on the homepage</span></label>
+                </div>
+              </div>
+
+              <div class="settings-section">
+                <h2 class="settings-section__title">Social profiles</h2>
+                <p class="settings-section__sub">Leave blank to hide a link in the footer.</p>
+                <div class="form-grid">
+                  <div class="field"><label class="field__label" for="set-linkedin">LinkedIn URL</label><input class="input" id="set-linkedin" name="linkedin_url" type="url"></div>
+                  <div class="field"><label class="field__label" for="set-instagram">Instagram URL</label><input class="input" id="set-instagram" name="instagram_url" type="url"></div>
+                </div>
+              </div>
+
+              <div class="admin-heading__actions" style="margin-top:24px">
+                <button class="btn btn--gold btn--sm" type="submit">Save configuration</button>
+                <a class="btn btn--ghost btn--sm" href="../index.html" target="_blank" rel="noopener">Preview homepage</a>
+              </div>
+            </form>
+
+            <aside class="admin-panel">
+              <div class="admin-panel__head">
+                <div>
+                  <h2 class="admin-panel__title">Environment</h2>
+                  <p class="admin-panel__sub">Where this console is reading and writing</p>
+                </div>
+              </div>
+              <div class="admin-detail">
+                <div class="admin-detail__row"><span>Mode</span><strong data-env-mode>—</strong></div>
+                <div class="admin-detail__row"><span>Storage</span><strong data-env-storage>—</strong></div>
+                <div class="admin-detail__row"><span>Intro video</span><strong data-env-video>—</strong></div>
+                <div class="admin-detail__row"><span>Version</span><strong data-env-version>—</strong></div>
+              </div>
+              <div class="admin-detail__note">Records are stored in Supabase and protected by row-level security. Use the Environment panel to confirm the active backend before editing live data.</div>
+              <button class="btn btn--ghost btn--sm btn--block" type="button" data-reset-demo style="margin-top:16px" hidden>Reset demonstration data</button>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-backdrop" data-admin-backdrop></div>
+
+  <!-- Job editor -->
+  <div class="modal modal--light" id="job-modal" role="dialog" aria-modal="true" aria-labelledby="job-modal-title" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <div class="modal__panel modal__panel--wide">
+      <button class="modal__close" type="button" data-modal-close aria-label="Close">×</button>
+      <h2 class="modal__title" id="job-modal-title">Add a role</h2>
+      <p class="modal__sub">Vacancy details appear on the public careers page as soon as the status is Open.</p>
+      <form id="job-form" novalidate>
+        <input type="hidden" name="id">
+        <div class="form-grid" style="margin-top:20px">
+          <div class="field"><label class="field__label" for="job-title">Title</label><input class="input" id="job-title" name="title" type="text" required></div>
+          <div class="field"><label class="field__label" for="job-department">Department</label><input class="input" id="job-department" name="department" type="text" required></div>
+          <div class="field"><label class="field__label" for="job-location">Location</label><input class="input" id="job-location" name="location" type="text" required></div>
+          <div class="field"><label class="field__label" for="job-work">Work mode</label>
+            <select class="select" id="job-work" name="work_mode"><option>Hybrid</option><option>On-site</option><option>Remote</option></select>
+          </div>
+          <div class="field"><label class="field__label" for="job-type">Employment type</label>
+            <select class="select" id="job-type" name="employment_type"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select>
+          </div>
+          <div class="field"><label class="field__label" for="job-status">Status</label>
+            <select class="select" id="job-status" name="status"><option value="open">Open</option><option value="draft">Draft</option><option value="closed">Closed</option></select>
+          </div>
+          <div class="field"><label class="field__label" for="job-min">Salary minimum (USD)</label><input class="input" id="job-min" name="salary_min" type="number" min="0" step="1000"></div>
+          <div class="field"><label class="field__label" for="job-max">Salary maximum (USD)</label><input class="input" id="job-max" name="salary_max" type="number" min="0" step="1000"></div>
+          <div class="field"><label class="field__label" for="job-deadline">Closing date</label><input class="input" id="job-deadline" name="deadline" type="date"></div>
+          <div class="field"><label class="field__label" for="job-slug">Slug</label><input class="input" id="job-slug" name="slug" type="text" placeholder="generated-from-title"></div>
+          <div class="field span-2"><label class="field__label" for="job-summary">Summary</label><input class="input" id="job-summary" name="summary" type="text" required></div>
+          <div class="field span-2"><label class="field__label" for="job-description">Description</label><textarea class="textarea" id="job-description" name="description" rows="4"></textarea></div>
+          <div class="field span-2"><label class="field__label" for="job-responsibilities">Responsibilities <span class="field__hint" style="text-transform:none;letter-spacing:0">one per line</span></label><textarea class="textarea" id="job-responsibilities" name="responsibilities" rows="4"></textarea></div>
+          <div class="field span-2"><label class="field__label" for="job-requirements">Requirements <span class="field__hint" style="text-transform:none;letter-spacing:0">one per line</span></label><textarea class="textarea" id="job-requirements" name="requirements" rows="4"></textarea></div>
+          <div class="field span-2"><label class="field__label" for="job-benefits">Benefits <span class="field__hint" style="text-transform:none;letter-spacing:0">one per line</span></label><textarea class="textarea" id="job-benefits" name="benefits" rows="3"></textarea></div>
+        </div>
+        <label class="checkbox" style="margin-top:14px"><input type="checkbox" name="featured"><span>Feature this role on the careers page</span></label>
+        <div class="modal__actions">
+          <button class="btn btn--ghost btn--sm" type="button" data-modal-close>Cancel</button>
+          <button class="btn btn--gold btn--sm" type="submit">Save role</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Detail / decision modal -->
+  <div class="modal modal--light" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-modal-title" aria-hidden="true">
+    <div class="modal__backdrop"></div>
+    <div class="modal__panel modal__panel--wide">
+      <button class="modal__close" type="button" data-modal-close aria-label="Close">×</button>
+      <h2 class="modal__title" id="detail-modal-title">Record</h2>
+      <p class="modal__sub" data-detail-sub></p>
+      <div data-detail-body></div>
+      <div class="modal__actions" data-detail-actions></div>
+    </div>
+  </div>
+
+  <script src="../assets/vendor/supabase.js"></script>
+  <script src="../js/env.js"></script>
+  <script type="module" src="../js/pages/admin.js"></script>
+</body>
+</html>

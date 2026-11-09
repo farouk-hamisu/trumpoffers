@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Member Sign In — Trump Offers</title>
+  <meta name="description" content="Sign in to your Trump Offers member account to manage rewards, withdrawals, applications and your digital card.">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://trumpoffers.com/login.html">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/cormorant-garamond-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="login" class="auth-page">
+  <a class="skip-link" href="#auth-main">Skip to sign in</a>
+
+  <div class="auth">
+    <aside class="auth__visual" aria-hidden="true">
+      <img src="assets/images/businesswoman-1600.webp" srcset="assets/images/businesswoman-800.webp 800w, assets/images/businesswoman-1600.webp 1600w" sizes="52vw" alt="" width="1600" height="1066" fetchpriority="high">
+      <div class="auth__visual-inner">
+        <a class="brand" href="index.html" aria-label="Trump Offers — home">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M24 2.5 45.5 24 24 45.5 2.5 24Z"/><path d="M15 15.5h18M24 15.5v17" stroke-width="1.6"/></svg>
+          <span class="brand__text"><span class="brand__name">TRUMP</span><span class="brand__sub">OFFERS</span></span>
+        </a>
+        <div>
+          <p class="auth__quote">A quieter kind of <em>ambition.</em></p>
+          <p class="auth__caption">Rewards, opportunities and a digital card studio — brought together with the discretion of a private members’ platform.</p>
+        </div>
+        <div class="auth__visual-foot">
+          <span>New York · London · Singapore</span>
+          <span>Est. 2026</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="auth__panel">
+      <div class="auth__top">
+        <a class="brand" href="index.html" aria-label="Trump Offers — home">
+          <svg class="brand__mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M24 2.5 45.5 24 24 45.5 2.5 24Z"/><path d="M15 15.5h18M24 15.5v17" stroke-width="1.6"/></svg>
+          <span class="brand__text"><span class="brand__name">TRUMP</span><span class="brand__sub">OFFERS</span></span>
+        </a>
+        <a class="auth__back" href="index.html">← Back to site</a>
+      </div>
+
+      <main class="auth__body" id="auth-main">
+        <div id="auth-signin">
+          <p class="auth__eyebrow">Member access</p>
+          <h1 class="auth__title">Welcome <em>back.</em></h1>
+          <p class="auth__sub">Sign in to review your demonstration balance, progress a reward claim, or continue an application.</p>
+
+          <div data-auth-alert></div>
+
+          <form class="auth__form" id="signin-form" novalidate>
+            <div class="field">
+              <label class="field__label" for="signin-email">Email address</label>
+              <input class="input" id="signin-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <div class="field">
+              <label class="field__label" for="signin-password">Password</label>
+              <input class="input" id="signin-password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required>
+            </div>
+            <div class="field" style="margin-top:14px">
+              <div style="display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap">
+                <label class="checkbox" style="font-size:0.72rem"><input type="checkbox" name="remember" checked> Keep me signed in</label>
+                <button class="auth__back" type="button" data-auth-mode="reset" style="letter-spacing:0.1em">Forgot password?</button>
+              </div>
+            </div>
+            <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Sign in <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12h15M13 6l6 6-6 6"/></svg></button>
+          </form>
+
+          <p class="auth__switch">New to Trump Offers? <a href="register.html">Create an account</a></p>
+
+        </div>
+
+        <div id="auth-reset" hidden>
+          <p class="auth__eyebrow">Account recovery</p>
+          <h1 class="auth__title">Reset your <em>password.</em></h1>
+          <p class="auth__sub">Enter the email address associated with your account. If it is registered, we will send a secure reset link.</p>
+          <div data-auth-alert></div>
+          <form class="auth__form" id="reset-form" novalidate>
+            <div class="field">
+              <label class="field__label" for="reset-email">Email address</label>
+              <input class="input" id="reset-email" name="email" type="email" autocomplete="email" placeholder="you@example.com" required>
+            </div>
+            <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Send reset link</button>
+          </form>
+          <p class="auth__switch"><button type="button" class="auth__back" data-auth-mode="signin" style="letter-spacing:0.1em">← Return to sign in</button></p>
+        </div>
+
+        <div id="auth-update" hidden>
+          <p class="auth__eyebrow">Secure your account</p>
+          <h1 class="auth__title">Choose a new <em>password.</em></h1>
+          <p class="auth__sub">Your recovery link has been verified. Set a new password of at least eight characters.</p>
+          <div data-auth-alert></div>
+          <form class="auth__form" id="update-form" novalidate>
+            <div class="field">
+              <label class="field__label" for="update-password">New password</label>
+              <input class="input" id="update-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+              <span class="field__hint">At least 8 characters. A longer passphrase is better.</span>
+            </div>
+            <div class="field">
+              <label class="field__label" for="update-confirm">Confirm new password</label>
+              <input class="input" id="update-confirm" name="confirm" type="password" autocomplete="new-password" minlength="8" required>
+            </div>
+            <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Update password</button>
+          </form>
+        </div>
+      </main>
+
+      <footer class="auth__footer">
+        <span>© <span data-year>2026</span> Trump Offers</span>
+        <span><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="contact.html">Contact</a></span>
+      </footer>
+    </div>
+  </div>
+
+  <script src="assets/vendor/supabase.js"></script>
+  <script src="js/env.js"></script>
+  <script type="module" src="js/pages/login.js"></script>
+</body>
+</html>

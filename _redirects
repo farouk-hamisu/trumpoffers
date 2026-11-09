@@ -1,0 +1,4 @@
+# Cloudflare Pages / Netlify convenience redirects.
+# Vercel uses the redirects in vercel.json.
+/admin      /admin/index.html   301
+/admin/     /admin/index.html   301

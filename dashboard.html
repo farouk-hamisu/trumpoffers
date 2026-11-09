@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Member Dashboard — Trump Offers</title>
+  <meta name="description" content="Your Trump Offers member dashboard: demonstration reward balance, claims, withdrawals, applications and digital card.">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="canonical" href="https://trumpoffers.com/dashboard.html">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/cormorant-garamond-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/home.css">
+</head>
+<body data-page="dashboard">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="app-shell">
+    <aside class="app-sidebar" id="app-sidebar"></aside>
+    <div class="app-main">
+      <header class="app-topbar" id="app-topbar"></header>
+      <main class="app-content" id="main">
+        <div class="app-heading" data-reveal="fade">
+          <div>
+            <p class="app-heading__eyebrow">Member overview</p>
+            <h1>Good to see you, <em data-first-name>Member.</em></h1>
+            <p class="app-heading__sub">Your simulated reward balance, active requests and opportunities in one considered view.</p>
+          </div>
+          <div class="app-heading__actions">
+            <a class="btn btn--ghost btn--sm" href="careers.html">Explore roles</a>
+            <a class="btn btn--gold btn--sm" href="rewards.html">Open rewards</a>
+          </div>
+        </div>
+
+        <div class="sim-banner" style="margin-bottom:20px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></svg>
+          Demonstration environment · balances, claims and withdrawals are simulated. No real funds are held or transferred.
+        </div>
+
+        <div class="dash-hero">
+          <section class="balance-panel" aria-labelledby="balance-label" data-reveal>
+            <div>
+              <div class="balance-panel__top">
+                <div class="balance-panel__label" id="balance-label"><span class="status-dot status-dot--live"></span> Available demonstration balance</div>
+                <span class="badge">Simulated</span>
+              </div>
+              <div class="balance-panel__value" data-balance>$30,000<sup>USD</sup></div>
+              <p class="balance-panel__note" data-balance-note>Fixed demonstration balance. Withdrawals are simulated and never reach a real bank account.</p>
+            </div>
+            <div class="balance-panel__actions">
+              <a class="btn btn--gold btn--sm" href="rewards.html">Claim reward</a>
+              <a class="btn btn--ghost btn--sm" href="withdraw.html">Withdraw funds</a>
+            </div>
+            <svg class="balance-panel__spark" viewBox="0 0 190 66" fill="none" aria-hidden="true"><path d="M2 55 24 48 45 51 66 38 87 42 108 27 129 31 150 16 170 20 188 6" stroke="currentColor" stroke-width="1"/><path d="M2 55 24 48 45 51 66 38 87 42 108 27 129 31 150 16 170 20 188 6V66H2Z" fill="url(#sparkFill)" opacity=".25"/><defs><linearGradient id="sparkFill" x1="95" y1="6" x2="95" y2="66" gradientUnits="userSpaceOnUse"><stop stop-color="#c6a25b"/><stop offset="1" stop-color="#c6a25b" stop-opacity="0"/></linearGradient></defs></svg>
+          </section>
+
+          <div class="overview-side">
+            <div class="mini-stat" data-reveal>
+              <div>
+                <div class="mini-stat__label">Active claim</div>
+                <div class="mini-stat__value" data-active-claim>—</div>
+              </div>
+              <div class="mini-stat__foot" data-active-claim-foot>No request in progress</div>
+            </div>
+            <a class="notification-mini" href="dashboard.html#notifications" data-reveal>
+              <span class="notification-mini__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 7.5-2.5 7.5h17S18 14.5 18 8.5Z"/><path d="M10 19.5a2.2 2.2 0 0 0 4 0"/></svg>
+              </span>
+              <div>
+                <div class="notification-mini__title" data-notif-title>Notifications</div>
+                <div class="notification-mini__text" data-notif-text>Loading your latest updates…</div>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <div class="stat-strip" data-reveal="fade">
+          <div class="stat-cell">
+            <div class="stat-cell__label">Withdrawals</div>
+            <div class="stat-cell__value" data-stat-withdrawals>—</div>
+            <div class="stat-cell__foot" data-stat-withdrawals-foot>No requests yet</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell__label">Applications</div>
+            <div class="stat-cell__value" data-stat-applications>—</div>
+            <div class="stat-cell__foot" data-stat-applications-foot>No applications yet</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell__label">Card applications</div>
+            <div class="stat-cell__value" data-stat-cards>—</div>
+            <div class="stat-cell__foot" data-stat-cards-foot>No card request yet</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-cell__label">Member since</div>
+            <div class="stat-cell__value" data-stat-since>—</div>
+            <div class="stat-cell__foot">Private demonstration account</div>
+          </div>
+        </div>
+
+        <div class="dash-grid">
+          <div class="dash-stack">
+            <section class="panel" id="claim" aria-labelledby="claim-panel-title" data-reveal>
+              <div class="panel__head">
+                <div>
+                  <h2 class="panel__title" id="claim-panel-title">Reward claim</h2>
+                  <p class="panel__sub">A live view of your current demonstration request.</p>
+                </div>
+                <a class="panel__action" href="rewards.html">Rewards</a>
+              </div>
+              <div data-claim-panel>
+                <div class="skeleton" style="height:150px"></div>
+              </div>
+            </section>
+
+            <section class="panel" id="applications" aria-labelledby="apps-panel-title" data-reveal>
+              <div class="panel__head">
+                <div>
+                  <h2 class="panel__title" id="apps-panel-title">Career applications</h2>
+                  <p class="panel__sub">Roles you have applied for through Trump Offers.</p>
+                </div>
+                <a class="panel__action" href="track.html">Track</a>
+              </div>
+              <div data-applications-panel>
+                <div class="skeleton" style="height:110px"></div>
+              </div>
+            </section>
+
+            <section class="panel" id="activity" aria-labelledby="activity-panel-title" data-reveal>
+              <div class="panel__head">
+                <div>
+                  <h2 class="panel__title" id="activity-panel-title">Recent activity</h2>
+                  <p class="panel__sub">The latest movements on your account.</p>
+                </div>
+              </div>
+              <div class="activity-list" data-activity-list>
+                <div class="skeleton" style="height:90px"></div>
+              </div>
+            </section>
+          </div>
+
+          <div class="dash-stack">
+            <section class="panel panel--flush" id="notifications" aria-labelledby="notif-panel-title" data-reveal>
+              <div class="panel__head" style="padding:24px 24px 0;margin-bottom:0">
+                <div>
+                  <h2 class="panel__title" id="notif-panel-title">Notifications</h2>
+                  <p class="panel__sub">Updates from the concierge desk.</p>
+                </div>
+                <button class="panel__action" type="button" data-mark-read>Mark read</button>
+              </div>
+              <div class="notif-list" style="padding:0 24px 20px" data-notif-list>
+                <div class="skeleton" style="height:110px;margin-top:18px"></div>
+              </div>
+            </section>
+
+            <section class="panel" id="account" aria-labelledby="account-panel-title" data-reveal>
+              <div class="panel__head">
+                <div>
+                  <h2 class="panel__title" id="account-panel-title">Account details</h2>
+                  <p class="panel__sub">Your private membership record.</p>
+                </div>
+                <button class="panel__action" type="button" data-edit-profile>Edit</button>
+              </div>
+              <dl class="detail-list" data-account-details>
+                <div class="skeleton" style="height:100px"></div>
+              </dl>
+            </section>
+
+            <section class="panel panel--gold" data-reveal>
+              <div class="panel__head" style="margin-bottom:14px">
+                <div>
+                  <h2 class="panel__title">Quick actions</h2>
+                  <p class="panel__sub">Continue where you left off.</p>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <a class="btn btn--ghost btn--sm btn--block" href="withdraw.html">Request a withdrawal</a>
+                <a class="btn btn--ghost btn--sm btn--block" href="card.html">Open card studio</a>
+                <a class="btn btn--ghost btn--sm btn--block" href="track.html">Track an application</a>
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal" id="profile-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="profile-modal-title">
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__panel">
+      <button class="modal__close" type="button" data-modal-close aria-label="Close">✕</button>
+      <h2 class="modal__title" id="profile-modal-title">Edit your details</h2>
+      <p class="modal__sub">Only your name, phone and location are stored. Never add banking details.</p>
+      <form id="profile-form" novalidate style="margin-top:24px">
+        <div class="field">
+          <label class="field__label" for="profile-name">Full name</label>
+          <input class="input" id="profile-name" name="full_name" type="text" autocomplete="name" required>
+        </div>
+        <div class="field">
+          <label class="field__label" for="profile-phone">Phone</label>
+          <input class="input" id="profile-phone" name="phone" type="tel" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label class="field__label" for="profile-location">Location</label>
+          <input class="input" id="profile-location" name="location" type="text" autocomplete="address-level2">
+        </div>
+        <div class="modal__actions">
+          <button class="btn btn--ghost btn--sm" type="button" data-modal-close>Cancel</button>
+          <button class="btn btn--gold btn--sm" type="submit">Save details</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/vendor/supabase.js"></script>
+  <script src="js/env.js"></script>
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/pages/dashboard.js"></script>
+</body>
+</html>

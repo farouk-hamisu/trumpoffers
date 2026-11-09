@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /admin/login.html
+Disallow: /dashboard.html
+Disallow: /rewards.html
+Disallow: /withdraw.html
+Disallow: /card.html
+Disallow: /apply.html
+Disallow: /track.html
+
+Sitemap: https://trumpoffers.com/sitemap.xml

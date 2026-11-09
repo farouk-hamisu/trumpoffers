@@ -1,0 +1,24 @@
+{
+  "name": "trump-offers",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trump Offers — a premium demonstration rewards, recruitment and digital card platform.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node scripts/generate-env.mjs",
+    "env": "node scripts/generate-env.mjs",
+    "dev": "python3 -m http.server 8080",
+    "check": "node scripts/check-project.mjs"
+  },
+  "keywords": [
+    "html5",
+    "css3",
+    "vanilla-javascript",
+    "supabase",
+    "demonstration"
+  ],
+  "license": "UNLICENSED"
+}

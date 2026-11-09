@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apply — Trump Offers</title>
+  <meta name="description" content="Submit a considered application for an open role at Trump Offers. Receive a unique reference and a clear review window.">
+  <meta name="theme-color" content="#0a0a0b">
+  <meta name="robots" content="noindex, follow">
+  <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <link rel="preload" href="assets/fonts/cormorant-garamond-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/inter-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body data-page="careers" data-header-solid="true">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div id="site-header"></div>
+
+  <main id="main">
+    <section class="page-hero page-hero--light page-hero--compact">
+      <div class="container">
+        <nav class="breadcrumb" aria-label="Breadcrumb" style="color:var(--ink-faint)">
+          <a href="index.html">Home</a><span class="breadcrumb__sep">/</span>
+          <a href="careers.html">Careers</a><span class="breadcrumb__sep">/</span>
+          <span>Apply</span>
+        </nav>
+        <div style="margin-top:24px;max-width:640px">
+          <p class="eyebrow" style="color:var(--gold-deep)">Application</p>
+          <h1 class="page-hero__title" style="font-size:clamp(2.6rem,5.4vw,4.8rem)">Tell us what you <em>bring.</em></h1>
+          <p class="page-hero__lede" style="color:var(--ink-muted)">A short form, a resume and a clear reference. We review every application within three to four business days.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--light" style="padding-top:clamp(40px,5vw,70px)">
+      <div class="container">
+        <div class="apply-layout" data-apply-layout>
+          <section class="apply-form">
+            <div class="apply-form__head">
+              <div>
+                <p class="apply-form__step">Step 1 of 1 · Application details</p>
+                <h2 class="h-serif" style="font-size:2rem;margin-top:6px">Your application</h2>
+              </div>
+              <span class="badge badge--ink">3–4 business days</span>
+            </div>
+
+            <div data-apply-alert></div>
+
+            <form id="apply-form" novalidate>
+              <div class="form-grid">
+                <div class="field">
+                  <label class="field__label" for="apply-name">Full name</label>
+                  <input class="input" id="apply-name" name="fullName" type="text" autocomplete="name" required>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="apply-email">Email address</label>
+                  <input class="input" id="apply-email" name="email" type="email" autocomplete="email" required>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="apply-phone">Phone</label>
+                  <input class="input" id="apply-phone" name="phone" type="tel" autocomplete="tel" required>
+                </div>
+                <div class="field">
+                  <label class="field__label" for="apply-location">Location</label>
+                  <input class="input" id="apply-location" name="location" type="text" autocomplete="address-level2" required>
+                </div>
+                <div class="field span-2">
+                  <label class="field__label" for="apply-qualifications">Qualifications</label>
+                  <input class="input" id="apply-qualifications" name="qualifications" type="text" placeholder="Degree, certification or equivalent experience" required>
+                </div>
+                <div class="field span-2">
+                  <label class="field__label" for="apply-experience">Relevant experience</label>
+                  <textarea class="textarea" id="apply-experience" name="experience" rows="6" placeholder="A concise summary of the experience that makes you a strong fit for this role." required></textarea>
+                  <span class="field__hint">A few focused sentences are more useful than a full biography.</span>
+                </div>
+              </div>
+
+              <div class="field" style="margin-top:22px">
+                <span class="field__label">Resume</span>
+                <label class="upload-zone" id="upload-zone">
+                  <input type="file" id="resume-input" name="resume" accept=".pdf,.doc,.docx" required>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 17V3M7 8l5-5 5 5M4 20h16"/></svg>
+                  <strong>Drop your resume here, or browse</strong>
+                  <span>PDF, DOC or DOCX · up to 5&nbsp;MB</span>
+                </label>
+                <div class="upload-file" id="upload-file">
+                  <span data-file-name>—</span>
+                  <button type="button" id="remove-file">Remove</button>
+                </div>
+                <span class="field__hint">Your resume is stored privately and is only accessible to the demonstration recruitment team.</span>
+              </div>
+
+              <label class="checkbox" style="margin-top:22px">
+                <input type="checkbox" name="consent" required>
+                <span>I confirm the information is accurate and consent to it being processed for this demonstration application. I understand no employment offer is guaranteed.</span>
+              </label>
+
+              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Submit application</button>
+            </form>
+          </section>
+
+          <aside class="apply-aside">
+            <div class="apply-job-card" data-apply-job>
+              <div class="skeleton" style="height:150px"></div>
+            </div>
+            <div class="apply-process">
+              <h3>What happens next</h3>
+              <ol>
+                <li>You receive a unique reference and an emailed confirmation.</li>
+                <li>Our recruitment team reviews your application within 3–4 business days.</li>
+                <li>Shortlisted candidates are invited to a structured conversation.</li>
+                <li>Every applicant receives a clear outcome and useful feedback.</li>
+              </ol>
+            </div>
+          </aside>
+        </div>
+
+        <div class="application-success" id="apply-success" hidden>
+          <div class="application-success__mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4.5 12.5 5 5 10-11"/></svg>
+          </div>
+          <h2>Application received.</h2>
+          <p>Thank you. Your application is now with our recruitment team. Keep the reference below to track progress.</p>
+          <div class="application-success__ref"><span data-apply-ref>TO-JB-26-000000</span><button type="button" data-apply-copy aria-label="Copy reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div>
+          <p class="fine" style="margin-top:12px">Estimated review period: 3–4 business days.</p>
+          <div class="application-success__actions">
+            <a class="btn btn--dark btn--sm" href="track.html" data-track-link>Track application</a>
+            <a class="btn btn--outline-dark btn--sm" href="careers.html">Back to careers</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <script src="assets/vendor/supabase.js"></script>
+  <script src="js/env.js"></script>
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/pages/apply.js"></script>
+</body>
+</html>
