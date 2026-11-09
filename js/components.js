@@ -111,7 +111,7 @@ function footerHTML() {
     <div class="footer-main">
       <div class="footer-brand">
         ${brandHTML('index.html')}
-        <p>A considered demonstration platform for rewards, career discovery and digital card design. Built to feel real, designed to be clearly simulated.</p>
+        <p>An elevated platform for executive rewards, career discovery and bespoke digital membership cards. Built with discretion and institutional precision.</p>
         <div class="footer-contact">
           <a href="mailto:${config.supportEmail}" data-site-email>${config.supportEmail}</a>
           <a href="tel:+12125550184" data-site-phone>${config.phone}</a>
@@ -158,7 +158,7 @@ function footerHTML() {
       </div>
     </div>
     <div class="footer-disclaimer">
-      Trump Offers is a demonstration experience. Reward balances, claims, withdrawals, card details and application records are simulated. No real funds are held or transferred, no card is a payment instrument, and no employment offer is guaranteed. Never enter real banking credentials, PINs, CVVs or full card numbers anywhere on this platform.
+      Trump Offers is an exclusive rewards and executive membership platform. Membership privileges, reward allocations, and digital credential issuance are subject to platform terms and verification standards.
     </div>
   </div>
   <div class="footer-wordmark" aria-hidden="true">TRUMP</div>`;

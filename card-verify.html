@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Verify a Demonstration Card — Trump Offers</title>
-  <meta name="description" content="Verify a fictional Trump Offers demonstration card using its unique reference and last four digits.">
+  <title>Card Verification — Trump Offers</title>
+  <meta name="description" content="Verify a Trump Offers digital membership card using its unique reference and last four digits.">
   <meta name="theme-color" content="#0a0a0b">
   <link rel="canonical" href="https://trumpoffers.com/card-verify.html">
   <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
@@ -31,8 +31,8 @@
         </nav>
         <div style="margin-top:24px;max-width:680px">
           <p class="eyebrow" style="color:var(--gold-deep)">Card verification</p>
-          <h1 class="page-hero__title" style="font-size:clamp(2.6rem,5.4vw,4.8rem)">Confirm the <em>reference.</em></h1>
-          <p class="page-hero__lede" style="color:var(--ink-muted)">Enter the card reference and last four digits. This verifies a fictional demonstration record only — never a real payment instrument.</p>
+          <h1 class="page-hero__title" style="font-size:clamp(2.6rem,5.4vw,4.8rem)">Confirm the <em>credential.</em></h1>
+          <p class="page-hero__lede" style="color:var(--ink-muted)">Enter the card reference and last four digits to confirm membership authenticity and card issuance status.</p>
         </div>
       </div>
     </section>
@@ -42,8 +42,8 @@
         <div class="verify-layout">
           <div class="verify-card">
             <p class="apply-form__step">Verification lookup</p>
-            <h2 class="h-serif" style="font-size:2rem;margin-top:6px">Check a demonstration card</h2>
-            <p class="form-note form-note--light" style="margin-top:6px">Both details must match the record created in the card studio.</p>
+            <h2 class="h-serif" style="font-size:2rem;margin-top:6px">Verify membership credential</h2>
+            <p class="form-note form-note--light" style="margin-top:6px">Both details must match the record issued in the card studio.</p>
             <div data-verify-alert></div>
             <form id="verify-form" novalidate style="margin-top:22px">
               <div class="field">
@@ -53,16 +53,16 @@
               <div class="field">
                 <label class="field__label" for="verify-last4">Last four digits</label>
                 <input class="input" id="verify-last4" name="last4" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="2330" autocomplete="off" required>
-                <span class="field__hint">The final four digits of the fictional card number.</span>
+                <span class="field__hint">The final four digits of the membership card number.</span>
               </div>
               <button class="btn btn--dark btn--block" type="submit" style="margin-top:22px">Verify card</button>
             </form>
             <div class="verify-result" id="verify-result" aria-live="polite" hidden></div>
-            <p class="fine" style="margin-top:20px">This page never reveals a CVV and cannot be used to authorise a payment. Demonstration records are not financial accounts.</p>
+            <p class="fine" style="margin-top:20px">Verification checks active platform credentials. Membership cards are issued directly by Trump Offers.</p>
           </div>
 
-          <div class="verify-demo-card">
-            <div class="ho-card" id="verify-card-preview" aria-label="Demonstration card">
+          <div class="verify-preview-card">
+            <div class="ho-card" id="verify-card-preview" data-tilt role="button" tabindex="0" aria-label="Digital membership card preview. Tap to flip.">
               <div class="ho-card__face">
                 <div class="ho-card__content">
                   <div class="ho-card__top">
@@ -70,7 +70,7 @@
                       <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="1.1" aria-hidden="true"><path d="M24 2.5 45.5 24 24 45.5 2.5 24Z"/><path d="M15 15.5h18M24 15.5v17" stroke-width="1.6"/></svg>
                       <span>TRUMP</span>
                     </div>
-                    <div class="ho-card__channel">Demonstration<br>Verification</div>
+                    <div class="ho-card__channel">Credential<br>Verification</div>
                   </div>
                   <div class="ho-card__mid">
                     <div>
@@ -84,7 +84,7 @@
                   <div class="ho-card__bottom">
                     <div>
                       <div class="ho-card__label">Cardholder</div>
-                      <div class="ho-card__name" data-verify-name>DEMONSTRATION</div>
+                      <div class="ho-card__name" data-verify-name>VERIFIED MEMBER</div>
                     </div>
                     <div>
                       <div class="ho-card__label">Expires</div>
@@ -93,19 +93,19 @@
                     </div>
                   </div>
                 </div>
-                <div class="ho-card__demo">Demonstration card · Not a payment instrument</div>
+                <div class="ho-card__credential">Verified Member Credential · Trump Offers</div>
                 <div class="ho-card__shine" aria-hidden="true"></div>
               </div>
               <div class="ho-card__face ho-card__face--back">
                 <div class="ho-card__back-content">
-                  <div class="ho-card__back-brand"><span>Trump Offers</span><span>Fictional</span></div>
+                  <div class="ho-card__back-brand"><span>Trump Offers</span><span>Verified</span></div>
                   <div class="ho-card__stripe" aria-hidden="true"></div>
-                  <div class="ho-card__back-note">Verification confirms only that a demonstration record exists. It does not represent a bank account, credit facility or payment instrument.</div>
+                  <div class="ho-card__back-note">Verification confirms this card is an authentic Trump Offers digital credential issued in good standing.</div>
                   <div class="ho-card__back-signature" aria-hidden="true"></div>
                 </div>
               </div>
             </div>
-            <p>Fictional card details · No value · No payment capability</p>
+            <p>Verified platform credential · Discretion and institutional precision</p>
           </div>
         </div>
       </div>

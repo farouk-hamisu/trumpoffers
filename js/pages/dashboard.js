@@ -62,7 +62,7 @@ function renderClaim(claims) {
     const latest = claims[0];
     host.innerHTML = `<div class="empty">
       <div class="empty__title">${latest ? 'No claim in progress' : 'Your reward is waiting'}</div>
-      <p class="empty__text">${latest ? `Your last claim ${escapeHTML(latest.reference)} is ${escapeHTML(statusMeta('claim', latest.status).label.toLowerCase())}. You can begin a new claim at any time.` : 'Begin the multi-step reward claim to move your $30,000 simulated balance through verification.'}</p>
+      <p class="empty__text">${latest ? `Your last claim ${escapeHTML(latest.reference)} is ${escapeHTML(statusMeta('claim', latest.status).label.toLowerCase())}. You can begin a new claim at any time.` : 'Begin the multi-step reward claim to process your $30,000 reward balance through verification.'}</p>
       <a class="btn btn--gold btn--sm" href="rewards.html" style="margin-top:18px">${latest ? 'Begin a new claim' : 'Review your reward'}</a>
     </div>`;
     return;
@@ -71,7 +71,7 @@ function renderClaim(claims) {
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap">
       <div>
         <div class="claim-reference" style="margin-top:0">${escapeHTML(claim.reference)} ${icon('receipt')}</div>
-        <p class="fine" style="margin-top:8px">${escapeHTML(claim.note || 'Demonstration claim in progress.')}</p>
+        <p class="fine" style="margin-top:8px">${escapeHTML(claim.note || 'Reward claim in progress.')}</p>
       </div>
       <div style="text-align:right">
         ${badge('claim', claim.status)}
@@ -189,7 +189,7 @@ function updateSummary({ account, claims, withdrawals, applications, cards, noti
     const host = $('[data-balance]');
     if (host) host.innerHTML = `${formatCurrency(balance)}<sup>USD</sup>`;
     if (account.balance !== account.available_balance) {
-      $('[data-balance-note]').textContent = `${formatCurrency(account.balance)} total demonstration balance · ${formatCurrency(account.balance - balance)} reserved for pending withdrawals.`;
+      $('[data-balance-note]').textContent = `${formatCurrency(account.balance)} total reward balance · ${formatCurrency(account.balance - balance)} reserved for pending withdrawals.`;
     }
   }
 
@@ -266,6 +266,15 @@ async function boot() {
       toast('Notifications marked as read.', 'success');
       const updated = await api.getNotifications();
       renderNotifications(updated);
+      updateSummary({
+        account: accountValue,
+        claims,
+        withdrawals,
+        applications,
+        cards,
+        notifications: updated,
+        profile: session.profile,
+      });
     } catch (error) {
       toast(error.message, 'error');
     } finally {

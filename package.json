@@ -2,7 +2,7 @@
   "name": "trump-offers",
   "version": "1.0.0",
   "private": true,
-  "description": "Trump Offers — a premium demonstration rewards, recruitment and digital card platform.",
+  "description": "Trump Offers — a premium rewards, executive recruitment and digital card platform.",
   "type": "module",
   "engines": {
     "node": ">=20"
@@ -18,7 +18,8 @@
     "css3",
     "vanilla-javascript",
     "supabase",
-    "demonstration"
+    "rewards",
+    "membership"
   ],
   "license": "UNLICENSED"
 }

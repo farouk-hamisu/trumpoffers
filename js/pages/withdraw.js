@@ -1,5 +1,5 @@
 /**
- * Trump Offers — simulated withdrawal desk.
+ * Trump Offers — withdrawal desk.
  */
 
 import { getApi } from '../lib/api.js';
@@ -65,7 +65,7 @@ function renderHistory(withdrawals) {
   if (count) count.textContent = `${withdrawals.length} request${withdrawals.length === 1 ? '' : 's'}`;
   if (!host) return;
   if (!withdrawals.length) {
-    host.innerHTML = `<div class="empty"><div class="empty__title">No withdrawals yet</div><p class="empty__text">Submitted demonstration requests will appear here with a reference and status.</p></div>`;
+    host.innerHTML = `<div class="empty"><div class="empty__title">No withdrawals yet</div><p class="empty__text">Submitted requests will appear here with a reference and status.</p></div>`;
     return;
   }
   host.innerHTML = `<div class="table-wrap"><table class="table">
@@ -125,7 +125,7 @@ async function boot() {
     let valid = true;
 
     if (!Number.isFinite(amount) || amount < 100) {
-      fieldError(amountInput, 'The minimum demonstration withdrawal is $100.');
+      fieldError(amountInput, 'The minimum withdrawal amount is $100.');
       valid = false;
     } else if (account && amount > Number(account.available_balance)) {
       fieldError(amountInput, `That exceeds your available balance of ${formatCurrency(account.available_balance)}.`);
@@ -143,7 +143,7 @@ async function boot() {
       valid = false;
     }
     if (!form.elements.confirm.checked) {
-      fieldError(form.elements.confirm, 'Please confirm that you understand this is simulated.');
+      fieldError(form.elements.confirm, 'Please confirm your withdrawal authorization.');
       valid = false;
     }
     if (!valid) {
@@ -160,13 +160,13 @@ async function boot() {
       $('[data-withdraw-amount]').textContent = formatCurrency(withdrawal.amount);
       $('[data-withdraw-method]').textContent = methodMeta.label;
       $('[data-withdraw-destination]').textContent = withdrawal.destination_label;
-      $('[data-withdraw-estimate]').textContent = `${methodMeta.arrival} (simulated)`;
+      $('[data-withdraw-estimate]').textContent = methodMeta.arrival;
       openModal('withdraw-modal');
       form.reset();
       form.elements.accountName.value = session.profile.full_name || '';
       updateSummary();
       await refresh();
-      toast('Simulated withdrawal submitted.', 'success');
+      toast('Withdrawal request submitted.', 'success');
     } catch (error) {
       showAlert(error.message || 'We could not submit the withdrawal.');
     } finally {

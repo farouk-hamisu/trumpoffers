@@ -77,7 +77,7 @@ async function boot() {
       valid = false;
     }
     if (!form.elements.terms.checked) {
-      fieldError(form.elements.terms, 'Please confirm you understand the demonstration terms.');
+      fieldError(form.elements.terms, 'Please agree to the Terms of Service and Privacy Policy.');
       valid = false;
     }
     if (!valid) {

@@ -61,7 +61,7 @@ function renderHistory() {
   if (!claims.length) {
     host.innerHTML = `<div class="empty">
       <div class="empty__title">No claims yet</div>
-      <p class="empty__text">When you submit a demonstration claim, the reference and status will appear here.</p>
+      <p class="empty__text">When you submit a claim, the reference and status will appear here.</p>
     </div>`;
     return;
   }
@@ -120,7 +120,7 @@ async function refresh() {
   if (openBtn && claimInProgress) {
     openBtn.disabled = true;
     openBtn.textContent = 'Claim in progress';
-    if (hint) hint.textContent = 'You already have a demonstration claim in verification.';
+    if (hint) hint.textContent = 'You already have a claim in verification.';
   }
 }
 
@@ -176,11 +176,11 @@ async function boot() {
       if (est) {
         est.textContent = `Estimated completion ${futureLabel(claim.estimated_completion_at)} — ${formatDateTime(
           claim.estimated_completion_at
-        )}. No real funds are involved.`;
+        )}.`;
       }
       await refresh();
       setStage(4);
-      toast('Demonstration claim received.', 'success');
+      toast('Reward claim received.', 'success');
     } catch (error) {
       showAlert(error.message || 'We could not submit the claim.');
       setStage(2);

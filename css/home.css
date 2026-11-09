@@ -1351,7 +1351,8 @@
   opacity: 0.6;
 }
 
-.ho-card__demo {
+.ho-card__demo,
+.ho-card__credential {
   position: absolute;
   left: 50%;
   bottom: 9px;
@@ -1452,7 +1453,8 @@
 
 .ho-card--champagne .ho-card__label,
 .ho-card--champagne .ho-card__channel,
-.ho-card--champagne .ho-card__demo {
+.ho-card--champagne .ho-card__demo,
+.ho-card--champagne .ho-card__credential {
   color: rgba(36, 31, 22, 0.52);
 }
 
@@ -2176,7 +2178,8 @@
   .ho-card__number {
     font-size: clamp(0.8rem, 4vw, 1rem);
   }
-  .ho-card__demo {
+  .ho-card__demo,
+  .ho-card__credential {
     font-size: 0.28rem;
     letter-spacing: 0.16em;
   }

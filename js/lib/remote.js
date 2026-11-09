@@ -183,7 +183,6 @@ class SupabaseBackend {
     return {
       ...account,
       available_balance: Math.max(0, Number(account.balance) - active),
-      simulated: true,
     };
   }
 

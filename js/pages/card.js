@@ -71,20 +71,25 @@ function resultFor(card) {
   $('[data-card-ref]').textContent = card.reference;
   $('[data-card-design]').textContent = design.label;
   $('[data-card-holder]').textContent = card.cardholder_name;
-  $('[data-card-full-number]').textContent = groupCardNumber(card.fictional_card_number);
-  $('[data-card-exp]').textContent = `${String(card.expiry_month).padStart(2, '0')} / ${String(card.expiry_year).slice(-2)}`;
+  const num = card.card_number || card.fictional_card_number;
+  $('[data-card-full-number]').textContent = num
+    ? groupCardNumber(num)
+    : '•••• •••• •••• ••••';
+  $('[data-card-exp]').textContent = card.expiry_month && card.expiry_year
+    ? `${String(card.expiry_month).padStart(2, '0')} / ${String(card.expiry_year).slice(-2)}`
+    : '— / —';
   const status = $('[data-card-status]');
   status.innerHTML = badge('card', card.status);
   const verify = $('[data-card-verify]');
-  if (verify && card.fictional_card_number) {
-    verify.href = `card-verify.html?ref=${encodeURIComponent(card.reference)}&last4=${card.fictional_card_number.slice(-4)}`;
+  if (verify && num) {
+    verify.href = `card-verify.html?ref=${encodeURIComponent(card.reference)}&last4=${num.slice(-4)}`;
   }
   const result = $('#card-result');
   if (result) result.hidden = false;
   updatePreview({
     name: card.cardholder_name,
     design: card.design,
-    number: card.fictional_card_number,
+    number: num || null,
     month: card.expiry_month,
     year: card.expiry_year,
   });
@@ -97,7 +102,7 @@ function renderApplications(cards) {
   wrap.hidden = false;
   list.innerHTML = cards
     .map(
-      (c) => `<div class="card-app-row">
+      (c) => `<div class="card-app-row" data-card-id="${escapeHTML(c.id)}" style="cursor:pointer" tabindex="0" role="button" aria-label="Select card ${escapeHTML(c.reference)}">
         <div class="card-app-row__design">
           <span class="card-app-row__swatch swatch--${escapeHTML(c.design)}"></span>
           <div>
@@ -110,6 +115,24 @@ function renderApplications(cards) {
       </div>`
     )
     .join('');
+
+  list.querySelectorAll('.card-app-row').forEach((row) => {
+    const onSelect = () => {
+      const card = cards.find((c) => c.id === row.dataset.cardId);
+      if (!card) return;
+      list.querySelectorAll('.card-app-row').forEach((r) => r.classList.remove('is-selected'));
+      row.classList.add('is-selected');
+      resultFor(card);
+      $('#card-result')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+    row.addEventListener('click', onSelect);
+    row.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onSelect();
+      }
+    });
+  });
 }
 
 async function boot() {
@@ -134,19 +157,13 @@ async function boot() {
 
   if (session) {
     const hint = $('[data-card-auth-hint]');
-    if (hint) hint.textContent = 'Your request will be reviewed by a demonstration administrator.';
+    if (hint) hint.textContent = 'Your request will be reviewed by our member services desk.';
     try {
       const cards = await api.getCardApplications();
       renderApplications(cards);
       const latest = cards[0];
       if (latest) {
-        updatePreview({
-          design: latest.design,
-          month: latest.expiry_month,
-          year: latest.expiry_year,
-          number: latest.status === 'approved' ? latest.fictional_card_number : null,
-        });
-        if (latest.status === 'approved') resultFor(latest);
+        resultFor(latest);
       }
     } catch (error) {
       console.warn(error);
@@ -167,7 +184,7 @@ async function boot() {
       return;
     }
     if (!form.elements.confirm.checked) {
-      fieldError(form.elements.confirm, 'Please confirm you understand the card is fictional.');
+      fieldError(form.elements.confirm, 'Please confirm your digital card request.');
       focusFirstError(form);
       return;
     }
@@ -185,7 +202,7 @@ async function boot() {
         cardholderName: name.toUpperCase().slice(0, 26),
       });
       resultFor(card);
-      toast('Demonstration card request submitted.', 'success');
+      toast('Digital membership card request submitted.', 'success');
       const cards = await api.getCardApplications();
       renderApplications(cards);
       $('#card-result')?.scrollIntoView({ behavior: 'smooth', block: 'center' });

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Administrator Console — Trump Offers</title>
-  <meta name="description" content="Manage members, rewards, recruitment, demonstration cards and site configuration.">
+  <meta name="description" content="Manage members, rewards, recruitment, digital cards and site configuration.">
   <meta name="theme-color" content="#0a0a0b">
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="../assets/icons/favicon.svg" type="image/svg+xml">
@@ -74,7 +74,7 @@
             <div>
               <p class="admin-heading__eyebrow">Console overview</p>
               <h1 id="overview-title">Good <em>morning</em>, <span data-admin-first>Administrator</span>.</h1>
-              <p>A live view of the demonstration platform. Figures refresh when you open a view or press refresh.</p>
+              <p>A live view of platform operations. Figures refresh when you open a view or press refresh.</p>
             </div>
             <div class="admin-heading__actions">
               <a class="btn btn--ghost btn--sm" href="../index.html" target="_blank" rel="noopener">View site</a>
@@ -195,7 +195,7 @@
             <div>
               <p class="admin-heading__eyebrow">Rewards ledger</p>
               <h1 id="rewards-title">Claims &amp; <em>withdrawals.</em></h1>
-              <p>All demonstrations are simulated. Advancing a status sends the member a notification and records an activity entry.</p>
+              <p>All transactions are logged in the ledger. Advancing a status sends the member a notification and records an activity entry.</p>
             </div>
             <div class="admin-heading__actions">
               <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
@@ -219,7 +219,7 @@
             <div class="admin-panel__head admin-panel__head--padded">
               <div>
                 <h2 class="admin-panel__title">Reward claims</h2>
-                <p class="admin-panel__sub">Fixed demonstration balance of $30,000 per member</p>
+                <p class="admin-panel__sub">Member reward balance of $30,000 per member</p>
               </div>
             </div>
             <div class="admin-table-wrap">
@@ -248,7 +248,7 @@
             <div class="admin-panel__head admin-panel__head--padded">
               <div>
                 <h2 class="admin-panel__title">Withdrawal requests</h2>
-                <p class="admin-panel__sub">Simulated payouts — no banking details are collected</p>
+                <p class="admin-panel__sub">Member disbursement payouts and settlement records</p>
               </div>
             </div>
             <div class="admin-table-wrap">
@@ -326,7 +326,7 @@
             <div>
               <p class="admin-heading__eyebrow">Card studio</p>
               <h1 id="cards-title">Card <em>requests.</em></h1>
-              <p>Approve or decline fictional card designs. Approval activates the public verification result for the reference.</p>
+              <p>Approve or decline digital card requests. Approval activates the public verification result for the credential.</p>
             </div>
             <div class="admin-heading__actions">
               <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
@@ -463,7 +463,7 @@
                 <div class="admin-detail__row"><span>Version</span><strong data-env-version>—</strong></div>
               </div>
               <div class="admin-detail__note">Records are stored in Supabase and protected by row-level security. Use the Environment panel to confirm the active backend before editing live data.</div>
-              <button class="btn btn--ghost btn--sm btn--block" type="button" data-reset-demo style="margin-top:16px" hidden>Reset demonstration data</button>
+              <button class="btn btn--ghost btn--sm btn--block" type="button" data-reset-cache style="margin-top:16px" hidden>Reset local cache</button>
             </aside>
           </div>
         </section>

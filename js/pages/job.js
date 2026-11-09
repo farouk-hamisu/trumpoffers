@@ -71,7 +71,7 @@ async function boot() {
       ${job.requirements?.length ? `<h2>What we are looking for</h2>${list(job.requirements)}` : ''}
       ${job.benefits?.length ? `<h2>What we offer</h2>${list(job.benefits)}` : ''}
       <div class="legal-callout">
-        This is a demonstration vacancy within the Trump Offers platform. The role, salary and process are illustrative. No employment offer is guaranteed by submitting an application.
+        Trump Offers is an Equal Opportunity Employer. We offer competitive compensation packages, comprehensive health cover, and flexible hybrid arrangements.
       </div>`;
   }
 

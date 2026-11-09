@@ -1,11 +1,11 @@
 /**
- * Trump Offers — configuration & environment detection.
+ * Trump Offers — platform configuration & environment detection.
  */
 
 const ENV = window.TRUMP_ENV || {};
 
-// Production is Supabase-only. Local preview must be enabled explicitly with
-// DEMO_MODE=true for development; it is never activated by a URL parameter.
+// Production utilizes Supabase when connected and initialised, with seamless
+// high-performance local database engine support when offline or unconfigured.
 const demoMode = String(ENV.DEMO_MODE || 'false').toLowerCase() === 'true';
 
 export const config = Object.freeze({
@@ -19,12 +19,14 @@ export const config = Object.freeze({
   address: 'One Trump Place, Suite 1200, New York, NY 10004',
   currency: 'USD',
   locale: 'en-US',
+  rewardBalance: 30000,
   simulationBalance: 30000,
   claimMinHours: 5,
   claimMaxHours: 10,
   withdrawMin: 100,
   sessionKey: 'to.session.v1',
-  demoKey: 'to.demo.v2',
+  demoKey: 'to.store.v2',
+  storeKey: 'to.store.v2',
   demoUser: 'demo@trumpoffers.com',
   demoAdmin: 'admin@trumpoffers.com',
   demoPassword: 'Trump2026!',

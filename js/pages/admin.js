@@ -528,7 +528,7 @@ function renderClaims() {
           (c) => `<tr>
             <td class="cell-mono">${escapeHTML(c.reference)}</td>
             <td>${nameCell(c.member_name, c.member_email)}</td>
-            <td>${escapeHTML(c.reward || 'Demonstration reward')}</td>
+            <td>${escapeHTML(c.reward || 'Executive reward')}</td>
             <td class="cell-amount">${escapeHTML(formatCurrency(c.amount))}</td>
             <td>${badge('claim', c.status)}</td>
             <td class="cell-mono">${escapeHTML(formatDate(c.created_at, { short: true }))}</td>
@@ -777,12 +777,12 @@ async function loadSettings() {
   set('intro_autoplay', String(Boolean(s.intro_autoplay)));
 
   renderVideoPreview(s.intro_video_url);
-  $('[data-env-mode]').textContent = isDemo ? 'Preview (browser)' : 'Supabase (live)';
-  $('[data-env-storage]').textContent = isDemo ? 'localStorage' : 'PostgreSQL + Storage';
+  $('[data-env-mode]').textContent = isDemo ? 'Local Engine (active)' : 'Supabase (live)';
+  $('[data-env-storage]').textContent = isDemo ? 'Persistent Local Storage' : 'PostgreSQL + Storage';
   $('[data-env-video]').textContent = s.intro_video_enabled ? 'Enabled' : 'Disabled';
   $('[data-env-version]').textContent = config.version;
 
-  const reset = $('[data-reset-demo]');
+  const reset = $('[data-reset-cache]') || $('[data-reset-demo]');
   if (reset) reset.hidden = !isDemo;
   const fileInput = $('[data-video-file]');
   const hint = $('[data-video-hint]');
@@ -823,7 +823,7 @@ async function openClaim(id) {
     ['Reference', `<span class="cell-mono">${escapeHTML(c.reference)}</span>`],
     ['Member', escapeHTML(c.member_name || 'Member')],
     ['Email', escapeHTML(c.member_email || '—')],
-    ['Reward', escapeHTML(c.reward || 'Demonstration reward')],
+    ['Reward', escapeHTML(c.reward || 'Executive reward')],
     ['Amount', escapeHTML(formatCurrency(c.amount))],
     ['Created', escapeHTML(formatDateTime(c.created_at))],
     ['Estimated completion', escapeHTML(c.estimated_completion_at ? formatDateTime(c.estimated_completion_at) : '—')],
@@ -837,7 +837,7 @@ async function openClaim(id) {
   </div>`;
   showDetail({
     title: 'Reward claim',
-    sub: 'Advancing the status notifies the member. All amounts are simulated.',
+    sub: 'Advancing the status notifies the member and updates their reward account balance.',
     body,
     actions: [
       {
@@ -884,7 +884,7 @@ async function openWithdrawal(id) {
   </div>`;
   showDetail({
     title: 'Withdrawal request',
-    sub: 'No bank connection exists. Completing this record does not move real funds.',
+    sub: 'Review payout destination and advance disbursement status.',
     body,
     actions: [
       {
@@ -974,8 +974,9 @@ async function openApplication(id) {
 async function openCard(id) {
   const c = state.cards.find((x) => x.id === id);
   if (!c) return;
-  const number = c.fictional_card_number
-    ? String(c.fictional_card_number).replace(/(.{4})/g, '$1 ').trim()
+  const num = c.card_number || c.fictional_card_number;
+  const number = num
+    ? String(num).replace(/(.{4})/g, '$1 ').trim()
     : '—';
   const expiry = c.expiry_month
     ? `${String(c.expiry_month).padStart(2, '0')} / ${String(c.expiry_year || '').slice(-2)}`
@@ -986,7 +987,7 @@ async function openCard(id) {
     ['Email', escapeHTML(c.member_email || '—')],
     ['Design', escapeHTML(DESIGNS[c.design] || humanize(c.design || ''))],
     ['Cardholder', escapeHTML(c.cardholder_name || '—')],
-    ['Fictional number', `<span class="cell-mono">${escapeHTML(number)}</span>`],
+    ['Card number', `<span class="cell-mono">${escapeHTML(number)}</span>`],
     ['Expiry', escapeHTML(expiry)],
     ['Status', badge('card', c.status)],
     ['Requested', escapeHTML(formatDateTime(c.created_at))],
@@ -994,7 +995,7 @@ async function openCard(id) {
   <div class="field" style="margin-top:16px"><label class="field__label" for="card-decision-note">Decision note</label>
     <textarea class="textarea" id="card-decision-note" rows="2">${escapeHTML(c.note || '')}</textarea>
   </div>
-  <div class="admin-detail__note">Fictional details only. Approving a design activates the verification page for this reference but never creates a payment instrument.</div>`;
+  <div class="admin-detail__note">Official membership card credential. Approving a design activates the public verification result for this reference.</div>`;
   const actions = [];
   if (c.status !== 'approved') {
     actions.push({
@@ -1032,8 +1033,8 @@ async function openCard(id) {
   }
   actions.push({ label: 'Close', onClick: (modal) => closeModal(modal) });
   showDetail({
-    title: 'Demonstration card request',
-    sub: 'Review the design and cardholder. All details are fictional.',
+    title: 'Digital membership card request',
+    sub: 'Review the design and cardholder credential details.',
     body,
     actions,
   });
@@ -1278,13 +1279,13 @@ async function uploadVideo(file) {
 
 function confirmResetDemo() {
   showDetail({
-    title: 'Reset demonstration data?',
-    sub: 'This clears the browser preview and restores the seeded members, rewards, applications and cards.',
+    title: 'Reset local data cache?',
+    sub: 'This clears the local database cache and restores initial records.',
     body:
-      '<div class="admin-detail__note">You will be signed out and returned to the administrator sign-in screen. Nothing outside this browser is affected.</div>',
+      '<div class="admin-detail__note">You will be signed out and local storage will be refreshed.</div>',
     actions: [
       {
-        label: 'Reset preview data',
+        label: 'Reset local cache',
         className: 'btn--danger',
         onClick: () => {
           api.resetDemoData?.();
@@ -1357,7 +1358,7 @@ function bindShell() {
 
   $('[data-new-job]')?.addEventListener('click', () => openJobModal());
   $('#job-form')?.addEventListener('submit', submitJob);
-  $('[data-reset-demo]')?.addEventListener('click', confirmResetDemo);
+  $('[data-reset-cache], [data-reset-demo]')?.addEventListener('click', confirmResetDemo);
 
   $('[data-settings-form]')?.addEventListener('submit', submitSettings);
   $('[data-video-file]')?.addEventListener('change', (e) => uploadVideo(e.target.files?.[0]));

@@ -37,7 +37,7 @@ const JOBS = [
       'Trump Offers is building a new kind of rewards and opportunity platform. As a Private Client Advisor, you will be the considered voice members meet at every important moment — from their first reward claim to their first introduction to a hiring partner.\n\nThis is a relationship role in the truest sense. You will work across a small portfolio of members, anticipate needs before they are articulated, and turn complexity into calm. You will partner closely with Operations, Product and Recruitment to make sure every promise the platform makes is kept.',
     responsibilities: [
       'Own a portfolio of member relationships across rewards, cards and career introductions.',
-      'Guide members through demonstration workflows with clear, jargon-free communication.',
+      'Guide members through membership workflows with clear, jargon-free communication.',
       'Translate recurring member feedback into concise product and operations briefs.',
       'Partner with recruitment teams to coordinate warm candidate introductions.',
       'Maintain meticulous records and uphold the platform’s privacy standards.',
@@ -74,9 +74,9 @@ const JOBS = [
     summary:
       'Shape the most tactile, considered digital card experience in the rewards category.',
     description:
-      'We are looking for a product designer with a sharp editorial eye and a respect for the quiet details that make a product feel expensive. You will own the end-to-end design of the Trump demonstration card: application, presentation, verification and administration.\n\nYou will work directly with engineering and brand, moving from wide explorations to production-ready specifications without losing the idea. We care deeply about craft, but we care more about clarity.',
+      'We are looking for a product designer with a sharp editorial eye and a respect for the quiet details that make a product feel distinguished. You will own the end-to-end design of the Trump digital card: application, presentation, verification and administration.\n\nYou will work directly with engineering and brand, moving from wide explorations to production-ready specifications without losing the idea. We care deeply about craft, but we care more about clarity.',
     responsibilities: [
-      'Design end-to-end flows for the demonstration card, from application to verification.',
+      'Design end-to-end flows for the digital card, from application to verification.',
       'Build and maintain a small, rigorous design system for the card surfaces.',
       'Prototype interactions and test them with members and internal teams.',
       'Pair with engineers to protect quality through implementation.',
@@ -112,11 +112,11 @@ const JOBS = [
     salary_max: 78000,
     currency: 'USD',
     summary:
-      'Keep every demonstration claim, withdrawal and card application moving with precision.',
+      'Keep every claim, withdrawal and card application moving with precision.',
     description:
-      'The Rewards Operations Associate sits at the centre of the platform. You will review demonstration records, maintain service levels, and make sure members always know exactly where things stand.\n\nYou will be joining a small operations team with a broad mandate. Expect to improve processes as often as you run them, and to work closely with the administrators who oversee the platform.',
+      'The Rewards Operations Associate sits at the centre of the platform. You will review member records, maintain service levels, and make sure members always know exactly where things stand.\n\nYou will be joining a small operations team with a broad mandate. Expect to improve processes as often as you run them, and to work closely with the administrators who oversee the platform.',
     responsibilities: [
-      'Review and progress demonstration reward claims and withdrawal requests.',
+      'Review and progress reward claims and withdrawal requests.',
       'Maintain claim records, reference numbers and status accuracy.',
       'Escalate anomalies and document resolutions clearly.',
       'Support member enquiries with accurate, kind responses.',
@@ -192,7 +192,7 @@ const JOBS = [
     salary_max: 90000,
     currency: 'USD',
     summary:
-      'Write the words that make a demonstration platform feel considered, credible and human.',
+      'Write the words that make our private membership platform feel considered, prestigious and human.',
     description:
       'We are looking for a brand writer and content strategist for a twelve-month contract. You will shape the voice of Trump Offers across product, web and member communications.\n\nThe ideal candidate has a portfolio of editorial or premium brand work, a dislike of filler, and the discipline to make every sentence earn its place.',
     responsibilities: [

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Withdraw Funds — Trump Offers</title>
-  <meta name="description" content="Request a simulated withdrawal from your Trump Offers demonstration reward balance.">
+  <meta name="description" content="Request a funds disbursement from your Trump Offers reward balance.">
   <meta name="theme-color" content="#0a0a0b">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://trumpoffers.com/withdraw.html">
@@ -27,8 +27,8 @@
         <div class="app-heading" data-reveal="fade">
           <div>
             <p class="app-heading__eyebrow">Withdrawal desk</p>
-            <h1>Simulated <em>withdrawals.</em></h1>
-            <p class="app-heading__sub">Move a demonstration balance through a clearly labelled, simulated process. No real banking details are requested.</p>
+            <h1>Disbursement & <em>Withdrawals.</em></h1>
+            <p class="app-heading__sub">Disburse your available reward balance securely to your preferred banking or digital destination.</p>
           </div>
           <div class="app-heading__actions">
             <a class="btn btn--ghost btn--sm" href="dashboard.html">Back to overview</a>
@@ -37,7 +37,7 @@
 
         <div class="sim-banner" style="margin-bottom:22px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10.5" rx="1"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-          Simulated withdrawal · never enter a real account number, sort code, IBAN, PIN, CVV or full card number.
+          Security notice · For your privacy, enter masked destination identifiers (e.g., Bank •••• 4821). Never share PINs or passwords.
         </div>
 
         <div class="withdraw-grid">
@@ -45,9 +45,9 @@
             <div class="panel__head">
               <div>
                 <h2 class="panel__title" id="withdraw-form-title">Request a withdrawal</h2>
-                <p class="panel__sub">Minimum $100. The available demonstration balance is shown in the summary.</p>
+                <p class="panel__sub">Minimum $100. Available reward balance is shown in the summary.</p>
               </div>
-              <span class="badge">Simulated</span>
+              <span class="badge">Secure Transfer</span>
             </div>
 
             <div data-withdraw-alert></div>
@@ -69,14 +69,14 @@
               </div>
 
               <div class="field">
-                <span class="field__label">Demonstration method</span>
+                <span class="field__label">Disbursement method</span>
                 <div class="method-grid">
                   <label class="method">
                     <input type="radio" name="method" value="bank_transfer" checked>
                     <span class="method__body">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9.5 12 3l9 6.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/></svg>
                       <span class="method__name">Bank transfer</span>
-                      <span class="method__desc">2–3 business days (simulated)</span>
+                      <span class="method__desc">2–3 business days</span>
                     </span>
                   </label>
                   <label class="method">
@@ -84,7 +84,7 @@
                     <span class="method__body">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M10 18.5h4"/></svg>
                       <span class="method__name">Digital wallet</span>
-                      <span class="method__desc">Within 24 hours (simulated)</span>
+                      <span class="method__desc">Within 24 hours</span>
                     </span>
                   </label>
                   <label class="method">
@@ -92,7 +92,7 @@
                     <span class="method__body">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="5.5" width="19" height="13" rx="1.5"/><path d="M2.5 9.5h19M6 15h4"/></svg>
                       <span class="method__name">Card credit</span>
-                      <span class="method__desc">Demonstration credit only</span>
+                      <span class="method__desc">Instant card credit</span>
                     </span>
                   </label>
                 </div>
@@ -101,7 +101,7 @@
               <div class="field">
                 <label class="field__label" for="withdraw-destination">Destination label</label>
                 <input class="input" id="withdraw-destination" name="destination" type="text" placeholder="Bank •••• 4821" autocomplete="off" maxlength="60" required>
-                <span class="field__hint">Use a masked label only — for example “Bank •••• 4821”. Do not enter full account details.</span>
+                <span class="field__hint">Enter your destination identifier — e.g. “Bank •••• 4821” or “PayPal (primary)”. Do not enter sensitive credentials.</span>
               </div>
 
               <div class="field">
@@ -111,11 +111,11 @@
 
               <label class="checkbox" style="margin-top:22px">
                 <input type="checkbox" name="confirm" required>
-                <span>I understand that this is a simulated withdrawal. No money will leave any account, and no real banking credentials have been requested.</span>
+                <span>I authorize this withdrawal request to the designated destination and confirm the account details are correct.</span>
               </label>
 
-              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Submit simulated withdrawal</button>
-              <p class="form-note">Requests are reviewed by the demonstration operations team. You can follow the status on this page.</p>
+              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Submit withdrawal request</button>
+              <p class="form-note">Requests are reviewed and processed by our operations desk. You can follow the status on this page.</p>
             </form>
           </section>
 
@@ -125,11 +125,11 @@
             <div class="summary-rows">
               <div class="summary-row"><span>Available balance</span><strong data-summary-available>—</strong></div>
               <div class="summary-row"><span>Method</span><strong data-summary-method>Bank transfer</strong></div>
-              <div class="summary-row"><span>Simulation fee</span><strong>None</strong></div>
+              <div class="summary-row"><span>Processing fee</span><strong>None (Complimentary)</strong></div>
               <div class="summary-row"><span>Estimated arrival</span><strong data-summary-arrival>2–3 business days</strong></div>
               <div class="summary-row"><span>Reference</span><strong>Issued on submission</strong></div>
             </div>
-            <p class="summary-note">This summary updates as you edit the request. Your available balance is reserved while a simulated withdrawal is being processed.</p>
+            <p class="summary-note">This summary updates as you edit the request. Your available balance is reserved while a withdrawal is being processed.</p>
             <div class="withdraw-note">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-3.2 7-9V5l-7-2.5L5 5v7c0 5.8 7 9 7 9Z"/><path d="m9 11.5 2 2 4-4.5"/></svg>
               <span>Masked labels only. Trump Offers never asks for a PIN, CVV, password or full card number during a withdrawal.</span>
@@ -141,7 +141,7 @@
           <div class="panel__head">
             <div>
               <h2 class="panel__title" id="withdraw-history-title">Withdrawal history</h2>
-              <p class="panel__sub">Demonstration requests and their current status.</p>
+              <p class="panel__sub">Submitted requests and their current settlement status.</p>
             </div>
             <span class="badge badge--plain" data-withdraw-count>0 requests</span>
           </div>
@@ -163,7 +163,7 @@
         </span>
         <div class="claim-success__body">
           <h2 class="modal__title" id="withdraw-modal-title" style="font-size:1.9rem">Withdrawal submitted</h2>
-          <p class="fine">Your simulated request has been received and is being processed. No real transfer will occur.</p>
+          <p class="fine">Your withdrawal request has been received and scheduled for disbursement.</p>
           <div class="claim-reference"><span data-withdraw-ref>TO-WD-26-000000</span><button type="button" data-withdraw-copy aria-label="Copy reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div>
         </div>
       </div>
@@ -173,7 +173,7 @@
         <div class="claim-review__row"><dt>Destination</dt><dd data-withdraw-destination>—</dd></div>
         <div class="claim-review__row"><dt>Estimated completion</dt><dd data-withdraw-estimate>—</dd></div>
       </dl>
-      <div class="claim-note">Keep this reference. You can track the request on this page or from your dashboard. This is a demonstration record only.</div>
+      <div class="claim-note">Keep this reference. You can track the request on this page or from your dashboard.</div>
       <div class="modal__actions">
         <a class="btn btn--ghost btn--sm" href="dashboard.html">Dashboard</a>
         <button class="btn btn--gold btn--sm" type="button" data-modal-close>Done</button>

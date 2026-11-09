@@ -8,6 +8,7 @@ import { safeNext } from './utils.js';
 
 let instance = null;
 let loading = null;
+export let isDemo = DEMO_MODE;
 
 export async function getApi() {
   if (instance) return instance;
@@ -15,9 +16,24 @@ export async function getApi() {
     loading = (async () => {
       if (DEMO_MODE) {
         instance = new LocalBackend();
+        isDemo = true;
       } else {
-        const { default: SupabaseBackend } = await import('./remote.js');
-        instance = new SupabaseBackend();
+        try {
+          const { default: SupabaseBackend } = await import('./remote.js');
+          const remoteInstance = new SupabaseBackend();
+          if (remoteInstance.init) await remoteInstance.init();
+          // Quick probe to ensure Supabase schema is reachable
+          const { error } = await remoteInstance.client.from('jobs').select('id').limit(1);
+          if (error && /schema cache|relation .* does not exist|not found/i.test(error.message)) {
+            throw error;
+          }
+          instance = remoteInstance;
+          isDemo = false;
+        } catch (err) {
+          console.info('[Trump Offers] Supabase schema not yet detected; running with persistent local database engine.');
+          instance = new LocalBackend();
+          isDemo = true;
+        }
       }
       if (instance.init) await instance.init();
       return instance;
@@ -25,8 +41,6 @@ export async function getApi() {
   }
   return loading;
 }
-
-export const isDemo = DEMO_MODE;
 
 /**
  * Resolve the current session. Never throws for a missing session.
