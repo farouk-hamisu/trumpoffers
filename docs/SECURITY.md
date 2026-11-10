@@ -157,16 +157,16 @@ See [STORAGE.md](STORAGE.md) for policies, lifecycle and troubleshooting.
 
 Deployment configs set:
 
-- **CSP** with `default-src 'self'`, `script-src 'self'`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'` and `upgrade-insecure-requests`.
+- **CSP** with `default-src 'self'`, `script-src 'self' https://conversations-widget.brevo.com`, `frame-src https://conversations-widget.brevo.com`, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri 'self'`, `form-action 'self'` and `upgrade-insecure-requests`.
 - **HSTS** (two years, subdomains, preload) once HTTPS is permanent.
 - `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`.
 - `Referrer-Policy: strict-origin-when-cross-origin`.
 - `Permissions-Policy` disabling camera, microphone, geolocation, payment and USB.
 - `Cross-Origin-Opener-Policy: same-origin`.
 
-There are no third-party runtime scripts, no external fonts, no CDN images and no service worker. This keeps the attack surface and CSP exceptions small.
+Apart from the Brevo Conversations live-chat loader, there are no third-party runtime scripts, no external fonts, no CDN images and no service worker. The live chat is bootstrapped by the local `js/livechat.js`; the official inline snippet is not used because inline scripts are blocked. Only the Conversations widget origin is allowed, and the CSP does not permit its other CDN hosts or inline scripts. Set `LIVECHAT_ENABLED=false` in the public environment to remove it.
 
-If you add analytics, embeds or a payment provider later, update the CSP explicitly and review the privacy notice. Do not weaken `script-src` to `'unsafe-inline'`.
+Brevo's loader is third-party code. Review its privacy and security posture before enabling it, keep the widget ID in `js/livechat.js` or the public environment, and do not add `'unsafe-inline'` to `script-src` or a wildcard `*.brevo.com` allowlist to make it work. If you add analytics, embeds or a payment provider later, update the CSP explicitly and review the privacy notice.
 
 ---
 

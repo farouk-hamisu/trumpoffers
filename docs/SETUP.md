@@ -119,6 +119,9 @@ SUPPORT_EMAIL=concierge@trumpoffers.com
 CARD_CONNECT_URL=
 CARD_PROVIDER=
 BANK_VERIFICATION_URL=
+# Brevo Conversations live chat (public id; set LIVECHAT_ENABLED=false to hide it)
+LIVECHAT_ENABLED=true
+BREVO_CONVERSATIONS_ID=6af29e2f9894c8cc930ccf0a
 ```
 
 Then generate the browser config:
@@ -137,6 +140,10 @@ This writes `js/env.js` with only public values. Deployment platforms can inject
 | `true` | Local development fixture. Data lives in `localStorage`; use only on a developer machine |
 
 Production never falls back silently. If the Supabase values are missing or invalid in production mode, authenticated features surface an explicit error instead of switching adapters.
+
+**Live chat**
+
+The Brevo Conversations widget is bootstrapped by `js/livechat.js` on every page. The official snippet is not pasted into the HTML because the CSP blocks inline scripts. In the Brevo dashboard, add every domain that serves the site (for example `trumpoffers.com` and `www.trumpoffers.com`) to the Conversations widget's allowed domains. A widget that is disabled for the current host or account shuts itself down after loading; the page itself continues to work. `LIVECHAT_ENABLED=false` removes the widget without changing the CSP; the allowed Brevo origin stays in the CSP so it can be re-enabled without a redeploy of the headers.
 
 ---
 

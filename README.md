@@ -46,6 +46,7 @@ A premium platform for **rewards, recruitment and digital cards**, built as a mu
 - Two interchangeable adapters behind one API:
   - **Supabase** (`js/lib/remote.js`) for production.
   - **Local preview** (`js/lib/local.js`) with seeded data in `localStorage` when Supabase is not configured.
+- Brevo Conversations live chat on public, auth and admin pages, loaded from a local bootstrap so the CSP blocks inline scripts.
 - Deployment configs for Vercel, Netlify and Cloudflare Pages with CSP, HSTS and hardening headers.
 
 ---

@@ -13,5 +13,7 @@ window.TRUMP_ENV = {
   "SUPPORT_EMAIL": "concierge@trumpoffers.com",
   "CARD_CONNECT_URL": "",
   "CARD_PROVIDER": "provider",
-  "BANK_VERIFICATION_URL": ""
+  "BANK_VERIFICATION_URL": "",
+  "LIVECHAT_ENABLED": "true",
+  "BREVO_CONVERSATIONS_ID": "6af29e2f9894c8cc930ccf0a"
 };

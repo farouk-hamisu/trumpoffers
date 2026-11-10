@@ -122,11 +122,14 @@ Any host that serves files over HTTPS works:
 The deployed headers should match `_headers` / `vercel.json`:
 
 ```text
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
+Content-Security-Policy: default-src 'self';
+  script-src 'self' https://conversations-widget.brevo.com;
+  style-src 'self' 'unsafe-inline';
   img-src 'self' data: blob: https://*.supabase.co;
   media-src 'self' blob: https://*.supabase.co;
   font-src 'self';
   connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+  frame-src https://conversations-widget.brevo.com;
   object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';
   upgrade-insecure-requests
 Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
@@ -140,7 +143,8 @@ X-Permitted-Cross-Domain-Policies: none
 
 Notes:
 
-- `script-src 'self'` means **no inline `<script>` blocks** and no third-party scripts. All JavaScript is loaded from module files. Adding analytics requires updating the CSP deliberately.
+- `script-src 'self' https://conversations-widget.brevo.com` means **no inline `<script>` blocks**. The only third-party script is the Brevo Conversations loader, injected by `js/livechat.js`; `frame-src` allows its chat iframe. Adding analytics or another embed requires updating the CSP deliberately.
+- The official Brevo inline snippet is intentionally not pasted into the HTML. `js/livechat.js` performs the same bootstrap from a local file. Set `LIVECHAT_ENABLED=false` in the public environment to disable chat without changing the CSP.
 - `style-src 'unsafe-inline'` is required by the existing inline `style` attributes used for layout details. Do not loosen `script-src`.
 - Connect/image/media directives allow any Supabase project over HTTPS and WSS. If you use a custom Supabase domain, replace `*.supabase.co`.
 - HSTS is safe only once the domain is permanently HTTPS. Start with a shorter `max-age` if you are migrating, then raise it.
