@@ -1,20 +1,21 @@
 # Security and data handling
 
-Trump Offers is a **demonstration platform**. This document describes the security model, what the project deliberately does not do, and the controls to review before any public deployment.
+Trump Offers is a rewards, recruitment and digital-card platform. This document describes the security model, what the project deliberately does not do, and the controls to review before any public deployment.
 
 ---
 
-## 1. Demonstration disclaimer
+## 1. Platform status and disclaimers
 
-Keep the following visible in any deployment:
+Keep the following accurate in any deployment:
 
-- The $30,000 balance is simulated. No real money is held, transferred or withdrawable.
-- Claims and withdrawals are records in a demonstration workflow. No bank, card network or payment processor is connected.
-- Virtual cards are fictional. The card number is generated for display and verification only; it is not a payment instrument. The project never asks for a PIN, CVV, full real card number or online-banking credentials.
+- Reward balances and claims are platform records. Money moves only when a payout provider or bank is configured and an administrator confirms settlement.
+- Withdrawals are reviewed by an administrator. Approval, processing and completion are separate states; completion must not be marked before the payout is confirmed.
+- Bank details submitted for a withdrawal are encrypted at rest with `pgcrypto`. Card details are tokenised by the payment provider and are never stored by Trump Offers.
+- Virtual cards are presentation only. The card number is generated for display and verification; it is not a payment instrument. The project never asks for a PIN, CVV, full real card number or online-banking credentials.
 - Careers listings in the seed data are illustrative. Replace them with real roles before using the recruitment flow publicly.
 - The platform is not a bank, lender, remittance service or financial adviser.
 
-The interface labels these facts throughout: the demo ribbon, dashboard copy, reward cards, withdrawal form, card studio, legal pages and footer. Do not remove those labels when rebranding.
+Payment-provider integration is configuration-dependent. When no provider is configured, card connection and provider payouts fail closed with an explicit message rather than reporting false success. Do not remove those messages or the settlement confirmation requirement.
 
 ---
 
@@ -66,7 +67,12 @@ RLS is enabled on every public table. Summary:
 | `user_roles` | Own roles or admin | Admin | Admin | Admin |
 | `reward_accounts` | Own row or admin | Via provisioning trigger | Admin | — |
 | `reward_claims` | Own rows or admin | **RPC only** | Admin | — |
-| `withdrawals` | Own rows or admin | **RPC only** | Admin | — |
+| `withdrawals` | Own rows or admin | **RPC only** | Admin (RPC) | — |
+| `withdrawal_methods` | Public when enabled | Admin | Admin | — |
+| `crypto_networks` | Public when enabled | Admin | Admin | — |
+| `payment_accounts` | Own rows or admin | Own via adapter | Own (revoke) or admin | — |
+| `withdrawal_status_history` | Own rows or admin | Via RPC/trigger | — | — |
+| `admin_audit_logs` | Admin | Via RPC | — | — |
 | `notifications` | Own rows or admin | Via triggers/RPCs | Own (mark read) | — |
 | `activity_logs` | Own rows or admin | Via triggers/RPCs | — | — |
 | `job_vacancies` | Public when `open`, all for admin | Admin | Admin | Admin |
@@ -87,11 +93,14 @@ Additional controls:
 
 | Function | Callable by | Purpose |
 | --- | --- | --- |
-| `create_reward_claim()` | `authenticated` | Creates one active simulated claim |
-| `request_withdrawal(numeric,text,text,text)` | `authenticated` | Validates amount/method/masked destination and available balance |
+| `create_reward_claim()` | `authenticated` | Creates one active reward claim |
+| `request_withdrawal(...)` | `authenticated` | Validates amount, method, bank/crypto/card details and available balance; reserves funds and writes status history |
+| `admin_update_withdrawal_status(...)` | Admin only | Enforces status transitions, provider confirmation, balance deduction and audit logging |
+| `admin_get_withdrawal_details(uuid)` | Admin only | Decrypts bank details for review |
+| `admin_add_withdrawal_note(uuid,text)` | Admin only | Writes an internal note and audit entry |
 | `submit_job_application(...)` | `anon`, `authenticated` | Submits an application, optionally linking the signed-in user |
 | `track_application(text,text)` | `anon`, `authenticated` | Returns limited status for an exact reference + email pair |
-| `create_card_application(text,text)` | `authenticated` | Creates a fictional card request with a generated number |
+| `create_card_application(text,text)` | `authenticated` | Creates a card request with a generated number |
 | `verify_demo_card(text,text)` | `anon`, `authenticated` | Returns a public-safe payload for reference + last four |
 | `is_admin()` | `anon`, `authenticated` | RLS predicate |
 | `next_reference(text)` | No client access | Atomic reference generation; used inside definer RPCs |
@@ -186,15 +195,15 @@ Practices:
 Collected data:
 
 - account: name, email, phone (optional), location (optional), password hash (Supabase);
-- rewards: simulated balance, claims, withdrawals with masked destination labels;
+- rewards: balance, claims, withdrawals with encrypted bank details, tokenised card references and masked destination labels;
 - recruitment: application details and an uploaded CV;
-- cards: chosen design, cardholder name, generated fictional number;
+- cards: chosen design, cardholder name, generated display number;
 - contact: name, email, phone, subject and message.
 
 Guidelines:
 
-- Do not add fields for real bank accounts, card numbers, PINs, CVVs, government IDs or passwords.
-- The withdrawal form explicitly refuses destination labels with eight or more consecutive digits. Keep that validation.
+- Do not add fields for full card numbers, PINs, CVVs, government IDs or passwords. Bank account details are accepted only through the withdrawal RPC and stored encrypted.
+- The withdrawal form validates IBAN checksums and wallet-address formats. Keep that validation.
 - Publish a privacy notice with lawful basis, retention periods, processors (Supabase, hosting, email) and contact details. Review the supplied `privacy.html` with counsel.
 - Define CV retention (for example, six months after a decision) and delete objects and records on schedule.
 - Support access and deletion requests: delete the auth user to cascade member data; remove stored CVs separately.
@@ -247,8 +256,9 @@ A service-role key in client code is a critical incident: rotate it immediately,
 - [ ] Site-media writes restricted to admins.
 - [ ] CSP, HSTS, nosniff, frame denial and permissions policy present in production.
 - [ ] No inline scripts added; console clean on every page.
-- [ ] Withdrawal validation rejects full banking details.
-- [ ] Demonstration labels visible on rewards, withdrawals, cards and legal pages.
+- [ ] Withdrawal validation rejects invalid IBANs, malformed wallet addresses and missing payout details.
+- [ ] Payment provider keys are configured server-side; without them, card connection and provider payouts fail closed.
+- [ ] Administrator completion requires explicit payout confirmation and writes an audit entry.
 - [ ] Privacy notice, terms and retention policy reviewed.
 - [ ] Rate limiting/CAPTCHA considered for public forms.
 - [ ] Backups enabled; restore tested.

@@ -1,8 +1,8 @@
 # Trump Offers
 
-A premium demonstration platform for **simulated rewards, recruitment and virtual cards**, built as a multi-page site with HTML5, CSS3, vanilla JavaScript and Supabase.
+A premium platform for **rewards, recruitment and digital cards**, built as a multi-page site with HTML5, CSS3, vanilla JavaScript and Supabase.
 
-> **Demonstration only.** Trump Offers does not hold, transfer, or custody real money, does not issue payment instruments, and does not collect banking credentials, PINs, CVVs or full card numbers. The $30,000 balance, the processing windows, the card numbers and every "payment" are fictional and clearly labelled in the interface. See [docs/SECURITY.md](docs/SECURITY.md).
+> **Platform records and provider-dependent payouts.** Trump Offers does not custody money or issue payment instruments, and never asks for a PIN, CVV or full card number. Withdrawals are reviewed by an administrator and completed only after confirmed settlement. Card connection and provider payouts require configured credentials; without them those actions fail closed with an explicit message. See [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
 
@@ -16,14 +16,14 @@ A premium demonstration platform for **simulated rewards, recruitment and virtua
 | `register.html` | Account creation with validation and profile provisioning |
 | `login.html` | Sign in, password reset request and recovery-password mode |
 | `dashboard.html` | Member overview: balance, active claim, recent withdrawals, notifications and activity |
-| `rewards.html` | Fixed $30,000 simulated balance, multi-step claim workflow, live claim progress and claim history |
-| `withdraw.html` | Simulated withdrawal request (minimum $100) with masked destinations only, history and status tracking |
+| `rewards.html` | $30,000 reward balance, multi-step claim workflow, live claim progress and claim history |
+| `withdraw.html` | Bank, cryptocurrency and card withdrawals with encrypted details, validation, review, history and status tracking |
 | `careers.html` | Live vacancies pulled from the database with department and location filters |
 | `job-details.html` | Full vacancy description, responsibilities, requirements and benefits |
 | `apply.html` | Application form with CV upload, validation and a unique `TO-JB-*` reference |
 | `track.html` | Application tracking by exact reference + email, with a five-step status timeline and 3–4 business-day estimate |
-| `card.html` | Virtual card studio: four designs, cardholder name, generated fictional details and request history |
-| `card-verify.html` | Public verification of a demonstration card by reference + last four digits |
+| `card.html` | Card studio: four designs, cardholder name, generated display details and request history |
+| `card-verify.html` | Public verification of a card by reference + last four digits |
 | `contact.html` | Contact form, office details, response expectations and support channels |
 | `privacy.html`, `terms.html` | Full legal copy with sticky section navigation |
 | `404.html` | Branded not-found page |
@@ -134,19 +134,24 @@ Never place a service-role key in `.env`, `js/env.js` or any browser file.
 | --- | --- |
 | `profiles` | Member identity, contact details and account status |
 | `user_roles` | `user` / `admin` grants, checked by `public.is_admin()` |
-| `reward_accounts` | Fixed $30,000 simulated balance and account status |
-| `reward_claims` | Claim references, stage/progress, simulated completion window |
-| `withdrawals` | Simulated payout requests with masked destination labels |
+| `reward_accounts` | $30,000 reward balance and account status |
+| `reward_claims` | Claim references, stage/progress and verification window |
+| `withdrawals` | Bank, crypto and card payout requests with encrypted details and settlement state |
+| `withdrawal_methods` | Configurable methods, limits, fees and processing windows |
+| `crypto_networks` | Supported assets, networks and wallet-address validation |
+| `payment_accounts` | Tokenised card and payout destinations |
+| `withdrawal_status_history` | Append-only status and note history |
+| `admin_audit_logs` | Administrative action audit trail |
 | `notifications` | In-app status notifications for members |
 | `activity_logs` | Audit trail for member and administrator actions |
 | `job_vacancies` | Careers listings |
 | `job_applications` | Applications, CV metadata, review status and notes |
-| `card_applications` | Fictional card designs, generated numbers and approval status |
+| `card_applications` | Card designs, generated display numbers and approval status |
 | `contact_messages` | Contact form inbox |
 | `site_settings` | Public site copy, contact details and intro video configuration |
 | `reference_sequences` | Atomic human-readable reference counters |
 
-RPCs: `create_reward_claim`, `request_withdrawal`, `submit_job_application`, `track_application`, `create_card_application`, `verify_demo_card`. The privileged `grant_admin(email)` helper is intentionally not executable by `anon` or `authenticated`.
+RPCs: `create_reward_claim`, `request_withdrawal`, `admin_update_withdrawal_status`, `admin_get_withdrawal_details`, `admin_add_withdrawal_note`, `submit_job_application`, `track_application`, `create_card_application`, `verify_demo_card`. The privileged `grant_admin(email)` helper is intentionally not executable by `anon` or `authenticated`.
 
 References use the format `TO-RW-26-000001`, `TO-WD-26-000001`, `TO-JB-26-000001`, `TO-CD-26-000001`.
 
@@ -187,4 +192,4 @@ npm run check    # validate local links and asset references
 
 ## Licence
 
-Unlicensed demonstration project. Review the stock photography and font licences before commercial use. See `docs/SECURITY.md` for the demonstration disclaimer that must remain visible in any deployment.
+Unlicensed project. Review the stock photography and font licences before commercial use. See `docs/SECURITY.md` for the platform-status and data-handling requirements that must remain accurate in any deployment.

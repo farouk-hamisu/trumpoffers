@@ -23,7 +23,7 @@ create table if not exists public.reward_claims (
   id                      uuid        primary key default gen_random_uuid(),
   user_id                 uuid        not null references public.profiles (id) on delete cascade,
   reference               text        not null unique,
-  reward                  text        not null default 'Trump demonstration reward',
+  reward                  text        not null default 'Trump Offers reward',
   amount                  numeric(12,2) not null check (amount >= 0),
   status                  text        not null default 'confirmed'
                                       check (status in ('confirmed', 'verifying', 'processing', 'completed', 'cancelled')),
@@ -185,7 +185,7 @@ begin
   values (
     new.user_id,
     'Reward claim update',
-    format('Demonstration claim %s is now marked “%s”.', new.reference, replace(new.status, '_', ' ')),
+    format('Claim %s is now marked “%s”.', new.reference, replace(new.status, '_', ' ')),
     'reward'
   );
 
@@ -219,8 +219,8 @@ begin
     new.user_id,
     'Withdrawal update',
     case
-      when new.status = 'paid' then format('Demonstration withdrawal %s has been marked complete. No real funds were transferred.', new.reference)
-      else format('Demonstration withdrawal %s is now marked “%s”.', new.reference, replace(new.status, '_', ' '))
+      when new.status = 'paid' then format('Withdrawal %s has been marked complete.', new.reference)
+      else format('Withdrawal %s is now marked “%s”.', new.reference, replace(new.status, '_', ' '))
     end,
     'withdrawal'
   );
@@ -244,7 +244,7 @@ create trigger withdrawals_notify_status
   execute function public.on_withdrawal_status_changed();
 
 -- ----------------------------------------------------------------------------
--- RPC · create a simulated reward claim
+-- RPC · create a reward claim
 -- ----------------------------------------------------------------------------
 create or replace function public.create_reward_claim()
 returns public.reward_claims
@@ -286,7 +286,7 @@ begin
     raise exception 'Your reward account is not available.';
   end if;
 
-  v_hours := floor(random() * 6 + 5)::integer; -- 5–10 hour simulated window
+  v_hours := floor(random() * 6 + 5)::integer; -- 5–10 hour verification window
   v_ref := public.next_reference('TO-RW');
 
   insert into public.reward_claims (
@@ -296,12 +296,12 @@ begin
   values (
     v_uid,
     v_ref,
-    'Trump demonstration reward',
+    'Trump Offers reward',
     v_account.balance,
     'verifying',
     2,
     22,
-    'Demonstration verification in progress. No real funds are involved.',
+    'Verification in progress. Funds are not transferred until the claim is completed.',
     now(),
     now() + (v_hours * interval '1 hour')
   )
@@ -311,12 +311,12 @@ begin
   values (
     v_uid,
     'Reward claim received',
-    format('Claim %s is being verified in the demonstration environment. Estimated processing window: %s hours.', v_ref, v_hours),
+    format('Claim %s is being verified. Estimated processing window: %s hours.', v_ref, v_hours),
     'reward'
   );
 
   insert into public.activity_logs (user_id, action, entity_type, description)
-  values (v_uid, 'claim.created', 'reward_claim', format('Demonstration reward claim %s submitted.', v_ref));
+  values (v_uid, 'claim.created', 'reward_claim', format('Reward claim %s submitted.', v_ref));
 
   return v_claim;
 end;
@@ -326,7 +326,7 @@ revoke all on function public.create_reward_claim() from public;
 grant execute on function public.create_reward_claim() to authenticated;
 
 -- ----------------------------------------------------------------------------
--- RPC · request a simulated withdrawal
+-- RPC · request a withdrawal (superseded by the withdrawals v2 schema)
 -- ----------------------------------------------------------------------------
 create or replace function public.request_withdrawal(
   p_amount numeric,
@@ -352,11 +352,11 @@ begin
   end if;
 
   if p_amount is null or p_amount < 100 then
-    raise exception 'The minimum demonstration withdrawal is $100.';
+    raise exception 'The minimum withdrawal is $100.';
   end if;
 
   if p_method not in ('bank_transfer', 'digital_wallet', 'card_credit') then
-    raise exception 'Select a demonstration withdrawal method.';
+    raise exception 'Select a withdrawal method.';
   end if;
 
   if p_destination_label is null or length(trim(p_destination_label)) < 2 then
@@ -387,7 +387,7 @@ begin
   v_available := v_account.balance - v_active;
 
   if p_amount > v_available then
-    raise exception 'That amount exceeds your available demonstration balance.';
+    raise exception 'That amount exceeds your available balance.';
   end if;
 
   v_ref := public.next_reference('TO-WD');
@@ -399,7 +399,7 @@ begin
   values (
     v_uid, v_ref, p_amount, p_method, trim(p_destination_label), trim(p_account_name),
     'processing',
-    'Simulated withdrawal submitted for demonstration processing.',
+    'Withdrawal submitted for processing.',
     now() + interval '3 days'
   )
   returning * into v_row;
@@ -408,12 +408,12 @@ begin
   values (
     v_uid,
     'Withdrawal submitted',
-    format('Demonstration withdrawal %s is processing. No real transfer will occur.', v_ref),
+    format('Withdrawal %s is processing.', v_ref),
     'withdrawal'
   );
 
   insert into public.activity_logs (user_id, action, entity_type, description)
-  values (v_uid, 'withdrawal.created', 'withdrawal', format('Demonstration withdrawal %s requested.', v_ref));
+  values (v_uid, 'withdrawal.created', 'withdrawal', format('Withdrawal %s requested.', v_ref));
 
   return v_row;
 end;

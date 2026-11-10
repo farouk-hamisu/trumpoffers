@@ -10,5 +10,8 @@ window.TRUMP_ENV = {
   "SUPABASE_ANON_KEY": "sb_publishable_RpuovrMP6VXnOh5xwpsIEw_55b1aLEu",
   "DEMO_MODE": "false",
   "SITE_URL": "http://localhost:8080",
-  "SUPPORT_EMAIL": "concierge@trumpoffers.com"
+  "SUPPORT_EMAIL": "concierge@trumpoffers.com",
+  "CARD_CONNECT_URL": "",
+  "CARD_PROVIDER": "provider",
+  "BANK_VERIFICATION_URL": ""
 };

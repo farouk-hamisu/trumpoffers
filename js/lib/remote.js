@@ -8,13 +8,27 @@ import config from '../config.js';
 
 const { createClient } = window.supabase;
 
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
 function friendlyError(error) {
   const message = String(error?.message || 'Something went wrong. Please try again.');
-  if (/Invalid login credentials/i.test(message)) return new Error('The email or password entered is incorrect.');
-  if (/Email not confirmed/i.test(message)) return new Error('Please confirm your email address before signing in.');
-  if (/already registered/i.test(message)) return new Error('An account already exists with this email address.');
-  if (/Password should be/i.test(message)) return new Error('Use a password with at least 8 characters.');
-  if (/rate limit/i.test(message)) return new Error('Too many attempts. Please wait a moment and try again.');
+  if (/Invalid login credentials|User not found|No user found/i.test(message)) {
+    return new Error('The email or password entered is incorrect.');
+  }
+  if (/Email not confirmed|email.*not.*confirmed/i.test(message)) {
+    return new Error('Please confirm your email address before signing in. You can request a new confirmation email below.');
+  }
+  if (/already registered|already been registered|User already registered/i.test(message)) {
+    return new Error('An account already exists with this email address.');
+  }
+  if (/Password should be|password.*least 8/i.test(message)) {
+    return new Error('Use a password with at least 8 characters.');
+  }
+  if (/rate limit|too many requests/i.test(message)) {
+    return new Error('Too many attempts. Please wait a moment and try again.');
+  }
   if (/duplicate key/i.test(message)) return new Error('A record with those details already exists.');
   if (/row-level security/i.test(message)) return new Error('You do not have permission to perform this action.');
   if (/could not find the table|schema cache|relation .* does not exist/i.test(message)) {
@@ -48,17 +62,33 @@ class SupabaseBackend {
   }
 
   async profileFor(userId) {
-    const [{ data: profile, error }, { data: roles, error: roleError }] = await Promise.all([
-      this.client
-        .from('profiles')
-        .select('id,email,full_name,phone,location,avatar_url,status,created_at')
-        .eq('id', userId)
-        .maybeSingle(),
-      this.client.from('user_roles').select('role').eq('user_id', userId),
-    ]);
-    if (error) throw friendlyError(error);
-    if (roleError) throw friendlyError(roleError);
-    if (!profile) throw new Error('Your member profile is not available. Contact the platform administrator.');
+    const read = async () => {
+      const [{ data: profile, error }, { data: roles, error: roleError }] = await Promise.all([
+        this.client
+          .from('profiles')
+          .select('id,email,full_name,phone,location,avatar_url,status,created_at')
+          .eq('id', userId)
+          .maybeSingle(),
+        this.client.from('user_roles').select('role').eq('user_id', userId),
+      ]);
+      if (error) throw friendlyError(error);
+      if (roleError) throw friendlyError(roleError);
+      return { profile, roles };
+    };
+
+    let { profile, roles } = await read();
+
+    // Accounts created before the provisioning trigger existed (or while the
+    // database was being initialised) may have an auth user but no profile.
+    // Repair it on first sign-in instead of locking the member out.
+    if (!profile) {
+      const { error: repairError } = await this.client.rpc('ensure_profile');
+      if (!repairError) {
+        ({ profile, roles } = await read());
+      }
+    }
+
+    if (!profile) throw new Error('Your member profile could not be loaded. Please contact support.');
     const role = (roles || []).some((r) => r.role === 'admin') ? 'admin' : 'user';
     return { ...profile, role };
   }
@@ -78,7 +108,10 @@ class SupabaseBackend {
       return { user: { ...data.session.user, ...profile }, profile, session: data.session };
     },
     signIn: async ({ email, password }) => {
-      const { data, error } = await this.client.auth.signInWithPassword({ email: email.trim(), password });
+      const { data, error } = await this.client.auth.signInWithPassword({
+        email: normalizeEmail(email),
+        password,
+      });
       if (error) throw friendlyError(error);
       const profile = await this.profileFor(data.user.id);
       if (profile.status !== 'active') {
@@ -88,8 +121,9 @@ class SupabaseBackend {
       return { user: { ...data.user, ...profile }, profile, session: data.session };
     },
     signUp: async ({ fullName, email, password, phone, location }) => {
+      const normalized = normalizeEmail(email);
       const { data, error } = await this.client.auth.signUp({
-        email: email.trim().toLowerCase(),
+        email: normalized,
         password,
         options: {
           data: { full_name: fullName, phone: phone || '', location: location || '' },
@@ -100,12 +134,22 @@ class SupabaseBackend {
       if (!data.session) {
         return {
           requiresConfirmation: true,
-          email: email.trim().toLowerCase(),
+          email: normalized,
           message: 'Check your inbox to confirm your email address, then sign in.',
         };
       }
+      await this.client.rpc('ensure_profile');
       const profile = await this.profileFor(data.user.id);
       return { user: { ...data.user, ...profile }, profile, session: data.session };
+    },
+    resendConfirmation: async (email) => {
+      const { error } = await this.client.auth.resend({
+        type: 'signup',
+        email: normalizeEmail(email),
+        options: { emailRedirectTo: `${config.siteUrl}/login.html` },
+      });
+      if (error) throw friendlyError(error);
+      return { message: 'A new confirmation email has been sent. Check your inbox and spam folder.' };
     },
     signOut: async () => {
       const { error } = await this.client.auth.signOut();
@@ -174,7 +218,7 @@ class SupabaseBackend {
     const uid = session.session.user.id;
     const [{ data: account, error }, { data: withdrawals, error: wError }] = await Promise.all([
       this.client.from('reward_accounts').select('*').eq('user_id', uid).maybeSingle(),
-      this.client.from('withdrawals').select('amount,status').eq('user_id', uid).in('status', ['pending', 'reviewing', 'processing']),
+      this.client.from('withdrawals').select('amount,status').eq('user_id', uid).in('status', ['pending', 'reviewing', 'approved', 'processing']),
     ]);
     if (error) throw friendlyError(error);
     if (wError) throw friendlyError(wError);
@@ -222,15 +266,93 @@ class SupabaseBackend {
     return data || [];
   }
 
-  async createWithdrawal({ amount, method, destinationLabel, accountName }) {
+  async createWithdrawal(payload) {
     const { data, error } = await this.client.rpc('request_withdrawal', {
-      p_amount: Number(amount),
-      p_method: method,
-      p_destination_label: destinationLabel,
-      p_account_name: accountName,
+      p_amount: Number(payload.amount),
+      p_method: payload.method,
+      p_account_name: payload.accountName,
+      p_currency: payload.currency || 'USD',
+      p_bank_name: payload.bankName || null,
+      p_bank_code: payload.bankCode || null,
+      p_account_number: payload.accountNumber || null,
+      p_account_reference: payload.accountReference || null,
+      p_crypto_asset: payload.cryptoAsset || null,
+      p_crypto_network: payload.cryptoNetwork || null,
+      p_wallet_address: payload.walletAddress || null,
+      p_card_payment_account_id: payload.cardPaymentAccountId || null,
+      p_idempotency_key: payload.idempotencyKey || null,
     });
     if (error) throw friendlyError(error);
     return single(data);
+  }
+
+  async getWithdrawalMethods() {
+    const [{ data: methods, error }, { data: networks, error: networkError }] = await Promise.all([
+      this.client.from('withdrawal_methods').select('*').eq('enabled', true).order('sort_order'),
+      this.client.from('crypto_networks').select('*').eq('enabled', true).order('sort_order'),
+    ]);
+    if (error) throw friendlyError(error);
+    if (networkError) throw friendlyError(networkError);
+    return { methods: methods || [], networks: networks || [] };
+  }
+
+  async getWithdrawalDetail(id) {
+    const { data, error } = await this.client.rpc('admin_get_withdrawal_details', { p_id: id });
+    if (error) throw friendlyError(error);
+    return data;
+  }
+
+  async getWithdrawalHistory(id) {
+    const { data, error } = await this.client
+      .from('withdrawal_status_history')
+      .select('*')
+      .eq('withdrawal_id', id)
+      .order('created_at', { ascending: true });
+    if (error) throw friendlyError(error);
+    return data || [];
+  }
+
+  async getPaymentAccounts() {
+    const { data, error } = await this.client
+      .from('payment_accounts')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw friendlyError(error);
+    return data || [];
+  }
+
+  async savePaymentAccount(account) {
+    const { data: session } = await this.client.auth.getSession();
+    if (!session.session) throw new Error('Your session has ended. Please sign in again.');
+    const payload = {
+      user_id: session.session.user.id,
+      type: account.type,
+      provider: account.provider || 'manual',
+      provider_token: account.providerToken || null,
+      label: account.label || '',
+      account_holder: account.accountHolder || null,
+      bank_name: account.bankName || null,
+      bank_code: account.bankCode || null,
+      account_last4: account.accountLast4 || null,
+      iban_last4: account.ibanLast4 || null,
+      crypto_asset: account.cryptoAsset || null,
+      crypto_network: account.cryptoNetwork || null,
+      wallet_address: account.walletAddress || null,
+      card_brand: account.cardBrand || null,
+      card_last4: account.cardLast4 || null,
+      card_exp_month: account.cardExpMonth || null,
+      card_exp_year: account.cardExpYear || null,
+      is_default: Boolean(account.isDefault),
+    };
+    const { data, error } = await this.client.from('payment_accounts').insert(payload).select('*').single();
+    if (error) throw friendlyError(error);
+    return data;
+  }
+
+  async deletePaymentAccount(id) {
+    const { error } = await this.client.from('payment_accounts').update({ status: 'revoked' }).eq('id', id);
+    if (error) throw friendlyError(error);
+    return true;
   }
 
   async getNotifications() {
@@ -572,18 +694,25 @@ class SupabaseBackend {
     }));
   }
 
-  async updateWithdrawalStatus(id, status, note = '') {
-    const patch = { status };
-    if (note) patch.note = note;
-    if (status === 'paid') patch.processed_at = new Date().toISOString();
-    const { data, error } = await this.client
-      .from('withdrawals')
-      .update(patch)
-      .eq('id', id)
-      .select('*')
-      .single();
+  async updateWithdrawalStatus(id, status, note = '', providerConfirmed = false, providerReference = '') {
+    const { data, error } = await this.client.rpc('admin_update_withdrawal_status', {
+      p_id: id,
+      p_status: status,
+      p_note: note,
+      p_provider_reference: providerReference || null,
+      p_provider_confirmed: Boolean(providerConfirmed),
+    });
     if (error) throw friendlyError(error);
-    return data;
+    return single(data);
+  }
+
+  async addWithdrawalNote(id, note) {
+    const { data, error } = await this.client.rpc('admin_add_withdrawal_note', {
+      p_id: id,
+      p_note: note,
+    });
+    if (error) throw friendlyError(error);
+    return single(data);
   }
 
   async getResumeUrl(path) {

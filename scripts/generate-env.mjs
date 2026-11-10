@@ -40,13 +40,16 @@ const SUPABASE_ANON_KEY = pick('SUPABASE_ANON_KEY').trim();
 const SITE_URL = pick('SITE_URL').trim().replace(/\/$/, '');
 const DEMO_MODE = pick('DEMO_MODE', 'false').trim();
 const SUPPORT_EMAIL = pick('SUPPORT_EMAIL', 'concierge@trumpoffers.com').trim();
+const CARD_CONNECT_URL = pick('CARD_CONNECT_URL').trim();
+const CARD_PROVIDER = pick('CARD_PROVIDER', 'provider').trim();
+const BANK_VERIFICATION_URL = pick('BANK_VERIFICATION_URL').trim();
 
 const configured = /^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length >= 40;
 
 if (!configured) {
   console.warn(
-    '[env] Supabase is not configured. The site will run in local development mode.\n' +
-      '      Set SUPABASE_URL and SUPABASE_ANON_KEY in .env for production.'
+    '[env] Supabase is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY in .env for production.\n' +
+      '      The local adapter is available only with DEMO_MODE=true.'
   );
 }
 
@@ -64,6 +67,9 @@ window.TRUMP_ENV = ${JSON.stringify(
     DEMO_MODE,
     SITE_URL,
     SUPPORT_EMAIL,
+    CARD_CONNECT_URL,
+    CARD_PROVIDER,
+    BANK_VERIFICATION_URL,
   },
   null,
   2

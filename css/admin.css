@@ -1385,3 +1385,76 @@
   flex: none;
 }
 
+
+/* --------------------------------------------------------------------------
+   Withdrawal review drawer
+   -------------------------------------------------------------------------- */
+.admin-detail__section {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-dark);
+}
+
+.admin-detail__section-title {
+  margin-bottom: 12px;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold-light);
+}
+
+.wb-timeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.wb-timeline__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 13px minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.wb-timeline__item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 16px;
+  bottom: 0;
+  width: 1px;
+  background: var(--line-dark);
+}
+
+.wb-timeline__dot {
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 13px;
+  margin-top: 2px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  background: var(--ink);
+}
+
+.wb-timeline__title {
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.wb-timeline__time {
+  margin-top: 2px;
+  font-size: 0.56rem;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+
+.wb-timeline__note {
+  margin-top: 6px;
+  font-size: 0.7rem;
+  line-height: 1.55;
+  color: var(--text-dim);
+}

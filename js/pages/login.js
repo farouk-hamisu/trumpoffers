@@ -125,6 +125,30 @@ async function boot() {
       location.replace(safeNext(destination, 'dashboard.html'));
     } catch (error) {
       alertBox(error.message || 'We could not complete sign in.');
+      const resendWrap = $('[data-resend-wrap]');
+      if (resendWrap) resendWrap.hidden = !/confirm your email/i.test(error.message || '');
+      setLoading(button, false);
+    }
+  });
+
+  $('[data-resend-confirmation]')?.addEventListener('click', async () => {
+    const email = $('#signin-email')?.value.trim() || '';
+    if (!email || !validateEmail(email)) {
+      fieldError($('#signin-email'), 'Enter the email address you registered with.');
+      focusFirstError($('#signin-form'));
+      return;
+    }
+    const button = $('[data-resend-confirmation]');
+    setLoading(button, true, 'Sending…');
+    try {
+      const api = await getApi();
+      const result = await api.auth.resendConfirmation(email);
+      alertBox(result.message || 'A new confirmation email has been sent.', 'success');
+      const resendWrap = $('[data-resend-wrap]');
+      if (resendWrap) resendWrap.hidden = true;
+    } catch (error) {
+      alertBox(error.message || 'We could not resend the confirmation email.');
+    } finally {
       setLoading(button, false);
     }
   });

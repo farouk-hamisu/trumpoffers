@@ -50,11 +50,12 @@ The migrations are ordered by timestamp and must be applied in filename order:
 | `20261108120100_profiles_roles.sql` | Profiles, roles, `is_admin()`, profile RLS |
 | `20261108120200_rewards.sql` | Reward accounts, claims, withdrawals, notifications, activity, claim/withdrawal RPCs |
 | `20261108120300_recruitment.sql` | Vacancies, applications, application notification trigger, submit/track RPCs |
-| `20261108120400_cards.sql` | Fictional card applications, number generator, create/verify RPCs |
+| `20261108120400_cards.sql` | Card applications, display-number generator, create/verify RPCs |
 | `20261108120500_contact_settings.sql` | Contact inbox and public site settings |
 | `20261108120600_provisioning.sql` | New-user provisioning trigger and privileged `grant_admin()` |
 | `20261108120700_storage.sql` | `resumes` and `site-media` buckets with policies |
-| `20261108120800_seed.sql` | Demo settings and sample vacancies |
+| `20261108120800_seed.sql` | Seed settings and sample vacancies |
+| `20261109120000_withdrawals_v2.sql` | Withdrawal methods, crypto networks, encrypted payout details, payment accounts, status history, audit logs and hardened withdrawal/admin RPCs |
 
 ### Option A — One-paste SQL editor (fastest)
 
@@ -114,6 +115,10 @@ SUPABASE_ANON_KEY=<anon-or-publishable-key>
 SITE_URL=https://your-domain.example
 DEMO_MODE=false
 SUPPORT_EMAIL=concierge@trumpoffers.com
+# Optional payout providers. Leave blank to fail closed until configured.
+CARD_CONNECT_URL=
+CARD_PROVIDER=
+BANK_VERIFICATION_URL=
 ```
 
 Then generate the browser config:
@@ -173,7 +178,7 @@ The password reset flow sends the user to `login.html?mode=update`, where `js/pa
 
 4. Sign in at `/admin/login.html`. Non-admin accounts are redirected to the member dashboard with an "administrator access only" notice.
 
-The `handle_new_user` trigger provisions a profile, a `user` role, and a $30,000 simulated reward account for every new auth user. If a user was created before the trigger existed, backfill with the statements at the end of `20261108120600_provisioning.sql`.
+The `handle_new_user` trigger provisions a profile, a `user` role, and a $30,000 reward account for every new auth user. If a user was created before the trigger existed, backfill with the statements at the end of `20261108120600_provisioning.sql`.
 
 ### Additional administrators
 
@@ -240,9 +245,9 @@ Use a private browser window and check:
 
 1. **Registration** creates a profile, role and reward account (inspect `profiles`, `user_roles`, `reward_accounts`).
 2. **Claim** creates one active claim and a notification; a second claim is rejected while the first is active.
-3. **Withdrawal** rejects amounts below $100 and destinations containing 8+ consecutive digits; available balance excludes in-flight requests.
+3. **Withdrawal** rejects amounts below $100, invalid IBANs and malformed wallet addresses; available balance excludes in-flight requests; an approved request completes only after administrator confirmation.
 4. **Application** submits with and without a signed-in session, stores a CV under `applications/…`, and tracking matches reference + email only.
-5. **Card** creates a 16-digit fictional number with a valid Luhn check digit; verification returns only the last four digits and never the full number.
+5. **Card** creates a 16-digit display number with a valid Luhn check digit; verification returns only the last four digits and never the full number.
 6. **Contact** inserts a message visible in the admin inbox.
 7. **Admin** status changes generate the expected member notification and activity entry.
 8. **RLS**: as member A, a direct API query must not return member B's claims, withdrawals, applications, cards or notifications.
@@ -277,4 +282,4 @@ supabase db reset                              # local database + migrations + s
 rm -rf .env js/env.js && npm run env           # clear browser config
 ```
 
-In the browser, clear site data to remove any cached Supabase session. The local development fixture (`DEMO_MODE=true`) can be reset from **Admin → Website & video → Reset demonstration data**; that control is hidden in production mode.
+In the browser, clear site data to remove any cached Supabase session. The local development fixture (`DEMO_MODE=true`) can be reset from **Admin → Website & video → Reset local cache**; that control is hidden in production mode.

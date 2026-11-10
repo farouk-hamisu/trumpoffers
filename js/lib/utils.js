@@ -103,10 +103,12 @@ export const STATUS = {
   },
   withdrawal: {
     pending: { label: 'Pending', tone: 'warning' },
-    reviewing: { label: 'In review', tone: 'info' },
+    reviewing: { label: 'Under review', tone: 'info' },
+    approved: { label: 'Approved', tone: 'info' },
     processing: { label: 'Processing', tone: 'info' },
-    paid: { label: 'Completed', tone: 'success' },
-    rejected: { label: 'Declined', tone: 'danger' },
+    completed: { label: 'Completed', tone: 'success' },
+    rejected: { label: 'Rejected', tone: 'danger' },
+    cancelled: { label: 'Cancelled', tone: 'plain' },
   },
   application: {
     submitted: { label: 'Submitted', tone: 'plain' },

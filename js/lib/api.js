@@ -14,26 +14,22 @@ export async function getApi() {
   if (instance) return instance;
   if (!loading) {
     loading = (async () => {
+      const supabaseConfigured = Boolean(config.supabaseUrl && config.supabaseAnonKey);
       if (DEMO_MODE) {
+        // The local adapter is an explicit development fixture only. It is
+        // never selected as a silent fallback, because that would create
+        // accounts in browser storage that do not exist in Supabase.
         instance = new LocalBackend();
         isDemo = true;
       } else {
-        try {
-          const { default: SupabaseBackend } = await import('./remote.js');
-          const remoteInstance = new SupabaseBackend();
-          if (remoteInstance.init) await remoteInstance.init();
-          // Quick probe to ensure Supabase schema is reachable
-          const { error } = await remoteInstance.client.from('jobs').select('id').limit(1);
-          if (error && /schema cache|relation .* does not exist|not found/i.test(error.message)) {
-            throw error;
-          }
-          instance = remoteInstance;
-          isDemo = false;
-        } catch (err) {
-          console.info('[Trump Offers] Supabase schema not yet detected; running with persistent local database engine.');
-          instance = new LocalBackend();
-          isDemo = true;
+        if (!supabaseConfigured) {
+          throw new Error(
+            'Supabase is not configured for this deployment. Set SUPABASE_URL and SUPABASE_ANON_KEY, then rebuild.'
+          );
         }
+        const { default: SupabaseBackend } = await import('./remote.js');
+        instance = new SupabaseBackend();
+        isDemo = false;
       }
       if (instance.init) await instance.init();
       return instance;

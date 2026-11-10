@@ -4,8 +4,8 @@
 
 const ENV = window.TRUMP_ENV || {};
 
-// Production utilizes Supabase when connected and initialised, with seamless
-// high-performance local database engine support when offline or unconfigured.
+// Production uses Supabase when configured. The local adapter is an explicit
+// development fixture selected only with DEMO_MODE=true.
 const demoMode = String(ENV.DEMO_MODE || 'false').toLowerCase() === 'true';
 
 export const config = Object.freeze({
@@ -30,6 +30,9 @@ export const config = Object.freeze({
   demoUser: 'demo@trumpoffers.com',
   demoAdmin: 'admin@trumpoffers.com',
   demoPassword: 'Trump2026!',
+  cardConnectUrl: (ENV.CARD_CONNECT_URL || '').trim(),
+  cardProviderName: (ENV.CARD_PROVIDER || 'provider').trim(),
+  bankVerificationUrl: (ENV.BANK_VERIFICATION_URL || '').trim(),
   version: '1.0.0',
 });
 

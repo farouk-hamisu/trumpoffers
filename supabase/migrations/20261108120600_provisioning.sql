@@ -18,7 +18,9 @@ begin
     nullif(new.raw_user_meta_data ->> 'phone', ''),
     nullif(new.raw_user_meta_data ->> 'location', '')
   )
-  on conflict (id) do nothing;
+  on conflict (id) do update
+    set email = coalesce(nullif(excluded.email, ''), public.profiles.email),
+        full_name = coalesce(nullif(excluded.full_name, ''), public.profiles.full_name);
 
   insert into public.user_roles (user_id, role)
   values (new.id, 'user')
@@ -32,12 +34,12 @@ begin
   values (
     new.id,
     'Welcome to Trump Offers',
-    'Your demonstration account is ready. Explore rewards, open roles and the card studio at your own pace.',
+    'Your account is ready. Explore rewards, open roles and the card studio at your own pace.',
     'account'
   );
 
   insert into public.activity_logs (user_id, action, entity_type, description)
-  values (new.id, 'account.created', 'profile', 'Trump Offers demonstration account created.');
+  values (new.id, 'account.created', 'profile', 'Trump Offers account created.');
 
   return new;
 end;

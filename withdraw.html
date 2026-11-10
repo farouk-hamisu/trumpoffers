@@ -27,17 +27,20 @@
         <div class="app-heading" data-reveal="fade">
           <div>
             <p class="app-heading__eyebrow">Withdrawal desk</p>
-            <h1>Disbursement & <em>Withdrawals.</em></h1>
-            <p class="app-heading__sub">Disburse your available reward balance securely to your preferred banking or digital destination.</p>
+            <h1>Disbursement &amp; <em>Withdrawals.</em></h1>
+            <p class="app-heading__sub">Move your available reward balance to your bank, a crypto wallet you control, or an eligible connected card.</p>
           </div>
           <div class="app-heading__actions">
             <a class="btn btn--ghost btn--sm" href="dashboard.html">Back to overview</a>
           </div>
         </div>
 
-        <div class="sim-banner" style="margin-bottom:22px">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="4.5" y="10" width="15" height="10.5" rx="1"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-          Security notice · For your privacy, enter masked destination identifiers (e.g., Bank •••• 4821). Never share PINs or passwords.
+        <div class="withdraw-notice" style="margin-bottom:22px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21s7-3.2 7-9V5l-7-2.5L5 5v7c0 5.8 7 9 7 9Z"/><path d="m9 11.5 2 2 4-4.5"/></svg>
+          <div>
+            <strong>Secure payout details.</strong>
+            Bank details are encrypted at rest. Card details are tokenised by our payment provider. Trump Offers never asks for a PIN, CVV, online-banking password or full card number.
+          </div>
         </div>
 
         <div class="withdraw-grid">
@@ -45,19 +48,19 @@
             <div class="panel__head">
               <div>
                 <h2 class="panel__title" id="withdraw-form-title">Request a withdrawal</h2>
-                <p class="panel__sub">Minimum $100. Available reward balance is shown in the summary.</p>
+                <p class="panel__sub">Minimum $100. Your available balance is shown in the summary and reserved while a request is open.</p>
               </div>
-              <span class="badge">Secure Transfer</span>
+              <span class="badge">Encrypted</span>
             </div>
 
             <div data-withdraw-alert></div>
 
-            <form id="withdraw-form" novalidate>
+            <form id="withdraw-form" novalidate autocomplete="off">
               <div class="field">
                 <label class="field__label" for="withdraw-amount">Amount (USD)</label>
                 <div class="amount-input">
                   <span>$</span>
-                  <input class="input" id="withdraw-amount" name="amount" type="number" min="100" step="50" inputmode="decimal" placeholder="1,000" required>
+                  <input class="input" id="withdraw-amount" name="amount" type="number" min="100" step="0.01" inputmode="decimal" placeholder="1,000" required>
                 </div>
                 <div class="amount-presets" data-amount-presets>
                   <button type="button" data-amount="500">$500</button>
@@ -76,63 +79,150 @@
                     <span class="method__body">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9.5 12 3l9 6.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/></svg>
                       <span class="method__name">Bank transfer</span>
-                      <span class="method__desc">2–3 business days</span>
+                      <span class="method__desc" data-method-time="bank_transfer">2–3 business days</span>
                     </span>
                   </label>
                   <label class="method">
-                    <input type="radio" name="method" value="digital_wallet">
+                    <input type="radio" name="method" value="crypto">
                     <span class="method__body">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="6.5" y="2.5" width="11" height="19" rx="2"/><path d="M10 18.5h4"/></svg>
-                      <span class="method__name">Digital wallet</span>
-                      <span class="method__desc">Within 24 hours</span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9.5 8.5h4.2a2.3 2.3 0 0 1 0 4.6H9.5m0 0h4.6a2.35 2.35 0 0 1 0 4.7H9.5M11 6v2.5m0 12V18m2-12v2.5m0 12V18"/></svg>
+                      <span class="method__name">Cryptocurrency</span>
+                      <span class="method__desc" data-method-time="crypto">Within 24h of approval</span>
                     </span>
                   </label>
                   <label class="method">
-                    <input type="radio" name="method" value="card_credit">
+                    <input type="radio" name="method" value="card">
                     <span class="method__body">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="5.5" width="19" height="13" rx="1.5"/><path d="M2.5 9.5h19M6 15h4"/></svg>
                       <span class="method__name">Card credit</span>
-                      <span class="method__desc">Instant card credit</span>
+                      <span class="method__desc" data-method-time="card">1–2 business days</span>
                     </span>
                   </label>
                 </div>
               </div>
 
-              <div class="field">
-                <label class="field__label" for="withdraw-destination">Destination label</label>
-                <input class="input" id="withdraw-destination" name="destination" type="text" placeholder="Bank •••• 4821" autocomplete="off" maxlength="60" required>
-                <span class="field__hint">Enter your destination identifier — e.g. “Bank •••• 4821” or “PayPal (primary)”. Do not enter sensitive credentials.</span>
-              </div>
+              <div class="method-panels">
+                <!-- Bank transfer -->
+                <div class="method-panel" data-method-panel="bank_transfer">
+                  <div class="field">
+                    <label class="field__label" for="bank-account-name">Account holder's full name</label>
+                    <input class="input" id="bank-account-name" name="accountName" type="text" autocomplete="name" required>
+                  </div>
+                  <div class="field-row">
+                    <div class="field">
+                      <label class="field__label" for="bank-name">Bank</label>
+                      <select class="select" id="bank-name" name="bankName" required>
+                        <option value="">Select a bank</option>
+                        <option value="Chase">Chase</option>
+                        <option value="Bank of America">Bank of America</option>
+                        <option value="Wells Fargo">Wells Fargo</option>
+                        <option value="Citibank">Citibank</option>
+                        <option value="HSBC">HSBC</option>
+                        <option value="Barclays">Barclays</option>
+                        <option value="Deutsche Bank">Deutsche Bank</option>
+                        <option value="Other">Other bank</option>
+                      </select>
+                    </div>
+                    <div class="field" data-other-bank hidden>
+                      <label class="field__label" for="bank-name-other">Bank name</label>
+                      <input class="input" id="bank-name-other" name="bankNameOther" type="text" maxlength="80">
+                    </div>
+                  </div>
+                  <div class="field-row">
+                    <div class="field">
+                      <label class="field__label" for="bank-account-number">Account number or IBAN</label>
+                      <input class="input" id="bank-account-number" name="accountNumber" type="text" inputmode="text" spellcheck="false" autocomplete="off" required>
+                      <span class="field__hint">IBANs are validated with the international mod-97 checksum.</span>
+                    </div>
+                    <div class="field">
+                      <label class="field__label" for="bank-currency">Account currency</label>
+                      <select class="select" id="bank-currency" name="currency">
+                        <option value="USD">USD — US dollar</option>
+                        <option value="EUR">EUR — Euro</option>
+                        <option value="GBP">GBP — Pound sterling</option>
+                        <option value="CAD">CAD — Canadian dollar</option>
+                        <option value="AUD">AUD — Australian dollar</option>
+                        <option value="AED">AED — UAE dirham</option>
+                        <option value="CHF">CHF — Swiss franc</option>
+                        <option value="JPY">JPY — Japanese yen</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="bank-reference">Payment reference <span class="field__optional">Optional</span></label>
+                    <input class="input" id="bank-reference" name="accountReference" type="text" maxlength="80" placeholder="Reference shown on your bank statement">
+                  </div>
+                </div>
 
-              <div class="field">
-                <label class="field__label" for="withdraw-name">Account holder name</label>
-                <input class="input" id="withdraw-name" name="accountName" type="text" autocomplete="name" required>
+                <!-- Cryptocurrency -->
+                <div class="method-panel" data-method-panel="crypto" hidden>
+                  <div class="field">
+                    <span class="field__label">Cryptocurrency</span>
+                    <div class="asset-grid" data-crypto-assets role="radiogroup" aria-label="Cryptocurrency"></div>
+                    <input type="hidden" name="cryptoAsset" value="">
+                  </div>
+                  <div class="field-row">
+                    <div class="field">
+                      <label class="field__label" for="crypto-network">Network</label>
+                      <select class="select" id="crypto-network" name="cryptoNetwork" required></select>
+                      <span class="field__hint" data-network-hint>Select an asset to see supported networks.</span>
+                    </div>
+                    <div class="field">
+                      <span class="field__label">Network fee estimate</span>
+                      <input class="input" data-network-fee type="text" value="—" readonly tabindex="-1">
+                    </div>
+                  </div>
+                  <div class="field">
+                    <label class="field__label" for="crypto-wallet">Wallet address</label>
+                    <input class="input" id="crypto-wallet" name="walletAddress" type="text" spellcheck="false" autocomplete="off" placeholder="Paste the destination wallet address" required>
+                    <span class="field__hint" data-wallet-hint>The address must be valid for the selected asset and network.</span>
+                  </div>
+                </div>
+
+                <!-- Card -->
+                <div class="method-panel" data-method-panel="card" hidden>
+                  <div class="field">
+                    <span class="field__label">Connected card</span>
+                    <div class="card-accounts" data-card-accounts>
+                      <div class="skeleton" style="height:74px"></div>
+                    </div>
+                    <input type="hidden" name="cardPaymentAccountId" value="">
+                    <div class="card-connect">
+                      <button class="btn btn--ghost btn--sm" type="button" data-connect-card>Connect a card securely</button>
+                      <span class="field__hint">Card entry is hosted by our PCI-compliant payment provider. Card numbers and CVVs never reach Trump Offers.</span>
+                    </div>
+                    <div data-card-status></div>
+                  </div>
+                </div>
               </div>
 
               <label class="checkbox" style="margin-top:22px">
                 <input type="checkbox" name="confirm" required>
-                <span>I authorize this withdrawal request to the designated destination and confirm the account details are correct.</span>
+                <span>I authorise this withdrawal and confirm the payout details are correct. I understand the amount is reserved until the request is completed or rejected.</span>
               </label>
 
-              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Submit withdrawal request</button>
-              <p class="form-note">Requests are reviewed and processed by our operations desk. You can follow the status on this page.</p>
+              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Review withdrawal</button>
+              <p class="form-note">Every request is reviewed by our operations desk. You will receive a reference and can follow each status change on this page.</p>
             </form>
           </section>
 
           <aside class="summary-panel" aria-labelledby="summary-title" data-reveal="right">
             <div class="summary-panel__label" id="summary-title">Request summary</div>
-            <div class="summary-panel__amount" data-summary-amount>$1,000 <small>USD</small></div>
+            <div class="summary-panel__amount" data-summary-amount>$0 <small>USD</small></div>
             <div class="summary-rows">
               <div class="summary-row"><span>Available balance</span><strong data-summary-available>—</strong></div>
               <div class="summary-row"><span>Method</span><strong data-summary-method>Bank transfer</strong></div>
-              <div class="summary-row"><span>Processing fee</span><strong>None (Complimentary)</strong></div>
+              <div class="summary-row"><span>Destination</span><strong data-summary-destination>Not yet entered</strong></div>
+              <div class="summary-row"><span>Processing fee</span><strong data-summary-fee>None</strong></div>
+              <div class="summary-row" data-summary-network-row hidden><span>Network fee (est.)</span><strong data-summary-network-fee>—</strong></div>
+              <div class="summary-row"><span>Net payout</span><strong data-summary-net>—</strong></div>
               <div class="summary-row"><span>Estimated arrival</span><strong data-summary-arrival>2–3 business days</strong></div>
               <div class="summary-row"><span>Reference</span><strong>Issued on submission</strong></div>
             </div>
-            <p class="summary-note">This summary updates as you edit the request. Your available balance is reserved while a withdrawal is being processed.</p>
+            <p class="summary-note">The summary updates as you edit the request. Your balance is reserved while a withdrawal is pending, approved or processing.</p>
             <div class="withdraw-note">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-3.2 7-9V5l-7-2.5L5 5v7c0 5.8 7 9 7 9Z"/><path d="m9 11.5 2 2 4-4.5"/></svg>
-              <span>Masked labels only. Trump Offers never asks for a PIN, CVV, password or full card number during a withdrawal.</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s7-3.2 7-9V5l-7-2.5L5 5v7c0 5.8 7 9 7 9Z"/><path d="m9 14 2 2 4-4.5"/></svg>
+              <span>Completion is only recorded after the payout is confirmed by the payout provider or bank. Approval alone does not mean funds have been sent.</span>
             </div>
           </aside>
         </div>
@@ -153,6 +243,24 @@
     </div>
   </div>
 
+  <!-- Review before submission -->
+  <div class="modal" id="withdraw-review-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="withdraw-review-title">
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__panel">
+      <button class="modal__close" type="button" data-modal-close aria-label="Close">✕</button>
+      <p class="app-heading__eyebrow">Final check</p>
+      <h2 class="modal__title" id="withdraw-review-title" style="font-size:1.9rem">Review your <em>withdrawal.</em></h2>
+      <p class="fine">Confirm the amount and payout destination. Once submitted, the amount is reserved and cannot be edited while the request is open.</p>
+      <dl class="claim-review" style="max-width:none" data-review-rows></dl>
+      <div class="claim-note">Requests are reviewed by a human administrator. Approval and completion are separate steps.</div>
+      <div class="modal__actions">
+        <button class="btn btn--ghost btn--sm" type="button" data-modal-close>Edit details</button>
+        <button class="btn btn--gold btn--sm" type="button" data-confirm-withdrawal>Confirm &amp; submit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submitted -->
   <div class="modal" id="withdraw-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="withdraw-modal-title">
     <div class="modal__backdrop" data-modal-close></div>
     <div class="modal__panel">
@@ -163,7 +271,7 @@
         </span>
         <div class="claim-success__body">
           <h2 class="modal__title" id="withdraw-modal-title" style="font-size:1.9rem">Withdrawal submitted</h2>
-          <p class="fine">Your withdrawal request has been received and scheduled for disbursement.</p>
+          <p class="fine">Your request is now pending review. You will be notified at every status change.</p>
           <div class="claim-reference"><span data-withdraw-ref>TO-WD-26-000000</span><button type="button" data-withdraw-copy aria-label="Copy reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div>
         </div>
       </div>
@@ -177,6 +285,19 @@
       <div class="modal__actions">
         <a class="btn btn--ghost btn--sm" href="dashboard.html">Dashboard</a>
         <button class="btn btn--gold btn--sm" type="button" data-modal-close>Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status history -->
+  <div class="modal" id="withdraw-detail-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="withdraw-detail-title">
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__panel">
+      <button class="modal__close" type="button" data-modal-close aria-label="Close">✕</button>
+      <h2 class="modal__title" id="withdraw-detail-title" style="font-size:1.7rem">Request <em>timeline.</em></h2>
+      <div data-withdraw-timeline></div>
+      <div class="modal__actions">
+        <button class="btn btn--ghost btn--sm" type="button" data-modal-close>Close</button>
       </div>
     </div>
   </div>

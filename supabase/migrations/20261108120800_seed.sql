@@ -8,7 +8,7 @@ values
   ('site_name', to_jsonb('Trump Offers'::text), true),
   ('tagline', to_jsonb('Opportunities. Rewards. Possibilities.'::text), true),
   ('hero_headline', to_jsonb('Opportunities. Rewards. Possibilities.'::text), true),
-  ('hero_support', to_jsonb('Explore opportunities, discover career possibilities and experience a modern demonstration rewards platform designed around simplicity and accessibility.'::text), true),
+  ('hero_support', to_jsonb('Explore opportunities, discover career possibilities and experience a modern rewards platform designed around simplicity and accessibility.'::text), true),
   ('support_email', to_jsonb('concierge@trumpoffers.com'::text), true),
   ('support_phone', to_jsonb('+1 (212) 555-0184'::text), true),
   ('address', to_jsonb('One Trump Place, Suite 1200, New York, NY 10004'::text), true),
@@ -43,7 +43,7 @@ values
 This is a relationship role in the truest sense. You will work across a small portfolio of members, anticipate needs before they are articulated, and turn complexity into calm. You will partner closely with Operations, Product and Recruitment to make sure every promise the platform makes is kept.',
     array[
       'Own a portfolio of member relationships across rewards, cards and career introductions.',
-      'Guide members through demonstration workflows with clear, jargon-free communication.',
+      'Guide members through platform workflows with clear, jargon-free communication.',
       'Translate recurring member feedback into concise product and operations briefs.',
       'Partner with recruitment teams to coordinate warm candidate introductions.',
       'Maintain meticulous records and uphold the platform’s privacy standards.'
@@ -77,11 +77,11 @@ This is a relationship role in the truest sense. You will work across a small po
     124000,
     'USD',
     'Shape the most tactile, considered digital card experience in the rewards category.',
-    'We are looking for a product designer with a sharp editorial eye and a respect for the quiet details that make a product feel expensive. You will own the end-to-end design of the Trump demonstration card: application, presentation, verification and administration.
+    'We are looking for a product designer with a sharp editorial eye and a respect for the quiet details that make a product feel expensive. You will own the end-to-end design of the Trump Offers card: application, presentation, verification and administration.
 
 You will work directly with engineering and brand, moving from wide explorations to production-ready specifications without losing the idea. We care deeply about craft, but we care more about clarity.',
     array[
-      'Design end-to-end flows for the demonstration card, from application to verification.',
+      'Design end-to-end flows for the card, from application to verification.',
       'Build and maintain a small, rigorous design system for the card surfaces.',
       'Prototype interactions and test them with members and internal teams.',
       'Pair with engineers to protect quality through implementation.',
@@ -115,12 +115,12 @@ You will work directly with engineering and brand, moving from wide explorations
     64000,
     78000,
     'USD',
-    'Keep every demonstration claim, withdrawal and card application moving with precision.',
-    'The Rewards Operations Associate sits at the centre of the platform. You will review demonstration records, maintain service levels, and make sure members always know exactly where things stand.
+    'Keep every claim, withdrawal and card application moving with precision.',
+    'The Rewards Operations Associate sits at the centre of the platform. You will review records, maintain service levels, and make sure members always know exactly where things stand.
 
 You will be joining a small operations team with a broad mandate. Expect to improve processes as often as you run them, and to work closely with the administrators who oversee the platform.',
     array[
-      'Review and progress demonstration reward claims and withdrawal requests.',
+      'Review and progress reward claims and withdrawal requests.',
       'Maintain claim records, reference numbers and status accuracy.',
       'Escalate anomalies and document resolutions clearly.',
       'Support member enquiries with accurate, kind responses.',
@@ -193,7 +193,7 @@ This role suits someone who believes recruitment is a craft: part listening, par
     70000,
     90000,
     'USD',
-    'Write the words that make a demonstration platform feel considered, credible and human.',
+    'Write the words that make a platform feel considered, credible and human.',
     'We are looking for a brand writer and content strategist for a twelve-month contract. You will shape the voice of Trump Offers across product, web and member communications.
 
 The ideal candidate has a portfolio of editorial or premium brand work, a dislike of filler, and the discipline to make every sentence earn its place.',
@@ -232,8 +232,8 @@ The ideal candidate has a portfolio of editorial or premium brand work, a dislik
     88000,
     106000,
     'USD',
-    'Design the controls that keep a simulated rewards environment safe, honest and well-governed.',
-    'You will help define the standards that govern a demonstration rewards platform: data minimisation, clear disclosures, secure access and reliable audit trails.
+    'Design the controls that keep a rewards environment safe, honest and well-governed.',
+    'You will help define the standards that govern a rewards platform: data minimisation, clear disclosures, secure access and reliable audit trails.
 
 This is a hands-on role for someone who enjoys turning principles into practical controls and can explain them to non-specialists.',
     array[

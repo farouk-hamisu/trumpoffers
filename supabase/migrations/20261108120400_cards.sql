@@ -1,5 +1,5 @@
 -- ============================================================================
--- Trump Offers — 05 · Demonstration card studio
+-- Trump Offers — 05 · Card studio
 -- ============================================================================
 
 create table if not exists public.card_applications (
@@ -52,8 +52,8 @@ grant select on public.card_applications to authenticated;
 grant update on public.card_applications to authenticated;
 
 -- ----------------------------------------------------------------------------
--- Fictional card number generator with a valid Luhn check digit.
--- The number is intended solely for a non-functional demonstration card.
+-- Generated card number with a valid Luhn check digit.
+-- The number is display-only and is not a payment instrument.
 -- ----------------------------------------------------------------------------
 create or replace function public.generate_demo_card_number()
 returns text
@@ -88,7 +88,7 @@ end;
 $$;
 
 -- ----------------------------------------------------------------------------
--- RPC · create a fictional card application
+-- RPC · create a card application
 -- ----------------------------------------------------------------------------
 create or replace function public.create_card_application(
   p_design text,
@@ -106,7 +106,7 @@ declare
   v_row  public.card_applications;
 begin
   if v_uid is null then
-    raise exception 'Sign in to create a demonstration card.' using errcode = '42501';
+    raise exception 'Sign in to create a card.' using errcode = '42501';
   end if;
 
   if p_design not in ('noir', 'champagne', 'obsidian', 'heritage') then
@@ -138,7 +138,7 @@ begin
     extract(month from (now() + interval '3 years'))::integer,
     extract(year from (now() + interval '3 years'))::integer,
     'submitted',
-    'Fictional card issued for demonstration only. It is not a payment instrument.'
+    'Card issued for presentation only. It is not a payment instrument.'
   )
   returning * into v_row;
 
@@ -146,13 +146,13 @@ begin
   values (
     v_uid,
     'Card request received',
-    format('Your demonstration card request %s is awaiting administrator review.', v_ref),
+    format('Your card request %s is awaiting administrator review.', v_ref),
     'card'
   );
 
   insert into public.activity_logs (user_id, action, entity_type, description)
   values (v_uid, 'card.created', 'card_application',
-    format('Demonstration card application %s submitted.', v_ref));
+    format('Card application %s submitted.', v_ref));
 
   return v_row;
 end;
@@ -162,7 +162,7 @@ revoke all on function public.create_card_application(text, text) from public;
 grant execute on function public.create_card_application(text, text) to authenticated;
 
 -- ----------------------------------------------------------------------------
--- RPC · verify a fictional card by reference + last four (public-safe payload)
+-- RPC · verify a card by reference + last four (public-safe payload)
 -- ----------------------------------------------------------------------------
 create or replace function public.verify_demo_card(
   p_reference text,
@@ -219,10 +219,10 @@ begin
   insert into public.notifications (user_id, title, body, type)
   values (
     new.user_id,
-    case when new.status = 'approved' then 'Demonstration card approved' else 'Card application update' end,
+    case when new.status = 'approved' then 'Card approved' else 'Card application update' end,
     case
-      when new.status = 'approved' then format('Your demonstration card %s has been approved. The card is fictional and cannot be used for payment.', new.reference)
-      else format('Your demonstration card application %s is now marked “%s”.', new.reference, replace(new.status, '_', ' '))
+      when new.status = 'approved' then format('Your card %s has been approved. The card is not a payment instrument and cannot be used for transactions.', new.reference)
+      else format('Your card application %s is now marked “%s”.', new.reference, replace(new.status, '_', ' '))
     end,
     'card'
   );

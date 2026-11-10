@@ -60,22 +60,25 @@ Claims and withdrawals are shown in separate registers with independent search a
 
 Statuses: `confirmed → verifying → processing → completed`, plus `cancelled`.
 
-- The member's fixed demonstration balance is **$30,000**; it is created with the account and shown as simulated throughout the UI.
-- `create_reward_claim()` permits one active claim per member and assigns a 5–10 hour simulated completion window.
+- The member's fixed reward balance is **$30,000**; it is created with the account.
+- `create_reward_claim()` permits one active claim per member and assigns a 5–10 hour verification window.
 - Opening a claim shows the reference, member, amount, estimate, note, status selector and internal note.
 - **Save status** updates the record. Setting `completed` also sets progress to 100, stage 4 and `completed_at`; `processing` sets 64%/stage 3; `verifying` sets 22%/stage 2.
 - A database trigger writes a member notification when the status changes. `activity_logs` records the action.
 
 ### Withdrawals
 
-Statuses: `pending → reviewing → processing → paid`, plus `rejected` (shown as "Declined").
+Statuses: `pending → reviewing → approved → processing → completed`, plus `rejected` and `cancelled`.
 
-- Requests have a minimum of $100 and only accept masked destination labels. Labels containing eight or more consecutive digits are rejected by the RPC.
-- Opening a request shows method, destination, account name, timestamps and note.
-- **Save status** updates the record; `paid` stamps `processed_at`.
-- A trigger notifies the member. No bank connection exists and no real funds move.
+- Requests have a minimum of $100. Bank details are validated and encrypted at rest; crypto addresses are validated per network; card payouts require a tokenised card from the configured provider.
+- The register supports search by reference, member, method and destination, plus a status filter.
+- Opening a request shows the amount, fee, net payout, payout destination, provider reference, internal note, rejection reason, complete status history and administrative controls.
+- **Move to review**, **Approve**, **Mark processing** and **Mark completed** enforce the allowed transition graph. **Reject** requires a reason.
+- **Mark completed** requires the administrator to confirm that the payout was settled by the provider, bank or blockchain. The provider reference is recorded. Approval alone never marks funds as sent.
+- **Save note** records an internal note without changing the status.
+- The RPC deducts the amount from the member's balance only on completion, and writes both status history and an `admin_audit_logs` entry.
 
-There is no automatic status progression. The simulated estimate is informational; an administrator advances the record.
+There is no automatic status progression. Provider payouts require configured credentials; when a provider is not configured the request remains in review or processing and completion must be confirmed manually.
 
 ---
 
@@ -113,14 +116,14 @@ CVs are never exposed publicly. See [STORAGE.md](STORAGE.md).
 
 ## Card requests
 
-Each request shows the selected design, cardholder name, fictional number, expiry, status and request date.
+Each request shows the selected design, cardholder name, generated number, expiry, status and request date.
 
 - **Approve design** sets `approved`, activates the public verification result and notifies the member. This does **not** create a payment instrument.
 - **Decline** sets `rejected` with the decision note.
-- The full fictional number is visible to administrators for review. The public verification RPC returns only the last four digits.
+- The full generated number is visible to administrators for review. The public verification RPC returns only the last four digits.
 - New requests start as `submitted`; `under_review` is available through SQL or future automation but the console's two primary actions are approve/decline.
 
-Card numbers are generated in Postgres with a valid Luhn check digit and a `4539` prefix, and are unique. They are explicitly fictional.
+Card numbers are generated in Postgres with a valid Luhn check digit and a `4539` prefix, and are unique. They are display-only and are not payment instruments.
 
 ---
 
@@ -154,7 +157,7 @@ This form writes public `site_settings`:
 
 The **Environment** panel shows whether the console is in development-fixture or Supabase mode, where data is stored, whether the intro is enabled and the app version.
 
-The **Reset demonstration data** action exists only in the development fixture (`DEMO_MODE=true`) and is hidden in production.
+The **Reset local cache** action exists only in the development fixture (`DEMO_MODE=true`) and is hidden in production.
 
 ---
 
@@ -164,7 +167,7 @@ The **Reset demonstration data** action exists only in the development fixture (
 | --- | --- |
 | Member | `active`, `suspended` |
 | Claim | `confirmed`, `verifying`, `processing`, `completed`, `cancelled` |
-| Withdrawal | `pending`, `reviewing`, `processing`, `paid`, `rejected` |
+| Withdrawal | `pending`, `reviewing`, `approved`, `processing`, `completed`, `rejected`, `cancelled` |
 | Application | `submitted`, `under_review`, `shortlisted`, `interview`, `accepted`, `rejected` |
 | Card | `submitted`, `under_review`, `approved`, `rejected` |
 | Message | `new`, `read`, `archived` |
@@ -211,10 +214,10 @@ Changing a status where a trigger exists sends a member notification and records
 Role grants are deliberately SQL-only. Use `grant_admin` / a direct `user_roles` statement from the SQL editor. This keeps privilege escalation out of a browser session.
 
 **Why doesn't the claim progress move by itself?**
-The estimate is a demonstration window. An administrator advances the status. This is intentional so the register stays predictable and auditable.
+The estimate is an informational window. An administrator advances the status. This is intentional so the register stays predictable and auditable.
 
 **Why is a withdrawal amount unavailable?**
-The RPC subtracts all `pending`, `reviewing` and `processing` withdrawals from the $30,000 balance. Complete or decline earlier requests to free the amount.
+The RPC subtracts all `pending`, `reviewing`, `approved` and `processing` withdrawals from the balance. Complete or reject earlier requests to free the amount.
 
 **Can I delete a member?**
 Not from the console. Delete the auth user in Supabase; cascades remove the profile, reward account, claims, withdrawals, notifications and card requests. Applications keep their record with `user_id` set to null.

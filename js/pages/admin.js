@@ -88,7 +88,7 @@ function nameCell(name, email) {
 function statusOptions(type, current) {
   const map = {
     claim: ['confirmed', 'verifying', 'processing', 'completed', 'cancelled'],
-    withdrawal: ['pending', 'reviewing', 'processing', 'paid', 'rejected'],
+    withdrawal: ['pending', 'reviewing', 'approved', 'processing', 'completed', 'rejected', 'cancelled'],
     application: ['submitted', 'under_review', 'shortlisted', 'interview', 'accepted', 'rejected'],
     card: ['submitted', 'under_review', 'approved', 'rejected'],
     message: ['new', 'read', 'archived'],
@@ -112,10 +112,12 @@ function statusLabel(type, value) {
     },
     withdrawal: {
       pending: 'Pending',
-      reviewing: 'In review',
+      reviewing: 'Under review',
+      approved: 'Approved',
       processing: 'Processing',
-      paid: 'Completed',
-      rejected: 'Declined',
+      completed: 'Completed',
+      rejected: 'Rejected',
+      cancelled: 'Cancelled',
     },
     application: {
       submitted: 'Submitted',
@@ -140,10 +142,11 @@ function methodLabel(method = '') {
   return (
     {
       bank_transfer: 'Bank transfer',
+      crypto: 'Cryptocurrency',
+      card: 'Card credit',
       wire: 'Wire transfer',
       paypal: 'PayPal',
       wise: 'Wise',
-      crypto: 'Digital asset',
     }[method] || humanize(method)
   );
 }
@@ -554,7 +557,13 @@ function renderWithdrawals() {
   const status = $('[data-withdrawals-status]')?.value || '';
   const rows = state.withdrawals.filter((w) => {
     if (status && w.status !== status) return false;
-    if (q && !`${w.reference} ${w.member_name} ${w.member_email} ${w.method}`.toLowerCase().includes(q)) return false;
+    if (
+      q &&
+      !`${w.reference} ${w.member_name} ${w.member_email} ${w.method} ${w.destination_label || ''} ${w.bank_name || ''} ${w.crypto_asset || ''} ${w.wallet_address || ''}`
+        .toLowerCase()
+        .includes(q)
+    )
+      return false;
     return true;
   });
   body.innerHTML = rows.length
@@ -564,21 +573,17 @@ function renderWithdrawals() {
             <td class="cell-mono">${escapeHTML(w.reference)}</td>
             <td>${nameCell(w.member_name, w.member_email)}</td>
             <td>${escapeHTML(methodLabel(w.method))}</td>
+            <td>${escapeHTML(w.destination_label || '—')}<span class="cell-sub">${escapeHTML(w.account_name || '')}</span></td>
             <td class="cell-amount">${escapeHTML(formatCurrency(w.amount))}</td>
             <td>${badge('withdrawal', w.status)}</td>
             <td class="cell-mono">${escapeHTML(formatDate(w.created_at, { short: true }))}</td>
             <td><div class="admin-table__actions">
-              <button class="admin-icon-btn" type="button" data-withdrawal-open="${escapeHTML(w.id)}" aria-label="View withdrawal" title="View withdrawal">${icon(
-            'eye'
-          )}</button>
-              <select class="status-select" data-withdrawal-status="${escapeHTML(
-                w.id
-              )}" aria-label="Withdrawal status">${statusOptions('withdrawal', w.status)}</select>
+              <button class="btn btn--ghost btn--sm" type="button" data-withdrawal-open="${escapeHTML(w.id)}">Review</button>
             </div></td>
           </tr>`
         )
         .join('')
-    : emptyRow(7, 'No withdrawals match those filters.');
+    : emptyRow(8, 'No withdrawals match those filters.');
 }
 
 /* ------------------------------------------------------------- recruitment */
@@ -864,47 +869,165 @@ async function openClaim(id) {
 async function openWithdrawal(id) {
   const w = state.withdrawals.find((x) => x.id === id);
   if (!w) return;
+
+  let detail = null;
+  let history = [];
+  try {
+    [detail, history] = await Promise.all([api.getWithdrawalDetail(id), api.getWithdrawalHistory(id)]);
+  } catch (error) {
+    toast(error.message || 'The withdrawal details could not be loaded.', 'error');
+    return;
+  }
+  const d = detail?.details || {};
+  const isManual = !w.provider || w.provider === 'manual';
+
+  const destinationRows = [];
+  if (w.method === 'bank_transfer') {
+    destinationRows.push(
+      ['Account holder', escapeHTML(d.account_holder || w.account_name || '—')],
+      ['Bank', escapeHTML(d.bank_name || w.bank_name || '—')],
+      ['Account number', escapeHTML(d.account_number || (w.account_number_last4 ? `•••• ${w.account_number_last4}` : '—'))],
+      ['Bank code', escapeHTML(d.bank_code || w.bank_code || '—')],
+      ['Payment reference', escapeHTML(d.account_reference || w.account_reference || '—')],
+      ['Account currency', escapeHTML(w.currency || 'USD')]
+    );
+  } else if (w.method === 'crypto') {
+    destinationRows.push(
+      ['Asset', escapeHTML(d.crypto_asset || w.crypto_asset || '—')],
+      ['Network', escapeHTML(d.crypto_network || w.crypto_network || '—')],
+      ['Wallet address', `<span class="cell-mono" style="word-break:break-all">${escapeHTML(d.wallet_address || w.wallet_address || '—')}</span>`]
+    );
+  } else if (w.method === 'card') {
+    destinationRows.push(
+      ['Card', escapeHTML(`${d.card_brand || w.card_brand || 'Card'} •••• ${d.card_last4 || w.card_last4 || ''}`)],
+      ['Cardholder', escapeHTML(w.account_name || '—')],
+      ['Provider', escapeHTML(w.provider || 'manual')]
+    );
+  }
+
+  const historyHtml = history.length
+    ? `<div class="wb-timeline">${history
+        .map(
+          (h) => `<div class="wb-timeline__item">
+            <span class="wb-timeline__dot"></span>
+            <div>
+              <div class="wb-timeline__title">${escapeHTML(
+                h.from_status === h.to_status ? 'Administrative note' : statusLabel('withdrawal', h.to_status)
+              )}</div>
+              <div class="wb-timeline__time">${escapeHTML(formatDateTime(h.created_at))}</div>
+              ${h.note ? `<p class="wb-timeline__note">${escapeHTML(h.note)}</p>` : ''}
+            </div>
+          </div>`
+        )
+        .join('')}</div>`
+    : '<p class="fine">No status events recorded yet.</p>';
+
   const body = `${detailRows([
     ['Reference', `<span class="cell-mono">${escapeHTML(w.reference)}</span>`],
     ['Member', escapeHTML(w.member_name || 'Member')],
-    ['Email', escapeHTML(w.member_email || '—')],
-    ['Amount', escapeHTML(formatCurrency(w.amount))],
+    ['Email', `<a href="mailto:${escapeHTML(w.member_email || '')}">${escapeHTML(w.member_email || '—')}</a>`],
+    ['Amount', escapeHTML(formatCurrency(w.amount, { cents: true }))],
+    ['Processing fee', escapeHTML(formatCurrency(w.fee_amount || 0, { cents: true }))],
+    ['Net payout', escapeHTML(formatCurrency(w.net_amount ?? w.amount, { cents: true }))],
     ['Method', escapeHTML(methodLabel(w.method))],
     ['Destination', escapeHTML(w.destination_label || '—')],
-    ['Account name', escapeHTML(w.account_name || '—')],
+    ['Status', badge('withdrawal', w.status)],
     ['Requested', escapeHTML(formatDateTime(w.created_at))],
-    ['Processed', escapeHTML(w.processed_at ? formatDateTime(w.processed_at) : '—')],
-    ['Note', escapeHTML(w.note || '—')],
+    ['Reviewed', escapeHTML(w.reviewed_at ? formatDateTime(w.reviewed_at) : '—')],
+    ['Completed', escapeHTML(w.completed_at ? formatDateTime(w.completed_at) : '—')],
+    ['Payout provider', escapeHTML(w.provider || 'manual')],
+    ['Provider reference', escapeHTML(w.provider_reference || '—')],
   ])}
-  <div class="field" style="margin-top:18px"><label class="field__label" for="withdrawal-detail-status">Status</label>
-    <select class="select" id="withdrawal-detail-status">${statusOptions('withdrawal', w.status)}</select>
+  <div class="admin-detail__section">
+    <div class="admin-detail__section-title">Payout destination</div>
+    ${detailRows(destinationRows)}
   </div>
-  <div class="field" style="margin-top:12px"><label class="field__label" for="withdrawal-detail-note">Internal note</label>
-    <textarea class="textarea" id="withdrawal-detail-note" rows="2">${escapeHTML(w.note || '')}</textarea>
+  <div class="admin-detail__section">
+    <div class="admin-detail__section-title">Administrative controls</div>
+    <div class="field">
+      <label class="field__label" for="withdrawal-provider-reference">Provider reference</label>
+      <input class="input" id="withdrawal-provider-reference" type="text" value="${escapeHTML(w.provider_reference || '')}" placeholder="Payout ID, transaction hash or bank reference">
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label class="field__label" for="withdrawal-detail-note">Internal note</label>
+      <textarea class="textarea" id="withdrawal-detail-note" rows="2" placeholder="Visible to administrators only">${escapeHTML(w.note || '')}</textarea>
+    </div>
+    <div class="field" style="margin-top:14px">
+      <label class="field__label" for="withdrawal-rejection-reason">Rejection reason</label>
+      <textarea class="textarea" id="withdrawal-rejection-reason" rows="2" placeholder="Used when rejecting the request; shared with the member">${escapeHTML(w.rejection_reason || '')}</textarea>
+    </div>
+    <label class="checkbox" style="margin-top:16px">
+      <input type="checkbox" id="withdrawal-provider-confirmed">
+      <span>I confirm the payout has been sent or settled by the payout provider, bank or blockchain. Completion must not be marked before this confirmation.</span>
+    </label>
+    ${
+      isManual
+        ? '<p class="fine" style="margin-top:8px">This request uses manual settlement. Record the provider or bank reference before completing it.</p>'
+        : ''
+    }
+  </div>
+  <div class="admin-detail__section">
+    <div class="admin-detail__section-title">Status history</div>
+    ${historyHtml}
   </div>`;
+
+  const actions = [];
+  const noteValue = (modal) => $('#withdrawal-detail-note', modal)?.value.trim() || '';
+  const providerRef = (modal) => $('#withdrawal-provider-reference', modal)?.value.trim() || '';
+  const confirmed = (modal) => Boolean($('#withdrawal-provider-confirmed', modal)?.checked);
+  const transition = (label, status, className = 'btn--ghost') => ({
+    label,
+    className,
+    onClick: async (modal) => {
+      if (status === 'completed' && !confirmed(modal)) {
+        toast('Confirm the payout has been settled before marking this request complete.', 'error');
+        return;
+      }
+      const note =
+        status === 'rejected'
+          ? $('#withdrawal-rejection-reason', modal)?.value.trim() || noteValue(modal)
+          : noteValue(modal);
+      try {
+        await api.updateWithdrawalStatus(id, status, note, confirmed(modal), providerRef(modal));
+        closeModal(modal);
+        await loadRewards();
+        toast(`Withdrawal ${status === 'completed' ? 'completed' : `moved to ${status.replaceAll('_', ' ')}`}.`, 'success');
+      } catch (error) {
+        toast(error.message, 'error');
+      }
+    },
+  });
+
+  if (w.status === 'pending') actions.push(transition('Move to review', 'reviewing'));
+  if (['pending', 'reviewing'].includes(w.status)) actions.push(transition('Approve', 'approved', 'btn--gold'));
+  if (w.status === 'approved') actions.push(transition('Mark processing', 'processing'));
+  if (w.status === 'processing') actions.push(transition('Mark completed', 'completed', 'btn--gold'));
+  if (['pending', 'reviewing', 'approved', 'processing'].includes(w.status)) actions.push(transition('Reject', 'rejected'));
+  actions.push({
+    label: 'Save note',
+    onClick: async (modal) => {
+      const note = noteValue(modal);
+      if (!note) {
+        toast('Enter an internal note first.', 'error');
+        return;
+      }
+      try {
+        await api.addWithdrawalNote(id, note);
+        closeModal(modal);
+        await loadRewards();
+        toast('Internal note saved.', 'success');
+      } catch (error) {
+        toast(error.message, 'error');
+      }
+    },
+  });
+  actions.push({ label: 'Close', onClick: (modal) => closeModal(modal) });
+
   showDetail({
-    title: 'Withdrawal request',
-    sub: 'Review payout destination and advance disbursement status.',
+    title: `Withdrawal ${w.reference}`,
+    sub: `${methodLabel(w.method)} · ${formatCurrency(w.amount)} · ${statusLabel('withdrawal', w.status)}`,
     body,
-    actions: [
-      {
-        label: 'Save status',
-        className: 'btn--gold',
-        onClick: async (modal) => {
-          const status = $('#withdrawal-detail-status', modal).value;
-          const note = $('#withdrawal-detail-note', modal).value.trim();
-          try {
-            await api.updateWithdrawalStatus(id, status, note);
-            closeModal(modal);
-            await loadRewards();
-            toast('Withdrawal updated.', 'success');
-          } catch (error) {
-            toast(error.message, 'error');
-          }
-        },
-      },
-      { label: 'Close', onClick: (modal) => closeModal(modal) },
-    ],
+    actions,
   });
 }
 
@@ -1438,19 +1561,6 @@ function bindShell() {
         await loadRewards();
       }
       return;
-    }
-    const withdrawal = e.target.closest('[data-withdrawal-status]');
-    if (withdrawal) {
-      try {
-        await api.updateWithdrawalStatus(withdrawal.dataset.withdrawalStatus, withdrawal.value);
-        const cached = state.withdrawals.find((w) => w.id === withdrawal.dataset.withdrawalStatus);
-        if (cached) cached.status = withdrawal.value;
-        renderWithdrawals();
-        toast('Withdrawal status updated.', 'success');
-      } catch (error) {
-        toast(error.message, 'error');
-        await loadRewards();
-      }
     }
   });
 }

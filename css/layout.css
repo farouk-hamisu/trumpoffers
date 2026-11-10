@@ -1307,3 +1307,13 @@
 }
 
 
+
+.alert--warning {
+  border-color: rgba(198, 162, 91, 0.35);
+  background: rgba(198, 162, 91, 0.08);
+  color: #d9c18c;
+}
+
+.alert--warning svg {
+  color: var(--gold-light);
+}
