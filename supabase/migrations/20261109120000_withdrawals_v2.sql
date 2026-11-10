@@ -57,7 +57,7 @@ insert into public.withdrawal_methods
 values
   ('bank_transfer', 'Bank transfer', 'A direct transfer to your bank account.', 100, 30000, 'none', 0, '2–3 business days', true, 1),
   ('crypto', 'Cryptocurrency', 'A digital-asset payout to a wallet you control.', 100, 30000, 'none', 0, 'Usually within 24 hours of approval', true, 2),
-  ('card', 'Card credit', 'A credit to an eligible card connected through our payment provider.', 100, 30000, 'none', 0, '1–2 business days after approval', true, 3)
+  ('card', 'Card credit', 'A credit to a payout card connected in the withdrawal desk.', 100, 30000, 'none', 0, '1–2 business days after approval', true, 3)
 on conflict (method) do update
   set label = excluded.label,
       description = excluded.description,

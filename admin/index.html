@@ -38,6 +38,7 @@
         <a class="admin-nav__link" href="#applications" data-view-link="applications" data-icon="file"><span>Applications</span><span class="admin-nav__count" data-count="pendingApplications" hidden>0</span></a>
         <div class="admin-nav__label">Studio &amp; desk</div>
         <a class="admin-nav__link" href="#cards" data-view-link="cards" data-icon="card"><span>Card requests</span><span class="admin-nav__count" data-count="pendingCards" hidden>0</span></a>
+        <a class="admin-nav__link" href="#payouts" data-view-link="payouts" data-icon="wallet"><span>Payout cards</span></a>
         <a class="admin-nav__link" href="#messages" data-view-link="messages" data-icon="mail"><span>Messages</span><span class="admin-nav__count" data-count="newMessages" hidden>0</span></a>
         <div class="admin-nav__label">Configuration</div>
         <a class="admin-nav__link" href="#settings" data-view-link="settings" data-icon="settings"><span>Website &amp; video</span></a>
@@ -352,6 +353,39 @@
               <table class="admin-table">
                 <thead><tr><th>Reference</th><th>Member</th><th>Design</th><th>Cardholder</th><th>Status</th><th>Requested</th><th>Action</th></tr></thead>
                 <tbody data-cards-body></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <!-- Payout cards -->
+        <section class="admin-view" data-view="payouts" aria-labelledby="payouts-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Payout methods</p>
+              <h1 id="payouts-title">Payout <em>cards.</em></h1>
+              <p>Cards members have connected for manual card withdrawals. Full numbers are encrypted at rest, revealed only on request, and every reveal is written to the audit log.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <div class="admin-filters">
+            <div class="admin-filters__search">
+              <span data-icon-btn="search"></span>
+              <input type="search" placeholder="Search member, email, cardholder or last four" data-payouts-search autocomplete="off">
+            </div>
+            <select data-payouts-status aria-label="Filter payout cards by status">
+              <option value="">All statuses</option>
+              <option value="active">Active</option>
+              <option value="revoked">Revoked</option>
+            </select>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Member</th><th>Cardholder</th><th>Card</th><th>Expiry</th><th>Status</th><th>Connected</th><th>Action</th></tr></thead>
+                <tbody data-payouts-body></tbody>
               </table>
             </div>
           </section>

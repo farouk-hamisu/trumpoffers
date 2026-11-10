@@ -2,7 +2,7 @@
 
 A premium platform for **rewards, recruitment and digital cards**, built as a multi-page site with HTML5, CSS3, vanilla JavaScript and Supabase.
 
-> **Platform records and provider-dependent payouts.** Trump Offers does not custody money or issue payment instruments, and never asks for a PIN, CVV or full card number. Withdrawals are reviewed by an administrator and completed only after confirmed settlement. Card connection and provider payouts require configured credentials; without them those actions fail closed with an explicit message. See [docs/SECURITY.md](docs/SECURITY.md).
+> **Platform records and provider-dependent payouts.** Trump Offers does not custody money or issue payment instruments, and never asks for a PIN, CVV or online-banking password. Withdrawals are reviewed by an administrator and completed only after confirmed settlement. Payout cards can be connected without a payment provider; the full number is encrypted at rest and revealed only to authorised administrators through an audited action. Hosted-provider and provider payouts require configured credentials; without them those actions fail closed with an explicit message. See [docs/SECURITY.md](docs/SECURITY.md).
 
 ---
 

@@ -56,6 +56,7 @@ The migrations are ordered by timestamp and must be applied in filename order:
 | `20261108120700_storage.sql` | `resumes` and `site-media` buckets with policies |
 | `20261108120800_seed.sql` | Seed settings and sample vacancies |
 | `20261109120000_withdrawals_v2.sql` | Withdrawal methods, crypto networks, encrypted payout details, payment accounts, status history, audit logs and hardened withdrawal/admin RPCs |
+| `20261110120000_payment_cards.sql` | Encrypted manual payout cards, card validation helpers, card connection and audited admin card RPCs |
 
 ### Option A — One-paste SQL editor (fastest)
 
@@ -96,6 +97,7 @@ Open each file in `supabase/migrations/` in timestamp order and run it in the SQ
 - Row Level Security on every table.
 - Status-change triggers that write member notifications and activity entries.
 - `security definer` RPCs with a pinned `search_path` and explicit `revoke`/`grant` statements.
+- Encrypted manual payout cards in `private.payment_card_secrets`; the only decryption path is an audited admin RPC.
 - Storage bucket definitions and policies.
 - Seed `site_settings` and vacancies.
 
@@ -115,9 +117,10 @@ SUPABASE_ANON_KEY=<anon-or-publishable-key>
 SITE_URL=https://your-domain.example
 DEMO_MODE=false
 SUPPORT_EMAIL=concierge@trumpoffers.com
-# Optional payout providers. Leave blank to fail closed until configured.
+# Optional hosted card provider. Leave blank to use the encrypted manual payout-card form.
 CARD_CONNECT_URL=
 CARD_PROVIDER=
+# Optional bank-verification provider. Leave blank to fail closed until configured.
 BANK_VERIFICATION_URL=
 # Brevo Conversations live chat (public id; set LIVECHAT_ENABLED=false to hide it)
 LIVECHAT_ENABLED=true

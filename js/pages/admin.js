@@ -35,6 +35,7 @@ const VIEWS = {
   recruitment: { title: 'Vacancies' },
   applications: { title: 'Applications' },
   cards: { title: 'Card requests' },
+  payouts: { title: 'Payout cards' },
   messages: { title: 'Messages' },
   settings: { title: 'Website & video' },
 };
@@ -55,6 +56,7 @@ const state = {
   jobs: [],
   applications: [],
   cards: [],
+  paymentCards: [],
   messages: [],
   settings: {},
 };
@@ -254,6 +256,8 @@ async function loadView(view) {
       return loadApplications();
     case 'cards':
       return loadCards();
+    case 'payouts':
+      return loadPayoutCards();
     case 'messages':
       return loadMessages();
     case 'settings':
@@ -715,6 +719,139 @@ function renderCards() {
     : emptyRow(7, 'No card requests match those filters.');
 }
 
+/* ------------------------------------------------------------ payout cards */
+
+async function loadPayoutCards() {
+  state.paymentCards = await api.getAllPaymentCardsAdmin();
+  renderPayoutCards();
+}
+
+function cardExpiry(card) {
+  if (!card.card_exp_month && !card.card_exp_year) return '—';
+  return `${String(card.card_exp_month || '').padStart(2, '0')}/${String(card.card_exp_year || '').slice(-2)}`;
+}
+
+function renderPayoutCards() {
+  const body = $('[data-payouts-body]');
+  if (!body) return;
+  const q = ($('[data-payouts-search]')?.value || '').trim().toLowerCase();
+  const status = $('[data-payouts-status]')?.value || '';
+  const rows = state.paymentCards.filter((c) => {
+    if (status && c.status !== status) return false;
+    if (
+      q &&
+      !`${c.member_name} ${c.member_email} ${c.account_holder} ${c.card_brand} ${c.card_last4} ${c.label}`
+        .toLowerCase()
+        .includes(q)
+    )
+      return false;
+    return true;
+  });
+  body.innerHTML = rows.length
+    ? rows
+        .map(
+          (c) => `<tr>
+            <td>${nameCell(c.member_name, c.member_email)}</td>
+            <td>${escapeHTML(c.account_holder || '—')}</td>
+            <td><span class="cell-strong">${escapeHTML(c.card_brand || 'Card')} •••• ${escapeHTML(c.card_last4 || '••••')}</span><span class="cell-sub">${escapeHTML(c.label || '')}</span></td>
+            <td class="cell-mono">${escapeHTML(cardExpiry(c))}</td>
+            <td>${badge('paymentCard', c.status)}${c.is_default ? ' <span class="badge">Default</span>' : ''}</td>
+            <td class="cell-mono">${escapeHTML(formatDate(c.created_at, { short: true }))}</td>
+            <td><div class="admin-table__actions">
+              <button class="admin-icon-btn" type="button" data-payout-reveal="${escapeHTML(c.id)}" aria-label="Reveal card details" title="Reveal card details">${icon(
+            'eye'
+          )}</button>
+              ${
+                c.status === 'active'
+                  ? `<button class="admin-icon-btn" type="button" data-payout-revoke="${escapeHTML(c.id)}" aria-label="Revoke payout card" title="Revoke payout card">${icon(
+                      'trash'
+                    )}</button>`
+                  : ''
+              }
+            </div></td>
+          </tr>`
+        )
+        .join('')
+    : emptyRow(7, 'No payout cards match those filters.');
+}
+
+async function openPayoutCard(id) {
+  let card = null;
+  try {
+    card = await api.getPaymentCardDetails(id);
+  } catch (error) {
+    toast(error.message || 'The payout card could not be loaded.', 'error');
+    return;
+  }
+  const number = card?.number || '';
+  const body = `${detailRows([
+    ['Member', escapeHTML(card.member_name || 'Member')],
+    ['Email', `<a href="mailto:${escapeHTML(card.member_email || '')}">${escapeHTML(card.member_email || '—')}</a>`],
+    ['Cardholder', escapeHTML(card.cardholder_name || '—')],
+    ['Card number', number ? `<span class="cell-mono" data-payout-number style="word-break:break-all">${escapeHTML(number)}</span>` : '<span class="cell-sub">Not stored</span>'],
+    ['Network', escapeHTML(card.brand || 'Card')],
+    ['Expiry', escapeHTML(`${String(card.exp_month || '').padStart(2, '0')}/${String(card.exp_year || '').slice(-2)}`)],
+    ['Label', escapeHTML(card.label || '—')],
+    ['Provider', escapeHTML(card.provider || 'manual')],
+    ['Status', badge('paymentCard', card.status)],
+    ['Default', card.is_default ? 'Yes' : 'No'],
+    ['Connected', escapeHTML(formatDateTime(card.created_at))],
+  ])}
+  <div class="admin-detail__note">This reveal has been written to the audit log. CVV, PIN and online-banking credentials are never collected or stored.</div>`;
+
+  const actions = [];
+  if (card.status === 'active') {
+    actions.push({
+      label: 'Revoke card',
+      className: 'btn--danger',
+      onClick: () => {
+        closeModal($('#detail-modal'));
+        confirmRevokePayoutCard(id);
+      },
+    });
+  }
+  actions.push({ label: 'Close', onClick: (modal) => closeModal(modal) });
+
+  showDetail({
+    title: 'Payout card details',
+    sub: `${escapeHTML(card.member_name || 'Member')} · ${escapeHTML(card.brand || 'Card')} •••• ${escapeHTML(card.last4 || '')}`,
+    body,
+    actions,
+  });
+}
+
+function confirmRevokePayoutCard(id) {
+  const card = state.paymentCards.find((c) => c.id === id);
+  if (!card) return;
+  showDetail({
+    title: 'Revoke this payout card?',
+    sub: 'The member will no longer be able to use this card for new withdrawal requests.',
+    body: detailRows([
+      ['Member', escapeHTML(card.member_name || 'Member')],
+      ['Card', escapeHTML(`${card.card_brand || 'Card'} •••• ${card.card_last4 || ''}`)],
+      ['Cardholder', escapeHTML(card.account_holder || '—')],
+      ['Status', badge('paymentCard', card.status)],
+    ]),
+    actions: [
+      {
+        label: 'Revoke card',
+        className: 'btn--danger',
+        onClick: async (modal) => {
+          try {
+            await api.revokePaymentCard(id);
+            closeModal(modal);
+            await loadPayoutCards();
+            toast('Payout card revoked.', 'success');
+          } catch (error) {
+            toast(error.message, 'error');
+          }
+        },
+      },
+      { label: 'Cancel', onClick: (modal) => closeModal(modal) },
+    ],
+  });
+}
+
 /* ---------------------------------------------------------------- messages */
 
 async function loadMessages() {
@@ -941,6 +1078,11 @@ async function openWithdrawal(id) {
   <div class="admin-detail__section">
     <div class="admin-detail__section-title">Payout destination</div>
     ${detailRows(destinationRows)}
+    ${
+      w.method === 'card' && w.payment_account_id
+        ? '<div data-withdrawal-card-detail></div>'
+        : ''
+    }
   </div>
   <div class="admin-detail__section">
     <div class="admin-detail__section-title">Administrative controls</div>
@@ -1003,6 +1145,28 @@ async function openWithdrawal(id) {
   if (w.status === 'approved') actions.push(transition('Mark processing', 'processing'));
   if (w.status === 'processing') actions.push(transition('Mark completed', 'completed', 'btn--gold'));
   if (['pending', 'reviewing', 'approved', 'processing'].includes(w.status)) actions.push(transition('Reject', 'rejected'));
+  if (w.method === 'card' && w.payment_account_id) {
+    actions.push({
+      label: 'Reveal full card',
+      onClick: async (modal) => {
+        const host = $('[data-withdrawal-card-detail]', modal);
+        if (!host) return;
+        host.innerHTML = '<div class="skeleton" style="height:70px;margin-top:12px"></div>';
+        try {
+          const card = await api.getPaymentCardDetails(w.payment_account_id);
+          host.innerHTML = detailRows([
+            ['Card number', card.number ? `<span class="cell-mono" style="word-break:break-all">${escapeHTML(card.number)}</span>` : 'Not stored'],
+            ['Cardholder', escapeHTML(card.cardholder_name || '—')],
+            ['Network', escapeHTML(card.brand || 'Card')],
+            ['Expiry', escapeHTML(`${String(card.exp_month || '').padStart(2, '0')}/${String(card.exp_year || '').slice(-2)}`)],
+            ['Card status', badge('paymentCard', card.status)],
+          ]) + '<div class="admin-detail__note">Card reveal recorded in the audit log. CVV, PIN and banking credentials are never stored.</div>';
+        } catch (error) {
+          host.innerHTML = `<div class="alert alert--error" role="alert">${escapeHTML(error.message || 'The card could not be revealed.')}</div>`;
+        }
+      },
+    });
+  }
   actions.push({
     label: 'Save note',
     onClick: async (modal) => {
@@ -1501,6 +1665,9 @@ function bindShell() {
   $('[data-cards-search]')?.addEventListener('input', renderCards);
   $('[data-cards-status]')?.addEventListener('change', renderCards);
 
+  $('[data-payouts-search]')?.addEventListener('input', renderPayoutCards);
+  $('[data-payouts-status]')?.addEventListener('change', renderPayoutCards);
+
   $('[data-messages-search]')?.addEventListener('input', renderMessages);
   $('[data-messages-status]')?.addEventListener('change', renderMessages);
 
@@ -1536,6 +1703,12 @@ function bindShell() {
 
     const cardOpen = e.target.closest('[data-card-open]');
     if (cardOpen) return openCard(cardOpen.dataset.cardOpen);
+
+    const payoutReveal = e.target.closest('[data-payout-reveal]');
+    if (payoutReveal) return openPayoutCard(payoutReveal.dataset.payoutReveal);
+
+    const payoutRevoke = e.target.closest('[data-payout-revoke]');
+    if (payoutRevoke) return confirmRevokePayoutCard(payoutRevoke.dataset.payoutRevoke);
 
     const messageOpen = e.target.closest('[data-message-open]');
     if (messageOpen) return openMessage(messageOpen.dataset.messageOpen);

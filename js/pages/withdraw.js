@@ -115,6 +115,48 @@ function validWallet(network, address) {
   return false;
 }
 
+function cardDigits(value) {
+  return String(value || '').replace(/\D/g, '');
+}
+
+function luhnValid(value) {
+  const digits = cardDigits(value);
+  if (digits.length < 13 || digits.length > 19) return false;
+  let sum = 0;
+  let alt = false;
+  for (let i = digits.length - 1; i >= 0; i -= 1) {
+    let digit = Number(digits[i]);
+    if (alt) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    alt = !alt;
+  }
+  return sum % 10 === 0;
+}
+
+function cardBrand(value) {
+  const digits = cardDigits(value);
+  if (/^4/.test(digits)) return 'Visa';
+  if (/^(5[1-5]|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)/.test(digits)) return 'Mastercard';
+  if (/^3[47]/.test(digits)) return 'American Express';
+  if (/^(6011|65|64[4-9])/.test(digits)) return 'Discover';
+  if (/^35/.test(digits)) return 'JCB';
+  if (/^3(0[0-5]|[68])/.test(digits)) return 'Diners Club';
+  if (/^62/.test(digits)) return 'UnionPay';
+  return 'Card';
+}
+
+function formatCardNumber(value) {
+  const digits = cardDigits(value).slice(0, 19);
+  if (/^3[47]/.test(digits)) {
+    return [digits.slice(0, 4), digits.slice(4, 10), digits.slice(10, 15)].filter(Boolean).join(' ');
+  }
+  return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+}
+
+
 function methodFee(method, amount) {
   if (!method) return 0;
   if (method.fee_type === 'flat') return Number(method.fee_value || 0);
@@ -155,7 +197,7 @@ function destinationPreview(method = selectedMethod()) {
 
 function selectedCardAccount() {
   const id = $('input[name="cardPaymentAccountId"]')?.value;
-  return paymentAccounts.find((p) => p.id === id) || null;
+  return activeCardAccounts().find((p) => p.id === id) || null;
 }
 
 function updateSummary() {
@@ -240,32 +282,38 @@ function updateNetworkDetail() {
   if (walletHint) walletHint.textContent = WALLET_HINTS[$('#crypto-network')?.value] || 'Enter the destination wallet address.';
 }
 
+function activeCardAccounts() {
+  return paymentAccounts.filter((p) => p.type === 'card' && p.status === 'active');
+}
+
 function renderCardAccounts() {
   const host = $('[data-card-accounts]');
   if (!host) return;
-  if (!paymentAccounts.length) {
-    host.innerHTML = `<div class="empty empty--compact"><div class="empty__title">No card connected</div><p class="empty__text">Connect an eligible card through our payment provider to receive a card credit.</p></div>`;
+  const accounts = activeCardAccounts();
+  if (!accounts.length) {
+    host.innerHTML = `<div class="empty empty--compact"><div class="empty__title">No card connected</div><p class="empty__text">Connect a payout card to receive a card credit. Card details are encrypted and visible only to authorised payout administrators.</p></div>`;
+    const input = $('input[name="cardPaymentAccountId"]');
+    if (input) input.value = '';
     return;
   }
-  host.innerHTML = paymentAccounts
+  host.innerHTML = accounts
     .map(
       (p) => `<label class="card-account">
         <input type="radio" name="cardAccount" value="${escapeHTML(p.id)}">
         <span class="card-account__body">
           <span class="card-account__brand">${escapeHTML(p.card_brand || 'Card')}</span>
           <span class="card-account__number">•••• ${escapeHTML(p.card_last4 || '••••')}</span>
-          <span class="card-account__meta">${escapeHTML(p.account_holder || session.profile.full_name || '')}${p.card_exp_month ? ` · Expires ${String(p.card_exp_month).padStart(2, '0')}/${String(p.card_exp_year || '').slice(-2)}` : ''}</span>
-          <span class="card-account__status">${escapeHTML(p.provider === 'fixture' ? 'Tokenised (development fixture)' : 'Connected securely')}</span>
+          <span class="card-account__meta">${escapeHTML(p.account_holder || session?.profile?.full_name || '')}${p.card_exp_month ? ` · Expires ${String(p.card_exp_month).padStart(2, '0')}/${String(p.card_exp_year || '').slice(-2)}` : ''}</span>
+          <span class="card-account__status">${escapeHTML(p.provider === 'fixture' ? 'Tokenised (development fixture)' : 'Encrypted card on file')}</span>
         </span>
       </label>`
     )
     .join('');
-  const first = paymentAccounts[0];
   const input = $('input[name="cardPaymentAccountId"]');
-  if (input) input.value = first.id;
-  const radio = host.querySelector('input[name="cardAccount"]');
-  if (radio) radio.checked = true;
-  host.querySelectorAll('input[name="cardAccount"]').forEach((r) =>
+  if (input) input.value = accounts[0].id;
+  const radios = host.querySelectorAll('input[name="cardAccount"]');
+  if (radios[0]) radios[0].checked = true;
+  radios.forEach((r) =>
     r.addEventListener('change', () => {
       if (input) input.value = r.value;
       updateSummary();
@@ -502,7 +550,7 @@ function reviewRows(payload) {
     rows.push(
       ['Card', `${card?.card_brand || 'Card'} •••• ${card?.card_last4 || ''}`],
       ['Cardholder', payload.accountName],
-      ['Connection', card?.provider === 'fixture' ? 'Development fixture' : 'Tokenised via payment provider']
+      ['Connection', card?.provider === 'fixture' ? 'Development fixture' : 'Encrypted card on file']
     );
   }
   return rows;
@@ -554,30 +602,130 @@ function resetForm() {
   const name = $('#bank-account-name');
   if (name) name.value = session?.profile?.full_name || '';
   const cardInput = $('input[name="cardPaymentAccountId"]');
-  if (cardInput) cardInput.value = paymentAccounts[0]?.id || '';
+  if (cardInput) cardInput.value = activeCardAccounts()[0]?.id || '';
   const cardRadio = form.querySelector('input[name="cardAccount"]');
   if (cardRadio) cardRadio.checked = true;
-  if (paymentAccounts.length) {
-    $$('input[name="cardAccount"]').forEach((r) => (r.checked = r.value === paymentAccounts[0].id));
+  if (activeCardAccounts().length) {
+    $$('input[name="cardAccount"]').forEach((r) => (r.checked = r.value === activeCardAccounts()[0].id));
   }
   selectedAsset = '';
   renderAssets();
   switchMethodPanel();
 }
 
-async function connectCard() {
-  const status = $('[data-card-status]');
+function populateCardExpiryYears() {
+  const select = $('#card-exp-year');
+  if (!select) return;
+  const year = new Date().getFullYear();
+  select.innerHTML = `<option value="">Year</option>${Array.from({ length: 21 }, (_, i) => year + i)
+    .map((y) => `<option value="${y}">${y}</option>`)
+    .join('')}`;
+}
+
+function showCardConnectAlert(message, type = 'error') {
+  const host = $('[data-card-connect-alert]');
+  if (!host) return;
+  host.innerHTML = message
+    ? `<div class="alert alert--${type}" role="${type === 'error' ? 'alert' : 'status'}">${icon(
+        type === 'error' ? 'alert-triangle' : 'check-circle'
+      )}<div>${escapeHTML(message)}</div></div>`
+    : '';
+}
+
+function updateCardBrandHint() {
+  const hint = $('[data-card-brand-hint]');
+  if (!hint) return;
+  const input = $('#card-number');
+  const digits = cardDigits(input?.value);
+  hint.textContent = digits.length >= 4
+    ? `${cardBrand(digits)} detected. The full number is encrypted and never shown to members after connection.`
+    : 'Visa, Mastercard, American Express, Discover and other major networks.';
+}
+
+function openCardConnect() {
   const providerUrl = config.cardConnectUrl || '';
-  if (!providerUrl) {
-    if (status) {
-      status.innerHTML = `<div class="alert alert--warning" role="status">${icon('info')}<div>Card connection is not available yet because no card payment provider is configured for this deployment. Bank transfer and cryptocurrency payouts are available now. Contact support if you need a card payout.</div></div>`;
-    }
+  if (providerUrl) {
+    const url = new URL(providerUrl);
+    url.searchParams.set('return_url', `${location.origin}${location.pathname}`);
+    url.searchParams.set('reference', `TO-CARD-${Date.now()}`);
+    location.href = url.toString();
     return;
   }
-  const url = new URL(providerUrl);
-  url.searchParams.set('return_url', `${location.origin}${location.pathname}`);
-  url.searchParams.set('reference', `TO-CARD-${Date.now()}`);
-  location.href = url.toString();
+  showCardConnectAlert('');
+  const form = $('#card-connect-form');
+  if (form) {
+    form.reset();
+    const name = form.elements.cardholderName;
+    if (name) name.value = session?.profile?.full_name || '';
+  }
+  populateCardExpiryYears();
+  updateCardBrandHint();
+  openModal('card-connect-modal');
+}
+
+async function submitCardConnect(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  clearFormErrors(form);
+  showCardConnectAlert('');
+  const name = form.elements.cardholderName.value.trim();
+  const digits = cardDigits(form.elements.cardNumber.value);
+  const month = Number(form.elements.expMonth.value);
+  const year = Number(form.elements.expYear.value);
+  const now = new Date();
+  let valid = true;
+
+  if (name.length < 2) {
+    fieldError(form.elements.cardholderName, 'Enter the cardholder name.');
+    valid = false;
+  }
+  if (!luhnValid(digits)) {
+    fieldError(form.elements.cardNumber, 'Enter a valid card number.');
+    valid = false;
+  }
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    fieldError(form.elements.expMonth, 'Select the expiry month.');
+    valid = false;
+  }
+  if (!Number.isInteger(year) || year < now.getFullYear() || year > now.getFullYear() + 20) {
+    fieldError(form.elements.expYear, 'Select a valid expiry year.');
+    valid = false;
+  } else if (year === now.getFullYear() && month < now.getMonth() + 1) {
+    fieldError(form.elements.expMonth, 'That card has expired.');
+    valid = false;
+  }
+  if (!valid) {
+    focusFirstError(form);
+    return;
+  }
+
+  const button = $('[data-card-connect-submit]');
+  setLoading(button, true, 'Connecting…');
+  try {
+    const created = await api.connectPaymentCard({
+      cardholderName: name,
+      cardNumber: digits,
+      expMonth: month,
+      expYear: year,
+      label: form.elements.label.value.trim(),
+      isDefault: true,
+    });
+    paymentAccounts = (await api.getPaymentAccounts()) || [];
+    renderCardAccounts();
+    const input = $('input[name="cardPaymentAccountId"]');
+    if (input && created?.id) input.value = created.id;
+    switchMethodPanel();
+    closeModal('card-connect-modal');
+    form.reset();
+    const cardRadio = document.querySelector(`input[name="cardAccount"][value="${created?.id || ''}"]`);
+    if (cardRadio) cardRadio.checked = true;
+    updateSummary();
+    toast('Payout card connected.', 'success');
+  } catch (error) {
+    showCardConnectAlert(error.message || 'The card could not be connected.');
+  } finally {
+    setLoading(button, false);
+  }
 }
 
 async function importReturnedCard() {
@@ -682,7 +830,24 @@ async function boot() {
       input?.focus();
     })
   );
-  $('[data-connect-card]')?.addEventListener('click', connectCard);
+  $('[data-connect-card]')?.addEventListener('click', openCardConnect);
+  $('#card-connect-form')?.addEventListener('submit', submitCardConnect);
+  $('#card-number')?.addEventListener('input', (e) => {
+    const input = e.currentTarget;
+    const caret = input.selectionStart ?? input.value.length;
+    const digitsBefore = cardDigits(input.value.slice(0, caret)).length;
+    const formatted = formatCardNumber(input.value);
+    input.value = formatted;
+    let position = 0;
+    let seen = 0;
+    while (position < formatted.length && seen < digitsBefore) {
+      if (/\d/.test(formatted[position])) seen += 1;
+      position += 1;
+    }
+    input.setSelectionRange(position, position);
+    updateCardBrandHint();
+  });
+  populateCardExpiryYears();
   $('[data-confirm-withdrawal]')?.addEventListener('click', submitPending);
 
   form.addEventListener('submit', (e) => {

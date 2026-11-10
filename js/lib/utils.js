@@ -138,6 +138,10 @@ export const STATUS = {
     draft: { label: 'Draft', tone: 'plain' },
     closed: { label: 'Closed', tone: 'plain' },
   },
+  paymentCard: {
+    active: { label: 'Active', tone: 'success' },
+    revoked: { label: 'Revoked', tone: 'danger' },
+  },
 };
 
 export function statusMeta(type, value) {

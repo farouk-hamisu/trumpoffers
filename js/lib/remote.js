@@ -349,10 +349,39 @@ class SupabaseBackend {
     return data;
   }
 
-  async deletePaymentAccount(id) {
-    const { error } = await this.client.from('payment_accounts').update({ status: 'revoked' }).eq('id', id);
+  async deletePaymentAccount() {
+    throw new Error('Payout cards can only be revoked by an administrator.');
+  }
+
+  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true }) {
+    const { data, error } = await this.client.rpc('connect_payment_card', {
+      p_cardholder_name: cardholderName,
+      p_card_number: cardNumber,
+      p_exp_month: Number(expMonth),
+      p_exp_year: Number(expYear),
+      p_label: label || '',
+      p_is_default: Boolean(isDefault),
+    });
     if (error) throw friendlyError(error);
-    return true;
+    return single(data);
+  }
+
+  async getAllPaymentCardsAdmin() {
+    const { data, error } = await this.client.rpc('admin_list_payment_cards');
+    if (error) throw friendlyError(error);
+    return data || [];
+  }
+
+  async getPaymentCardDetails(id) {
+    const { data, error } = await this.client.rpc('admin_get_payment_card', { p_id: id });
+    if (error) throw friendlyError(error);
+    return data;
+  }
+
+  async revokePaymentCard(id) {
+    const { data, error } = await this.client.rpc('admin_revoke_payment_card', { p_id: id });
+    if (error) throw friendlyError(error);
+    return single(data);
   }
 
   async getNotifications() {
@@ -684,7 +713,7 @@ class SupabaseBackend {
   async getAllWithdrawalsAdmin() {
     const { data, error } = await this.client
       .from('withdrawals')
-      .select('*, profiles(full_name,email)')
+      .select('*, profiles:profiles!withdrawals_user_id_fkey(full_name,email)')
       .order('created_at', { ascending: false });
     if (error) throw friendlyError(error);
     return (data || []).map((w) => ({

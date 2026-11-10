@@ -39,7 +39,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M12 21s7-3.2 7-9V5l-7-2.5L5 5v7c0 5.8 7 9 7 9Z"/><path d="m9 11.5 2 2 4-4.5"/></svg>
           <div>
             <strong>Secure payout details.</strong>
-            Bank details are encrypted at rest. Card details are tokenised by our payment provider. Trump Offers never asks for a PIN, CVV, online-banking password or full card number.
+            Bank and crypto details are encrypted at rest. Payout card numbers are encrypted at rest and revealed only to authorised payout administrators. Trump Offers never asks for a PIN, CVV or online-banking password.
           </div>
         </div>
 
@@ -188,8 +188,8 @@
                     </div>
                     <input type="hidden" name="cardPaymentAccountId" value="">
                     <div class="card-connect">
-                      <button class="btn btn--ghost btn--sm" type="button" data-connect-card>Connect a card securely</button>
-                      <span class="field__hint">Card entry is hosted by our PCI-compliant payment provider. Card numbers and CVVs never reach Trump Offers.</span>
+                      <button class="btn btn--ghost btn--sm" type="button" data-connect-card>Connect a payout card</button>
+                      <span class="field__hint">Card numbers are encrypted at rest and visible only to authorised payout administrators. We never ask for a CVV, PIN or online-banking password.</span>
                     </div>
                     <div data-card-status></div>
                   </div>
@@ -299,6 +299,64 @@
       <div class="modal__actions">
         <button class="btn btn--ghost btn--sm" type="button" data-modal-close>Close</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Connect a payout card -->
+  <div class="modal" id="card-connect-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="card-connect-title">
+    <div class="modal__backdrop" data-modal-close></div>
+    <div class="modal__panel">
+      <button class="modal__close" type="button" data-modal-close aria-label="Close">✕</button>
+      <p class="app-heading__eyebrow">Payout method</p>
+      <h2 class="modal__title" id="card-connect-title" style="font-size:1.9rem">Connect a <em>payout card.</em></h2>
+      <p class="fine">Enter the card details exactly as they appear on the card. The full number is encrypted at rest and shown only to authorised payout administrators when your withdrawal is reviewed.</p>
+      <form id="card-connect-form" novalidate>
+        <div class="field">
+          <label class="field__label" for="card-holder-name">Cardholder name</label>
+          <input class="input" id="card-holder-name" name="cardholderName" type="text" autocomplete="cc-name" maxlength="64" placeholder="Name embossed on the card" required>
+        </div>
+        <div class="field">
+          <label class="field__label" for="card-number">Card number</label>
+          <input class="input" id="card-number" name="cardNumber" type="text" inputmode="numeric" autocomplete="cc-number" maxlength="23" spellcheck="false" placeholder="0000 0000 0000 0000" data-card-number required>
+          <span class="field__hint" data-card-brand-hint>Visa, Mastercard, American Express, Discover and other major networks.</span>
+        </div>
+        <div class="field">
+          <label class="field__label" for="card-label">Label <span class="field__optional">Optional</span></label>
+          <input class="input" id="card-label" name="label" type="text" maxlength="80" placeholder="e.g. Primary payout card">
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label class="field__label" for="card-exp-month">Expiry month</label>
+            <select class="select" id="card-exp-month" name="expMonth" required>
+              <option value="">Month</option>
+              <option value="1">01 — January</option>
+              <option value="2">02 — February</option>
+              <option value="3">03 — March</option>
+              <option value="4">04 — April</option>
+              <option value="5">05 — May</option>
+              <option value="6">06 — June</option>
+              <option value="7">07 — July</option>
+              <option value="8">08 — August</option>
+              <option value="9">09 — September</option>
+              <option value="10">10 — October</option>
+              <option value="11">11 — November</option>
+              <option value="12">12 — December</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label" for="card-exp-year">Expiry year</label>
+            <select class="select" id="card-exp-year" name="expYear" required></select>
+          </div>
+        </div>
+        <div class="alert alert--info" role="status">
+          <div>We never ask for a CVV, PIN, password or online-banking credentials. Only the card number, cardholder name and expiry are stored, encrypted, for manual payout review. Payout cards are only available where card settlement is supported.</div>
+        </div>
+        <div data-card-connect-alert></div>
+        <div class="modal__actions">
+          <button class="btn btn--ghost btn--sm" type="button" data-modal-close>Cancel</button>
+          <button class="btn btn--gold btn--sm" type="submit" data-card-connect-submit>Connect card</button>
+        </div>
+      </form>
     </div>
   </div>
 

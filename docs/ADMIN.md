@@ -70,15 +70,25 @@ Statuses: `confirmed → verifying → processing → completed`, plus `cancelle
 
 Statuses: `pending → reviewing → approved → processing → completed`, plus `rejected` and `cancelled`.
 
-- Requests have a minimum of $100. Bank details are validated and encrypted at rest; crypto addresses are validated per network; card payouts require a tokenised card from the configured provider.
+- Requests have a minimum of $100. Bank details are validated and encrypted at rest; crypto addresses are validated per network; card payouts use an active card connected by the member. When a hosted card provider is configured its token is used; otherwise the card number is stored encrypted for manual review.
 - The register supports search by reference, member, method and destination, plus a status filter.
-- Opening a request shows the amount, fee, net payout, payout destination, provider reference, internal note, rejection reason, complete status history and administrative controls.
+- Opening a request shows the amount, fee, net payout, payout destination, provider reference, internal note, rejection reason, complete status history and administrative controls. Card withdrawals also offer **Reveal full card**, which decrypts the stored number and writes an audit entry.
 - **Move to review**, **Approve**, **Mark processing** and **Mark completed** enforce the allowed transition graph. **Reject** requires a reason.
 - **Mark completed** requires the administrator to confirm that the payout was settled by the provider, bank or blockchain. The provider reference is recorded. Approval alone never marks funds as sent.
 - **Save note** records an internal note without changing the status.
 - The RPC deducts the amount from the member's balance only on completion, and writes both status history and an `admin_audit_logs` entry.
 
 There is no automatic status progression. Provider payouts require configured credentials; when a provider is not configured the request remains in review or processing and completion must be confirmed manually.
+
+### Payout cards
+
+The **Payout cards** view lists every card members have connected for card withdrawals.
+
+- Cards are shown masked by default: member, cardholder, network, last four, expiry, status and connection date. Search covers member, email, cardholder, label and last four.
+- **Reveal** decrypts the full number through `admin_get_payment_card()`. Every reveal is recorded in `admin_audit_logs`; never copy the number into notes, email or chat.
+- **Revoke** marks the card unusable for new requests, clears its default flag, notifies the member and writes an audit entry. Existing withdrawal requests keep their masked snapshot.
+- CVV, PIN, passwords and online-banking credentials are never collected. Do not ask members to send card details by email or chat; send them to the withdrawal desk card form.
+- Members can keep up to five active payout cards. Duplicate cards for the same member are rejected by the RPC.
 
 ---
 

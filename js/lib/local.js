@@ -47,7 +47,7 @@ const WITHDRAWAL_METHODS = [
   {
     method: 'card',
     label: 'Card credit',
-    description: 'A credit to an eligible card connected through our payment provider.',
+    description: 'A credit to a payout card connected in the withdrawal desk.',
     min_amount: 100,
     max_amount: 30000,
     fee_type: 'none',
@@ -674,6 +674,35 @@ function luhnNumber(prefix = '4539') {
   return body + ((10 - (sum % 10)) % 10);
 }
 
+function luhnValid(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (digits.length < 13 || digits.length > 19) return false;
+  let sum = 0;
+  let alt = false;
+  for (let i = digits.length - 1; i >= 0; i -= 1) {
+    let digit = Number(digits[i]);
+    if (alt) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    alt = !alt;
+  }
+  return sum % 10 === 0;
+}
+
+function cardBrand(value) {
+  const digits = String(value || '').replace(/\D/g, '');
+  if (/^4/.test(digits)) return 'Visa';
+  if (/^(5[1-5]|222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720)/.test(digits)) return 'Mastercard';
+  if (/^3[47]/.test(digits)) return 'American Express';
+  if (/^(6011|65|64[4-9])/.test(digits)) return 'Discover';
+  if (/^35/.test(digits)) return 'JCB';
+  if (/^3(0[0-5]|[68])/.test(digits)) return 'Diners Club';
+  if (/^62/.test(digits)) return 'UnionPay';
+  return 'Card';
+}
+
 function compactAccount(value) {
   return String(value || '').replace(/\s+/g, '');
 }
@@ -1224,15 +1253,160 @@ class LocalBackend {
     return record;
   }
 
-  async deletePaymentAccount(id) {
+  async deletePaymentAccount() {
+    throw new Error('Payout cards can only be revoked by an administrator.');
+  }
+
+  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true }) {
     const db = await this.db();
     const user = await this.requireUser(db);
-    const record = (db.payment_accounts || []).find((p) => p.id === id && p.user_id === user.id);
-    if (!record) throw new Error('Payment account not found.');
-    record.status = 'revoked';
-    record.updated_at = new Date().toISOString();
+    const name = String(cardholderName || '').replace(/\s+/g, ' ').trim();
+    const digits = String(cardNumber || '').replace(/\D/g, '');
+    const month = Number(expMonth);
+    const year = Number(expYear);
+    const now = new Date();
+
+    if (name.length < 2) throw new Error('Enter the cardholder name.');
+    if (name.length > 64) throw new Error('Cardholder names are limited to 64 characters.');
+    if (!luhnValid(digits)) throw new Error('That card number is not valid.');
+    if (!Number.isInteger(month) || month < 1 || month > 12) throw new Error('Select a valid expiry month.');
+    if (!Number.isInteger(year) || year < now.getFullYear() || year > now.getFullYear() + 20) {
+      throw new Error('Select a valid expiry year.');
+    }
+    if (year === now.getFullYear() && month < now.getMonth() + 1) throw new Error('That card has expired.');
+
+    db.payment_accounts = db.payment_accounts || [];
+    const activeCards = db.payment_accounts.filter(
+      (p) => p.user_id === user.id && p.type === 'card' && p.status === 'active'
+    );
+    if (activeCards.length >= 5) throw new Error('You can keep at most five active payout cards.');
+
+    const brand = cardBrand(digits);
+    const last4 = digits.slice(-4);
+    if (isDefault) {
+      activeCards.forEach((p) => {
+        p.is_default = false;
+      });
+    }
+
+    const record = {
+      id: crypto.randomUUID ? crypto.randomUUID() : `pa-${Date.now()}`,
+      user_id: user.id,
+      type: 'card',
+      provider: 'manual',
+      provider_token: null,
+      label: String(label || '').trim() || `${brand} ending ${last4}`,
+      account_holder: name,
+      bank_name: null,
+      bank_code: null,
+      account_last4: null,
+      iban_last4: null,
+      crypto_asset: null,
+      crypto_network: null,
+      wallet_address: null,
+      card_brand: brand,
+      card_last4: last4,
+      card_exp_month: month,
+      card_exp_year: year,
+      status: 'active',
+      is_default: Boolean(isDefault),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    db.payment_accounts.unshift(record);
+    // Local preview only: the production adapter keeps full numbers in an
+    // encrypted private-schema table and never returns them to members.
+    db.payment_card_secrets = db.payment_card_secrets || [];
+    db.payment_card_secrets.push({
+      payment_account_id: record.id,
+      card_number: digits,
+      created_at: record.created_at,
+    });
+    this.notify(
+      db,
+      user.id,
+      'Payout card connected',
+      `Your ${brand} ending ${last4} is connected for manual payouts.`,
+      'withdrawal'
+    );
+    this.logActivity(db, user.id, 'payment_account.card_added', 'payment_account', `${brand} ending ${last4} connected for payouts.`);
     await this.save(db);
-    return true;
+    return record;
+  }
+
+  async getAllPaymentCardsAdmin() {
+    const db = await this.db();
+    await this.requireAdmin(db);
+    return (db.payment_accounts || [])
+      .filter((p) => p.type === 'card')
+      .map((p) => {
+        const user = db.users.find((u) => u.id === p.user_id);
+        return {
+          ...p,
+          member_name: user?.full_name || 'Member',
+          member_email: user?.email || '',
+        };
+      })
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+
+  async getPaymentCardDetails(id) {
+    const db = await this.db();
+    const admin = await this.requireAdmin(db);
+    const card = (db.payment_accounts || []).find((p) => p.id === id && p.type === 'card');
+    if (!card) throw new Error('Payout card not found.');
+    const secret = (db.payment_card_secrets || []).find((s) => s.payment_account_id === id);
+    const user = db.users.find((u) => u.id === card.user_id);
+    db.admin_audit_logs = db.admin_audit_logs || [];
+    db.admin_audit_logs.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `aud-${Date.now()}`,
+      admin_id: admin.id,
+      action: 'payment_card.viewed',
+      entity_type: 'payment_account',
+      entity_id: id,
+      details: { brand: card.card_brand, last4: card.card_last4 },
+      created_at: new Date().toISOString(),
+    });
+    await this.save(db);
+    return {
+      ...card,
+      member_name: user?.full_name || 'Member',
+      member_email: user?.email || '',
+      cardholder_name: card.account_holder,
+      brand: card.card_brand,
+      exp_month: card.card_exp_month,
+      exp_year: card.card_exp_year,
+      number: secret?.card_number || null,
+    };
+  }
+
+  async revokePaymentCard(id) {
+    const db = await this.db();
+    const admin = await this.requireAdmin(db);
+    const card = (db.payment_accounts || []).find((p) => p.id === id && p.type === 'card');
+    if (!card) throw new Error('Payout card not found.');
+    card.status = 'revoked';
+    card.is_default = false;
+    card.updated_at = new Date().toISOString();
+    db.admin_audit_logs = db.admin_audit_logs || [];
+    db.admin_audit_logs.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `aud-${Date.now()}`,
+      admin_id: admin.id,
+      action: 'payment_card.revoked',
+      entity_type: 'payment_account',
+      entity_id: id,
+      details: { brand: card.card_brand, last4: card.card_last4 },
+      created_at: new Date().toISOString(),
+    });
+    this.notify(
+      db,
+      card.user_id,
+      'Payout card revoked',
+      `Your ${card.card_brand || 'card'} ending ${card.card_last4 || ''} was removed as a payout destination.`,
+      'withdrawal'
+    );
+    await this.save(db);
+    return card;
   }
 
   async getNotifications() {
