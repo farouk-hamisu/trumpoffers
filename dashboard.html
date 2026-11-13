@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Member Dashboard — Trump Offers</title>
-  <meta name="description" content="Your Trump Offers member dashboard: executive reward balance, claims, withdrawals, applications and digital card.">
+  <meta name="description" content="Your Trump Offers member dashboard: reward balance, withdrawal history, applications and digital card.">
   <meta name="theme-color" content="#0a0a0b">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://trumpoffers.com/dashboard.html">
@@ -29,7 +29,7 @@
           <div>
             <p class="app-heading__eyebrow">Member overview</p>
             <h1>Good to see you, <em data-first-name>Member.</em></h1>
-            <p class="app-heading__sub">Your member balance, active requests and opportunities in one unified view.</p>
+            <p class="app-heading__sub">Your balance, requests and opportunities in one place.</p>
           </div>
           <div class="app-heading__actions">
             <a class="btn btn--ghost btn--sm" href="careers.html">Explore roles</a>
@@ -39,7 +39,7 @@
 
         <div class="sim-banner" style="margin-bottom:20px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5M12 8h.01"/></svg>
-          Member portal · System status operational. Secure end-to-end transaction processing enabled.
+          Member portal · Your account is active and secure.
         </div>
 
         <div class="dash-hero">
@@ -50,10 +50,10 @@
                 <span class="badge badge--success">Active</span>
               </div>
               <div class="balance-panel__value" data-balance>$30,000<sup>USD</sup></div>
-              <p class="balance-panel__note" data-balance-note>Allocated membership balance. Available for distribution and benefit redemption.</p>
+              <p class="balance-panel__note" data-balance-note>Available to withdraw.</p>
             </div>
             <div class="balance-panel__actions">
-              <a class="btn btn--gold btn--sm" href="rewards.html">Claim reward</a>
+              <a class="btn btn--gold btn--sm" href="rewards.html">View rewards</a>
               <a class="btn btn--ghost btn--sm" href="withdraw.html">Withdraw funds</a>
             </div>
             <svg class="balance-panel__spark" viewBox="0 0 190 66" fill="none" aria-hidden="true"><path d="M2 55 24 48 45 51 66 38 87 42 108 27 129 31 150 16 170 20 188 6" stroke="currentColor" stroke-width="1"/><path d="M2 55 24 48 45 51 66 38 87 42 108 27 129 31 150 16 170 20 188 6V66H2Z" fill="url(#sparkFill)" opacity=".25"/><defs><linearGradient id="sparkFill" x1="95" y1="6" x2="95" y2="66" gradientUnits="userSpaceOnUse"><stop stop-color="#c6a25b"/><stop offset="1" stop-color="#c6a25b" stop-opacity="0"/></linearGradient></defs></svg>
@@ -62,10 +62,10 @@
           <div class="overview-side">
             <div class="mini-stat" data-reveal>
               <div>
-                <div class="mini-stat__label">Active claim</div>
-                <div class="mini-stat__value" data-active-claim>—</div>
+                <div class="mini-stat__label">Latest reward</div>
+                <div class="mini-stat__value" data-latest-reward>—</div>
               </div>
-              <div class="mini-stat__foot" data-active-claim-foot>No request in progress</div>
+              <div class="mini-stat__foot" data-latest-reward-foot>No rewards yet</div>
             </div>
             <a class="notification-mini" href="dashboard.html#notifications" data-reveal>
               <span class="notification-mini__icon">
@@ -104,15 +104,15 @@
 
         <div class="dash-grid">
           <div class="dash-stack">
-            <section class="panel" id="claim" aria-labelledby="claim-panel-title" data-reveal>
+            <section class="panel" id="rewards" aria-labelledby="reward-panel-title" data-reveal>
               <div class="panel__head">
                 <div>
-                  <h2 class="panel__title" id="claim-panel-title">Reward claim</h2>
-                  <p class="panel__sub">Live status of your current claim.</p>
+                  <h2 class="panel__title" id="reward-panel-title">Reward activity</h2>
+                  <p class="panel__sub">Rewards added to your account.</p>
                 </div>
-                <a class="panel__action" href="rewards.html">Rewards</a>
+                <a class="panel__action" href="rewards.html">View all</a>
               </div>
-              <div data-claim-panel>
+              <div data-reward-panel>
                 <div class="skeleton" style="height:150px"></div>
               </div>
             </section>
@@ -134,7 +134,7 @@
               <div class="panel__head">
                 <div>
                   <h2 class="panel__title" id="withdrawals-panel-title">Withdrawal history</h2>
-                  <p class="panel__sub">Requests appear here with a reference and settlement status.</p>
+                  <p class="panel__sub">Your requests and their current status.</p>
                 </div>
                 <a class="panel__action" href="withdraw.html">Withdraw</a>
               </div>
@@ -161,7 +161,7 @@
               <div class="panel__head" style="padding:24px 24px 0;margin-bottom:0">
                 <div>
                   <h2 class="panel__title" id="notif-panel-title">Notifications</h2>
-                  <p class="panel__sub">Updates from the concierge desk.</p>
+                  <p class="panel__sub">Updates from our team.</p>
                 </div>
                 <button class="panel__action" type="button" data-mark-read>Mark read</button>
               </div>

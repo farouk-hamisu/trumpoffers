@@ -235,6 +235,20 @@ class SupabaseBackend {
     };
   }
 
+  async getRewardTransactions() {
+    const { data: session } = await this.client.auth.getSession();
+    if (!session.session) throw new Error('Please sign in again.');
+    const uid = session.session.user.id;
+    const { data, error } = await this.client
+      .from('balance_ledger')
+      .select('*')
+      .eq('user_id', uid)
+      .in('entry_type', ['reward', 'settlement', 'adjustment'])
+      .order('created_at', { ascending: false });
+    if (error) throw friendlyError(error);
+    return data || [];
+  }
+
   async getClaims() {
     const { data, error } = await this.client
       .from('reward_claims')
@@ -727,6 +741,31 @@ class SupabaseBackend {
   }
 
   /* ------------------------------------------------------- admin registers */
+
+  async getRewardTransactionsAdmin() {
+    const { data, error } = await this.client
+      .from('balance_ledger')
+      .select('*, profiles:profiles!balance_ledger_user_id_fkey(full_name,email)')
+      .in('entry_type', ['reward', 'settlement', 'adjustment'])
+      .order('created_at', { ascending: false });
+    if (error) throw friendlyError(error);
+    return (data || []).map((entry) => ({
+      ...entry,
+      member_name: entry.profiles?.full_name || 'Member',
+      member_email: entry.profiles?.email || '',
+    }));
+  }
+
+  async adminIssueReward({ userId, amount, note = '', idempotencyKey = null }) {
+    const { data, error } = await this.client.rpc('admin_issue_reward', {
+      p_user_id: userId,
+      p_amount: Number(amount),
+      p_note: note,
+      p_idempotency_key: idempotencyKey,
+    });
+    if (error) throw friendlyError(error);
+    return single(data);
+  }
 
   async getAllClaimsAdmin() {
     const { data, error } = await this.client

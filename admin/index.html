@@ -196,13 +196,29 @@
           <div class="admin-heading">
             <div>
               <p class="admin-heading__eyebrow">Rewards ledger</p>
-              <h1 id="rewards-title">Claims &amp; <em>withdrawals.</em></h1>
-              <p>All transactions are logged in the ledger. Advancing a status sends the member a notification and records an activity entry.</p>
+              <h1 id="rewards-title">Rewards &amp; <em>withdrawals.</em></h1>
+              <p>Issue rewards and review every credit and withdrawal. Each reward updates the member balance immediately.</p>
             </div>
             <div class="admin-heading__actions">
+              <button class="btn btn--gold btn--sm" type="button" data-issue-reward>Issue reward</button>
               <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
             </div>
           </div>
+
+          <section class="admin-panel admin-panel--flush" style="margin-bottom:16px">
+            <div class="admin-panel__head admin-panel__head--padded">
+              <div>
+                <h2 class="admin-panel__title">Reward credits</h2>
+                <p class="admin-panel__sub">Automatic and manual rewards recorded in the balance ledger</p>
+              </div>
+            </div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Date</th><th>Member</th><th>Description</th><th>Amount</th><th>Balance after</th></tr></thead>
+                <tbody data-rewards-body></tbody>
+              </table>
+            </div>
+          </section>
           <div class="admin-filters">
             <div class="admin-filters__search">
               <span data-icon-btn="search"></span>

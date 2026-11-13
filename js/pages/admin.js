@@ -53,6 +53,7 @@ const state = {
   overview: null,
   users: [],
   claims: [],
+  rewardLedger: [],
   withdrawals: [],
   jobs: [],
   applications: [],
@@ -514,16 +515,112 @@ function renderUsers() {
 /* ----------------------------------------------------------------- rewards */
 
 async function loadRewards() {
-  const [claims, withdrawals, fields] = await Promise.all([
+  const [claims, withdrawals, rewardLedger, fields] = await Promise.all([
     api.getAllClaimsAdmin(),
     api.getAllWithdrawalsAdmin(),
+    api.getRewardTransactionsAdmin().catch(() => []),
     api.adminListCardFormFields().catch(() => state.cardFormFields),
   ]);
   state.claims = claims;
   state.withdrawals = withdrawals;
+  state.rewardLedger = rewardLedger;
   state.cardFormFields = fields || state.cardFormFields;
   renderClaims();
+  renderRewardLedger();
   renderWithdrawals();
+}
+
+function renderRewardLedger() {
+  const body = $('[data-rewards-body]');
+  if (!body) return;
+  const rows = state.rewardLedger || [];
+  body.innerHTML = rows.length
+    ? rows
+        .map(
+          (entry) => `<tr>
+            <td class="cell-mono">${escapeHTML(formatDate(entry.created_at, { short: true }))}</td>
+            <td>${nameCell(entry.member_name, entry.member_email)}</td>
+            <td><span class="cell-strong">${escapeHTML(entry.note || 'Reward added')}</span><span class="cell-sub">${escapeHTML(
+            entry.entry_type === 'reward' ? 'Reward credit' : humanize(entry.entry_type)
+          )}</span></td>
+            <td class="cell-amount">+${escapeHTML(formatCurrency(entry.amount, { cents: Number(entry.amount) % 1 !== 0 }))}</td>
+            <td>${entry.balance_after == null ? '—' : escapeHTML(formatCurrency(entry.balance_after, { cents: true }))}</td>
+          </tr>`
+        )
+        .join('')
+    : emptyRow(5, 'No reward credits yet.');
+}
+
+async function openIssueReward() {
+  let members = state.users.filter((u) => u.role !== 'admin');
+  if (!members.length) {
+    try {
+      members = (await api.auth.listUsers('')).filter((u) => u.role !== 'admin');
+      state.users = await api.auth.listUsers('');
+    } catch (error) {
+      toast(error.message || 'Members could not be loaded.', 'error');
+      return;
+    }
+  }
+
+  if (!members.length) {
+    toast('No members available to receive a reward.', 'info');
+    return;
+  }
+
+  const options = members
+    .map(
+      (u) =>
+        `<option value="${escapeHTML(u.id)}">${escapeHTML(u.full_name || 'Member')} — ${escapeHTML(
+          u.email || ''
+        )}</option>`
+    )
+    .join('');
+
+  showDetail({
+    title: 'Issue reward',
+    sub: 'The reward is added to the member balance immediately and recorded in their transaction history.',
+    body: `<div class="field" style="margin-top:18px">
+        <label class="field__label" for="reward-member">Member</label>
+        <select class="select" id="reward-member">${options}</select>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label class="field__label" for="reward-amount">Amount (USD)</label>
+        <input class="input" id="reward-amount" type="number" min="0.01" max="1000000" step="0.01" placeholder="500.00">
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label class="field__label" for="reward-note">Description</label>
+        <input class="input" id="reward-note" type="text" maxlength="120" placeholder="Reward issued by support">
+      </div>`,
+    actions: [
+      {
+        label: 'Issue reward',
+        className: 'btn--gold',
+        onClick: async (modal) => {
+          const userId = $('#reward-member', modal).value;
+          const amount = Number($('#reward-amount', modal).value);
+          const note = $('#reward-note', modal).value.trim();
+          if (!Number.isFinite(amount) || amount <= 0) {
+            toast('Enter a reward amount greater than zero.', 'error');
+            return;
+          }
+          const button = $('[data-detail-action="0"]', modal);
+          setLoading(button, true);
+          try {
+            await api.adminIssueReward({ userId, amount, note });
+            closeModal(modal);
+            await loadRewards();
+            toast('Reward Added Successfully!', 'success');
+          } catch (error) {
+            toast(error.message, 'error');
+          } finally {
+            setLoading(button, false);
+          }
+        },
+      },
+      { label: 'Cancel', onClick: (modal) => closeModal(modal) },
+    ],
+  });
 }
 
 function renderClaims() {
@@ -1911,6 +2008,9 @@ function bindShell() {
 
     const messageOpen = e.target.closest('[data-message-open]');
     if (messageOpen) return openMessage(messageOpen.dataset.messageOpen);
+
+    const issueReward = e.target.closest('[data-issue-reward]');
+    if (issueReward) return openIssueReward();
 
     const claimOpen = e.target.closest('[data-claim-open]');
     if (claimOpen) return openClaim(claimOpen.dataset.claimOpen);

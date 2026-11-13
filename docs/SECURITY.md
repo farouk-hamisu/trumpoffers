@@ -8,7 +8,8 @@ Trump Offers is a rewards, recruitment and digital-card platform. This document 
 
 Keep the following accurate in any deployment:
 
-- Reward balances and claims are platform records. Money moves only when a payout provider or bank is configured and an administrator confirms settlement.
+- Reward balances and reward credits are platform records. Money moves only when a payout provider or bank is configured and an administrator confirms settlement.
+- Rewards are credited automatically during provisioning. `private.credit_reward()` updates the balance, writes a `reward` entry to `balance_ledger`, sends the member a notification and records activity. An idempotency key prevents duplicate credits.
 - Withdrawals are reviewed by an administrator. Approval, processing and completion are separate states; completion must not be marked before the payout is confirmed.
 - **Connect Your Card** is the only withdrawal method. Manual payout cards are stored with the full number encrypted in the private schema (`private.payment_card_secrets`); public tables hold only the brand, last four and expiry. When a hosted card provider is configured, tokenised provider references are used instead.
 - Structured responses to the administrator-managed card form (bank name, phone number and any added fields) live in `payment_accounts.extra` and are snapshotted into the encrypted withdrawal details at request time. `card_form_fields` defines the member-facing fields and is writable only through administrator RPCs.
@@ -68,13 +69,13 @@ RLS is enabled on every public table. Summary:
 | `profiles` | Own row or admin | Admin | Own row or admin | Admin |
 | `user_roles` | Own roles or admin | Admin | Admin | Admin |
 | `reward_accounts` | Own row or admin | Via provisioning trigger | Admin | — |
-| `reward_claims` | Own rows or admin | **RPC only** | Admin | — |
+| `reward_claims` | Own rows or admin (legacy) | — | Admin | — |
 | `withdrawals` | Own rows or admin | **RPC only** | Admin (RPC) | — |
 | `withdrawal_methods` | Public when enabled | Admin | Admin | — |
 | `crypto_networks` | Public when enabled | Admin | Admin | — |
 | `payment_accounts` | Own rows or admin | Hosted-provider token only; manual cards via **RPC** | Admin (revoke via RPC) | — |
 | `card_form_fields` | Enabled rows for members; all for admin | Admin (RPC) | Admin (RPC) | Admin (RPC) |
-| `balance_ledger` | Own entries or admin | **RPC only** | — | — |
+| `balance_ledger` | Own reward/settlement entries or admin | **RPC only** | — | — |
 | `private.payment_card_secrets` | No client access | Via RPC | — | — |
 | `withdrawal_status_history` | Own rows or admin | Via RPC/trigger | — | — |
 | `admin_audit_logs` | Admin | Via RPC | — | — |
@@ -89,7 +90,7 @@ RLS is enabled on every public table. Summary:
 
 Additional controls:
 
-- A partial unique index allows at most one active reward claim per member.
+- A unique index on `balance_ledger.idempotency_key` prevents duplicate reward credits. Members cannot see internal reservation/release rows; administrators see the full ledger.
 - `profiles` has a `protect_profile_privileges()` trigger that blocks a member from changing their own `status`, `email` or profile `id`, even if an update policy exists. Administrator roles live in `user_roles` and are managed separately.
 - `is_admin()` is `security definer` with a pinned `search_path`, avoiding recursive RLS evaluation on `user_roles`.
 - Admin-only actions that are not exposed as RPCs (role grants, member deletion) are SQL-editor operations.
@@ -98,7 +99,7 @@ Additional controls:
 
 | Function | Callable by | Purpose |
 | --- | --- | --- |
-| `create_reward_claim()` | `authenticated` | Creates one active reward claim |
+| `admin_issue_reward(uuid,numeric,text,text)` | Admin only | Credits a reward, writes the ledger, notification and audit entries; rejects duplicate keys |
 | `request_withdrawal(...)` | `authenticated` | Card-only: validates amount, connected card, dynamic responses and available balance; reserves funds and writes status history and a reservation ledger entry |
 | `admin_update_withdrawal_status(...)` | Admin only | Enforces status transitions, explicit settlement confirmation, balance deduction and ledger/audit entries |
 | `admin_get_withdrawal_details(uuid)` | Admin only | Decrypts the saved card and form responses for review |
@@ -217,7 +218,7 @@ Practices:
 Collected data:
 
 - account: name, email, phone (optional), location (optional), password hash (Supabase);
-- rewards: balance, claims, withdrawals with encrypted card and form-response details, tokenised card references and masked destination labels;
+- rewards: balance, reward credits, withdrawals with encrypted card and form-response details, tokenised card references and masked destination labels;
 - recruitment: application details and an uploaded CV;
 - cards: chosen design, cardholder name, generated display number;
 - payout cards: cardholder name, brand, last four, expiry, administrator-defined form responses (for example bank name and phone number) and an encrypted full number for administrator-reviewed card withdrawals;
@@ -240,9 +241,9 @@ Guidelines:
 
 | Scenario | Mitigation |
 | --- | --- |
-| Member tries to read another member's claim/card | RLS scopes rows to `auth.uid()`; admin predicate for staff |
+| Member tries to read another member's reward or card | RLS scopes rows to `auth.uid()`; admin predicate for staff |
 | Member calls an admin mutation directly | No update policy for non-admins; RPCs check ownership; role grants are SQL-only |
-| Member forges a claim amount | `create_reward_claim()` ignores client input and reads the account balance |
+| Member tries to credit their own balance | Only `private.credit_reward()` and `admin_issue_reward()` can write reward entries; both are controlled server-side and the admin RPC checks `is_admin()` |
 | Member requests more than available | RPC sums in-flight withdrawals and rejects excess |
 | Member tries to mark their own withdrawal successful | `withdrawals` updates are admin-only; settlement requires `admin_update_withdrawal_status` with explicit provider confirmation |
 | Member submits a duplicate withdrawal or reconnects the same card | 60-second idempotency/duplicate guard on requests and an encrypted-fingerprint duplicate check on cards |

@@ -11,10 +11,9 @@ import {
   formatCurrency,
   formatDate,
   formatDateTime,
-  futureLabel,
   timeAgo,
   badge,
-  statusMeta,
+  memberWithdrawalBadge,
   initials,
   openModal,
   closeModal,
@@ -26,67 +25,35 @@ import {
 } from '../lib/utils.js';
 import { icon } from '../icons.js';
 
-const CLAIM_STEPS = [
-  { key: 'confirmed', label: 'Confirmed', icon: 'check' },
-  { key: 'verifying', label: 'Verifying', icon: 'shield' },
-  { key: 'processing', label: 'Processing', icon: 'clock' },
-  { key: 'completed', label: 'Completed', icon: 'seal' },
-];
-
-const ACTIVE_STATUSES = ['confirmed', 'verifying', 'processing'];
-
-function activeClaim(claims) {
-  return claims.find((c) => ACTIVE_STATUSES.includes(c.status)) || null;
-}
-
-function claimTrack(claim) {
-  const order = CLAIM_STEPS.map((s) => s.key);
-  const current = order.indexOf(claim.status);
-  return `<div class="status-track">
-    ${CLAIM_STEPS.map((step, i) => {
-      const done = i < current || claim.status === 'completed';
-      const active = i === current && claim.status !== 'completed';
-      return `<div class="status-track__step${done ? ' is-done' : ''}${active ? ' is-active' : ''}">
-        <span class="status-track__dot">${done ? icon('check') : ''}</span>
-        <span class="status-track__label">${step.label}</span>
-      </div>`;
-    }).join('')}
-  </div>`;
-}
-
-function renderClaim(claims) {
-  const host = $('[data-claim-panel]');
+function renderRewards(entries) {
+  const host = $('[data-reward-panel]');
   if (!host) return;
-  const claim = activeClaim(claims);
-  if (!claim) {
-    const latest = claims[0];
+  if (!entries.length) {
     host.innerHTML = `<div class="empty">
-      <div class="empty__title">${latest ? 'No claim in progress' : 'Your reward is waiting'}</div>
-      <p class="empty__text">${latest ? `Your last claim ${escapeHTML(latest.reference)} is ${escapeHTML(statusMeta('claim', latest.status).label.toLowerCase())}. You can begin a new claim at any time.` : 'Begin the multi-step reward claim to process your $30,000 reward balance through verification.'}</p>
-      <a class="btn btn--gold btn--sm" href="rewards.html" style="margin-top:18px">${latest ? 'Begin a new claim' : 'Review your reward'}</a>
+      <div class="empty__title">No rewards yet</div>
+      <p class="empty__text">Rewards added to your account will appear here.</p>
     </div>`;
     return;
   }
-  host.innerHTML = `
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap">
-      <div>
-        <div class="claim-reference" style="margin-top:0">${escapeHTML(claim.reference)} ${icon('receipt')}</div>
-        <p class="fine" style="margin-top:8px">${escapeHTML(claim.note || 'Reward claim in progress.')}</p>
-      </div>
-      <div style="text-align:right">
-        ${badge('claim', claim.status)}
-        <div style="margin-top:8px;font-family:var(--serif);font-size:1.6rem">${formatCurrency(claim.amount)}</div>
-      </div>
-    </div>
-    ${claimTrack(claim)}
-    <div class="claim-progress" style="max-width:none">
-      <div class="claim-progress__top"><span>Processing progress</span><span>${Number(claim.progress || 0)}%</span></div>
-      <div class="claim-progress__bar"><span style="width:${Number(claim.progress || 0)}%"></span></div>
-    </div>
-    <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:16px" class="fine">
-      <span>Estimated completion ${futureLabel(claim.estimated_completion_at)}</span>
-      <span>${formatDateTime(claim.estimated_completion_at)}</span>
-    </div>`;
+  host.innerHTML = `<div class="table-wrap"><table class="table">
+    <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
+    <tbody>${entries
+      .slice(0, 5)
+      .map((entry) => {
+        const amount = Number(entry.amount || 0);
+        const signed = entry.entry_type === 'settlement' ? -Math.abs(amount) : amount;
+        return `<tr>
+          <td>${formatDateTime(entry.created_at)}</td>
+          <td><span class="cell-strong">${entry.entry_type === 'reward' ? 'Reward added' : 'Withdrawal'}</span><span class="cell-sub">${escapeHTML(
+          entry.note || ''
+        )}</span></td>
+          <td class="cell-amount">${signed < 0 ? '−' : '+'}${formatCurrency(Math.abs(signed), {
+          cents: Math.abs(signed) % 1 !== 0,
+        })}</td>
+        </tr>`;
+      })
+      .join('')}</tbody>
+  </table></div>`;
 }
 
 function renderApplications(applications) {
@@ -139,7 +106,7 @@ function renderWithdrawals(withdrawals) {
         )}</span></td>
           <td class="cell-amount">${formatCurrency(w.amount)}</td>
           <td>${formatDateTime(w.created_at)}</td>
-          <td>${badge('withdrawal', w.status)}</td>
+          <td>${memberWithdrawalBadge(w.status)}</td>
         </tr>`
       )
       .join('')}</tbody>
@@ -154,7 +121,7 @@ function renderActivity(activity) {
     return;
   }
   const iconFor = (action = '') => {
-    if (action.startsWith('claim')) return 'gift';
+    if (action.startsWith('claim') || action.startsWith('reward')) return 'gift';
     if (action.startsWith('withdrawal')) return 'wallet';
     if (action.startsWith('application')) return 'briefcase';
     if (action.startsWith('card')) return 'card';
@@ -209,24 +176,31 @@ function renderAccount(profile) {
     <div class="detail-row"><dt>Member since</dt><dd>${formatDate(profile.created_at)}</dd></div>`;
 }
 
-function updateSummary({ account, claims, withdrawals, applications, cards, notifications, profile }) {
-  const active = activeClaim(claims);
+function updateSummary({ account, rewards, withdrawals, applications, cards, notifications, profile }) {
   const first = (profile.full_name || 'Member').split(' ')[0];
   $$('[data-first-name]').forEach((el) => (el.textContent = `${first}.`));
 
   if (account) {
-    const balance = Number(account.available_balance ?? account.balance ?? 30000);
+    const balance = Number(account.available_balance ?? account.balance ?? 0);
     const host = $('[data-balance]');
     if (host) host.innerHTML = `${formatCurrency(balance)}<sup>USD</sup>`;
-    if (account.balance !== account.available_balance) {
-      $('[data-balance-note]').textContent = `${formatCurrency(account.balance)} total reward balance · ${formatCurrency(account.balance - balance)} reserved for pending withdrawals.`;
-    }
+    const note = $('[data-balance-note]');
+    if (note) note.textContent = 'Available to withdraw.';
   }
 
-  const activeHost = $('[data-active-claim]');
-  if (activeHost) activeHost.textContent = active ? statusMeta('claim', active.status).label : 'None';
-  const activeFoot = $('[data-active-claim-foot]');
-  if (activeFoot) activeFoot.textContent = active ? `${active.reference} · ${futureLabel(active.estimated_completion_at)}` : 'No request in progress';
+  const latestReward = rewards.find((entry) => entry.entry_type === 'reward');
+  const rewardHost = $('[data-latest-reward]');
+  if (rewardHost) {
+    rewardHost.textContent = latestReward
+      ? `+${formatCurrency(latestReward.amount, { cents: Number(latestReward.amount) % 1 !== 0 })}`
+      : '—';
+  }
+  const rewardFoot = $('[data-latest-reward-foot]');
+  if (rewardFoot) {
+    rewardFoot.textContent = latestReward
+      ? `${latestReward.note || 'Reward added'} · ${formatDate(latestReward.created_at, { short: true })}`
+      : 'No rewards yet';
+  }
 
   const pendingWithdrawals = withdrawals.filter((w) =>
     ['pending', 'reviewing', 'approved', 'processing'].includes(w.status)
@@ -256,6 +230,15 @@ function updateSummary({ account, claims, withdrawals, applications, cards, noti
   if (text) text.textContent = notifications[0] ? notifications[0].title : 'No notifications yet.';
 }
 
+function announceLatestReward(entries, userId) {
+  const latest = entries.find((entry) => entry.entry_type === 'reward');
+  if (!latest || !userId) return;
+  const key = `to.reward-seen.${userId}`;
+  if (localStorage.getItem(key) === latest.id) return;
+  toast('Reward Added Successfully!', 'success');
+  localStorage.setItem(key, latest.id);
+}
+
 async function boot() {
   const session = await initAppShell({ page: 'dashboard', title: 'Overview', crumb: 'Member' });
   if (!session) return;
@@ -264,26 +247,27 @@ async function boot() {
   const api = await getApi();
   const results = await Promise.allSettled([
     api.getRewardAccount(),
-    api.getClaims(),
+    api.getRewardTransactions(),
     api.getWithdrawals(),
     api.getApplications(),
     api.getCardApplications(),
     api.getNotifications(),
     api.getActivity(),
   ]);
-  const [account, claims, withdrawals, applications, cards, notifications, activity] = results.map((r) =>
+  const [account, rewards, withdrawals, applications, cards, notifications, activity] = results.map((r) =>
     r.status === 'fulfilled' ? r.value : []
   );
   const accountValue = results[0].status === 'fulfilled' ? results[0].value : null;
 
-  renderClaim(claims);
+  renderRewards(rewards);
+  announceLatestReward(rewards, session.profile.id);
   renderApplications(applications);
   renderWithdrawals(withdrawals);
   renderActivity(activity);
   renderNotifications(notifications);
   updateSummary({
     account: accountValue,
-    claims,
+    rewards,
     withdrawals,
     applications,
     cards,
@@ -301,7 +285,7 @@ async function boot() {
       renderNotifications(updated);
       updateSummary({
         account: accountValue,
-        claims,
+        rewards,
         withdrawals,
         applications,
         cards,
@@ -346,7 +330,7 @@ async function boot() {
       renderAccount(session.profile);
       updateSummary({
         account: accountValue,
-        claims,
+        rewards,
         withdrawals,
         applications,
         cards,

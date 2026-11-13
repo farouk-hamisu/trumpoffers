@@ -15,7 +15,8 @@ import {
   escapeHTML,
   formatCurrency,
   formatDateTime,
-  badge,
+  memberWithdrawalBadge,
+  memberWithdrawalLabel,
   openModal,
   closeModal,
   initModals,
@@ -32,7 +33,7 @@ import { icon } from '../icons.js';
 const CARD_METHOD = {
   method: 'card',
   label: 'Connect Your Card',
-  processing_time: '1–2 business days after approval',
+  processing_time: 'Usually 1–2 business days',
   min_amount: 100,
   max_amount: 30000,
   fee_type: 'none',
@@ -42,7 +43,7 @@ const CARD_METHOD = {
 
 const FALLBACK_CARD_FIELDS = [
   { field_key: 'bank_name', label: 'Bank name', placeholder: 'e.g. Chase Bank', help_text: 'The bank that issued the card.', input_type: 'text', required: true, max_length: 80 },
-  { field_key: 'phone_number', label: 'Phone number', placeholder: '+1 555 000 0000', help_text: 'A number the bank can reach you on if the payout needs verification.', input_type: 'tel', required: true, max_length: 32 },
+  { field_key: 'phone_number', label: 'Phone number', placeholder: '+1 555 000 0000', help_text: 'A number your bank can use to reach you.', input_type: 'tel', required: true, max_length: 32 },
 ];
 
 let api;
@@ -246,7 +247,7 @@ function renderCardAccounts() {
   if (!accounts.length) {
     host.innerHTML = `<div class="empty empty--compact">
       <div class="empty__title">Connect your card to continue</div>
-      <p class="empty__text">You must connect a valid card before a withdrawal can be requested. Select <strong>Connect a payout card</strong> below to add your bank and card details.</p>
+      <p class="empty__text">Add a card before requesting a withdrawal. Select <strong>Connect card</strong> below.</p>
     </div>`;
     const input = $('input[name="cardPaymentAccountId"]');
     if (input) input.value = '';
@@ -271,7 +272,7 @@ function renderCardAccounts() {
           <span class="card-account__number">•••• ${escapeHTML(p.card_last4 || '••••')}</span>
           <span class="card-account__meta">${escapeHTML(meta)}</span>
           <span class="card-account__status">${escapeHTML(
-            p.provider === 'fixture' ? 'Tokenised (development fixture)' : 'Encrypted card on file'
+            p.provider === 'fixture' ? 'Connected' : 'Card on file'
           )}${p.card_exp_month ? ` · Expires ${String(p.card_exp_month).padStart(2, '0')}/${String(p.card_exp_year || '').slice(-2)}` : ''}</span>
         </span>
       </label>`;
@@ -311,7 +312,7 @@ function renderHistory(withdrawals) {
         )}</span></td>
           <td class="cell-amount">${formatCurrency(w.amount)}</td>
           <td>${formatDateTime(w.created_at)}</td>
-          <td>${badge('withdrawal', w.status)}</td>
+          <td>${memberWithdrawalBadge(w.status)}</td>
           <td><button class="link-btn" type="button" data-withdraw-view="${escapeHTML(w.id)}">View</button></td>
         </tr>`
       )
@@ -336,7 +337,7 @@ async function showTimeline(id) {
             (h) => `<div class="timeline__item">
               <span class="timeline__dot"></span>
               <div><div class="timeline__title">${escapeHTML(
-                h.to_status === h.from_status ? 'Administrative note' : statusLabel(h.to_status)
+                h.to_status === h.from_status ? 'Update' : statusLabel(h.to_status)
               )}</div>
               <div class="timeline__time">${formatDateTime(h.created_at)}</div>
               ${h.note ? `<p class="timeline__note">${escapeHTML(h.note)}</p>` : ''}</div>
@@ -351,7 +352,7 @@ async function showTimeline(id) {
               <div class="admin-detail__row"><span>Reference</span><strong class="cell-mono">${escapeHTML(withdrawal.reference)}</strong></div>
               <div class="admin-detail__row"><span>Amount</span><strong>${escapeHTML(formatCurrency(withdrawal.amount))}</strong></div>
               <div class="admin-detail__row"><span>Destination</span><strong>${escapeHTML(withdrawal.destination_label || '—')}</strong></div>
-              <div class="admin-detail__row"><span>Current status</span><strong>${badge('withdrawal', withdrawal.status)}</strong></div>
+              <div class="admin-detail__row"><span>Status</span><strong>${memberWithdrawalBadge(withdrawal.status)}</strong></div>
             </div>`
           : ''
       }
@@ -364,16 +365,7 @@ async function showTimeline(id) {
 }
 
 function statusLabel(status = '') {
-  const labels = {
-    pending: 'Pending approval',
-    reviewing: 'Under review',
-    approved: 'Approved — awaiting payment',
-    processing: 'Processing payment',
-    completed: 'Successful',
-    rejected: 'Rejected',
-    cancelled: 'Cancelled',
-  };
-  return labels[status] || status.replaceAll('_', ' ');
+  return memberWithdrawalLabel(status);
 }
 
 async function refresh() {
@@ -443,7 +435,6 @@ function reviewRows(payload) {
     ['Card', `${card?.card_brand || 'Card'} •••• ${card?.card_last4 || ''}`],
     ['Cardholder', payload.accountName],
     ['Bank', cardBankName(card) || '—'],
-    ['Connection', card?.provider === 'fixture' ? 'Development fixture' : 'Encrypted card on file'],
   ];
 }
 
@@ -479,13 +470,26 @@ function delay(ms) {
 }
 
 function showConfirmation(withdrawal) {
+  const paid = withdrawal.status === 'completed';
   $('[data-withdraw-ref]').textContent = withdrawal.reference;
   $('[data-withdraw-reference]').textContent = withdrawal.reference;
   $('[data-withdraw-amount]').textContent = formatCurrency(withdrawal.amount, { cents: withdrawal.amount % 1 !== 0 });
   $('[data-withdraw-destination]').textContent = withdrawal.destination_label || '—';
   $('[data-withdraw-date]').textContent = formatDateTime(withdrawal.created_at);
+  const eyebrow = $('[data-withdraw-modal-eyebrow]');
+  if (eyebrow) eyebrow.textContent = paid ? 'Payment sent' : 'Request received';
+  const title = $('[data-withdraw-modal-title]');
+  if (title) {
+    title.innerHTML = paid ? 'Funds Sent <em>Successfully!</em>' : 'Withdrawal <em>Submitted.</em>';
+  }
+  const copy = $('[data-withdraw-modal-text]');
+  if (copy) {
+    copy.textContent = paid
+      ? 'Your withdrawal has been paid to your connected card.'
+      : 'Your request has been received. We will notify you when it is processed.';
+  }
   const statusHost = $('[data-withdraw-status-badge]');
-  if (statusHost) statusHost.innerHTML = badge('withdrawal', withdrawal.status);
+  if (statusHost) statusHost.innerHTML = memberWithdrawalBadge(withdrawal.status);
   openModal('withdraw-modal');
 }
 
@@ -504,7 +508,7 @@ async function submitPending() {
     pendingPayload = null;
     resetForm();
     await refresh();
-    toast('Withdrawal request submitted and awaiting approval.', 'success');
+    toast('Withdrawal submitted.', 'success');
   } catch (error) {
     hideProcessing();
     showAlert(error.message || 'We could not submit the withdrawal.');
@@ -552,8 +556,8 @@ function updateCardBrandHint() {
   const digits = cardDigits(input?.value);
   hint.textContent =
     digits.length >= 4
-      ? `${cardBrand(digits)} detected. The full number is encrypted and never shown to members after connection.`
-      : 'Visa, Mastercard, American Express, Discover and other major networks.';
+      ? `${cardBrand(digits)} detected.`
+      : 'Visa, Mastercard, American Express and other major networks.';
 }
 
 function openCardConnect() {

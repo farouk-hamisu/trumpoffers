@@ -205,7 +205,7 @@ Run through this list against the production URL:
 1. Homepage loads over HTTPS with no mixed-content warnings; the intro plays or can be skipped; the poster appears if the video is blocked.
 2. Header/footer links resolve; no 404s; `404.html` renders for unknown paths if the host supports custom error pages.
 3. Register → confirm → sign in → dashboard.
-4. Claim, withdrawal, application, card request and contact submission succeed against Supabase.
+4. Reward credit, withdrawal, application, card request and contact submission succeed against Supabase.
 5. Application tracking works with reference + email; card verification works with reference + last four.
 6. Admin sign-in works; a normal member cannot open the console.
 7. CV upload succeeds and opens via a signed URL; the bucket is not publicly listable.
@@ -230,4 +230,4 @@ Run through this list against the production URL:
 - Static hosting scales automatically. Supabase Free/Pro limits apply to Auth MAU, database size, storage and egress.
 - The admin overview issues several count queries per load; it is designed for small teams. Add indexes (already present on the common filters) or a materialised summary if the dataset grows.
 - Public forms are protected by validation and RLS, not rate limiting. Add a CAPTCHA/Turnstile or edge rate limiting before promoting the site widely.
-- Cron-based status progression is intentionally not included. Use `pg_cron` or an Edge Function if you later want automatic claim/withdrawal advancement, and audit the change carefully.
+- Cron-based status progression is intentionally not included. Use `pg_cron` or an Edge Function if you later want automatic withdrawal advancement, and audit the change carefully.

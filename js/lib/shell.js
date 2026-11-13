@@ -54,9 +54,9 @@ function sidebarHTML(session, page) {
     </nav>
     <div class="app-sidebar__foot">
       <div class="sidebar-help">
-        <div class="sidebar-help__title">Concierge desk</div>
-        <p>Questions about a claim, withdrawal or application? Our team replies within one business day.</p>
-        <a href="contact.html">Contact the concierge</a>
+        <div class="sidebar-help__title">Need help?</div>
+        <p>Questions about a reward, withdrawal or application? Our team replies within one business day.</p>
+        <a href="contact.html">Contact support</a>
       </div>
       <div class="sidebar-user">
         <span class="avatar avatar--sm">${escapeHTML(initials(p.full_name))}</span>

@@ -58,6 +58,7 @@ The migrations are ordered by timestamp and must be applied in filename order:
 | `20261109120000_withdrawals_v2.sql` | Withdrawal methods, crypto networks, encrypted payout details, payment accounts, status history, audit logs and hardened withdrawal/admin RPCs |
 | `20261110120000_payment_cards.sql` | Encrypted manual payout cards, card validation helpers, card connection and audited admin card RPCs |
 | `20261113120000_card_only_withdrawals.sql` | Card-only withdrawal methods, administrator-managed card form fields, structured card responses, balance ledger, hardened request/approval RPCs |
+| `20261114120000_automatic_rewards.sql` | Automatic welcome reward, reward ledger entries, duplicate protection, member ledger policy and `admin_issue_reward()` |
 
 ### Option A — One-paste SQL editor (fastest)
 
@@ -210,7 +211,7 @@ The email-link redirect is driven by `SITE_URL`. If it is left at `http://localh
 
 4. Sign in at `/admin/login.html`. Non-admin accounts are redirected to the member dashboard with an "administrator access only" notice.
 
-The `handle_new_user` trigger provisions a profile, a `user` role, and a $30,000 reward account for every new auth user. If a user was created before the trigger existed, backfill with the statements at the end of `20261108120600_provisioning.sql`.
+The `handle_new_user` trigger provisions a profile, a `user` role, a reward account and an automatic $30,000 welcome reward for every new auth user. The welcome reward is written to `balance_ledger` with a unique key so it cannot be credited twice. If you are upgrading an existing database, apply `20261114120000_automatic_rewards.sql`; it adds the welcome history for existing accounts without changing their balances.
 
 ### Additional administrators
 
@@ -275,9 +276,9 @@ Deleting a vacancy with applications is blocked by the `on delete restrict` fore
 
 Use a private browser window and check:
 
-1. **Registration** creates a profile, role and reward account (inspect `profiles`, `user_roles`, `reward_accounts`).
-2. **Claim** creates one active claim and a notification; a second claim is rejected while the first is active.
-3. **Withdrawal** rejects amounts below $100, invalid IBANs and malformed wallet addresses; available balance excludes in-flight requests; an approved request completes only after administrator confirmation.
+1. **Registration** creates a profile, role, reward account and an automatic $30,000 welcome reward (inspect `profiles`, `user_roles`, `reward_accounts`, `balance_ledger`).
+2. **Reward** issuance adds the amount to the balance, writes a `reward` ledger row and a notification titled “Reward Added Successfully!”. Issuing the same reward key twice does not credit twice.
+3. **Withdrawal** rejects amounts below $100 and invalid card forms; available balance excludes in-flight requests; an approved request completes only after administrator confirmation.
 4. **Application** submits with and without a signed-in session, stores a CV under `applications/…`, and tracking matches reference + email only.
 5. **Card** creates a 16-digit display number with a valid Luhn check digit; verification returns only the last four digits and never the full number.
 6. **Contact** inserts a message visible in the admin inbox.

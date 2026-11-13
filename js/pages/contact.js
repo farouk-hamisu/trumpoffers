@@ -1,5 +1,5 @@
 /**
- * Trump Offers — contact / concierge desk.
+ * Trump Offers — contact page.
  */
 
 import { getApi } from '../lib/api.js';
@@ -87,7 +87,7 @@ function boot() {
       form.classList.add('is-hidden');
       success.hidden = false;
       $('.contact-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      toast('Message sent to the concierge desk.', 'success');
+      toast('Message sent.', 'success');
     } catch (error) {
       showAlert(error.message || 'We could not send your message. Please try again.');
       setLoading(button, false);

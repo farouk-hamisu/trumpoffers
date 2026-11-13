@@ -635,7 +635,21 @@ function seed() {
     payment_card_secrets,
     withdrawal_methods: WITHDRAWAL_METHODS,
     card_form_fields: CARD_FORM_FIELDS,
-    balance_ledger: [],
+    balance_ledger: [
+      {
+        id: 'f1a2b3c4-0001-4e5f-8a90-000000000010',
+        user_id: DEMO_ID,
+        withdrawal_id: null,
+        entry_type: 'reward',
+        amount: 30000,
+        balance_before: 0,
+        balance_after: 30000,
+        note: 'Welcome reward',
+        actor_id: null,
+        idempotency_key: `welcome:${DEMO_ID}`,
+        created_at: daysAgo(126),
+      },
+    ],
     applications,
     card_applications,
     notifications,
@@ -998,6 +1012,18 @@ class LocalBackend {
       ...account,
       available_balance: Math.max(0, Number(account.balance) - activeWithdrawals),
     };
+  }
+
+  async getRewardTransactions() {
+    const db = await this.db();
+    const user = await this.requireUser(db);
+    return (db.balance_ledger || [])
+      .filter(
+        (entry) =>
+          entry.user_id === user.id &&
+          ['reward', 'settlement', 'adjustment'].includes(entry.entry_type)
+      )
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }
 
   async getClaims() {
@@ -2007,6 +2033,84 @@ class LocalBackend {
   }
 
   /* ------------------------------------------------------- admin registers */
+
+  async getRewardTransactionsAdmin() {
+    const db = await this.db();
+    await this.requireAdmin(db);
+    return (db.balance_ledger || [])
+      .filter((entry) => ['reward', 'settlement', 'adjustment'].includes(entry.entry_type))
+      .map((entry) => {
+        const user = db.users.find((u) => u.id === entry.user_id);
+        return {
+          ...entry,
+          member_name: user?.full_name || 'Member',
+          member_email: user?.email || '',
+        };
+      })
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }
+
+  async adminIssueReward({ userId, amount, note = '', idempotencyKey = null }) {
+    const db = await this.db();
+    const admin = await this.requireAdmin(db);
+    const user = db.users.find((u) => u.id === userId);
+    if (!user) throw new Error('Member not found.');
+    const numeric = Number(amount);
+    if (!Number.isFinite(numeric) || numeric <= 0 || numeric > 1000000) {
+      throw new Error('Enter a reward amount between $0.01 and $1,000,000.');
+    }
+
+    db.balance_ledger = db.balance_ledger || [];
+    if (idempotencyKey) {
+      const existing = db.balance_ledger.find((entry) => entry.idempotency_key === idempotencyKey);
+      if (existing) return existing;
+    }
+
+    const account = this.ensureRewardAccount(db, user);
+    const before = Number(account.balance);
+    account.balance = before + numeric;
+    const entry = {
+      id: crypto.randomUUID ? crypto.randomUUID() : `led-${Date.now()}`,
+      user_id: user.id,
+      withdrawal_id: null,
+      entry_type: 'reward',
+      amount: numeric,
+      balance_before: before,
+      balance_after: Number(account.balance),
+      note: String(note || '').trim() || 'Reward issued by support',
+      actor_id: admin.id,
+      idempotency_key:
+        idempotencyKey || (crypto.randomUUID ? crypto.randomUUID() : `admin-${Date.now()}`),
+      created_at: new Date().toISOString(),
+    };
+    db.balance_ledger.unshift(entry);
+    this.notify(
+      db,
+      user.id,
+      'Reward Added Successfully!',
+      `A reward of $${numeric.toFixed(2)} has been added to your balance.`,
+      'reward'
+    );
+    this.logActivity(
+      db,
+      user.id,
+      'reward.credited',
+      'reward',
+      `Reward of $${numeric.toFixed(2)} added to the account balance.`
+    );
+    db.admin_audit_logs = db.admin_audit_logs || [];
+    db.admin_audit_logs.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `aud-${Date.now()}`,
+      admin_id: admin.id,
+      action: 'reward.issued',
+      entity_type: 'reward',
+      entity_id: entry.id,
+      details: { user_id: user.id, amount: numeric, note: entry.note },
+      created_at: new Date().toISOString(),
+    });
+    await this.save(db);
+    return entry;
+  }
 
   async getAllClaimsAdmin() {
     const db = await this.db();

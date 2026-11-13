@@ -144,8 +144,28 @@ export const STATUS = {
   },
 };
 
+const MEMBER_WITHDRAWAL_STATUS = {
+  pending: { label: 'Pending', tone: 'warning' },
+  reviewing: { label: 'Processing', tone: 'info' },
+  approved: { label: 'Processing', tone: 'info' },
+  processing: { label: 'Processing', tone: 'info' },
+  completed: { label: 'Successful', tone: 'success' },
+  rejected: { label: 'Declined', tone: 'danger' },
+  cancelled: { label: 'Cancelled', tone: 'plain' },
+};
+
 export function statusMeta(type, value) {
   return (STATUS[type] && STATUS[type][value]) || { label: value || '—', tone: 'plain' };
+}
+
+export function memberWithdrawalLabel(value) {
+  return (MEMBER_WITHDRAWAL_STATUS[value] || { label: value || '—' }).label;
+}
+
+export function memberWithdrawalBadge(value) {
+  const meta = MEMBER_WITHDRAWAL_STATUS[value] || { label: value || '—', tone: 'plain' };
+  const tone = meta.tone === 'plain' ? '' : ` badge--${meta.tone}`;
+  return `<span class="badge${tone}">${escapeHTML(meta.label)}</span>`;
 }
 
 export function badge(type, value) {

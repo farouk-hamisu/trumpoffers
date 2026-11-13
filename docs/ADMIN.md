@@ -30,9 +30,9 @@ The console lives at **`/admin/`** (`admin/index.html`) with a dedicated sign-in
 
 Displays:
 
-- total members, claims, applications, cards and messages;
+- total members, reward credits, applications, cards and messages;
 - pending application, card and message counts;
-- a 180-day chart of claims (gold line) and registrations (dashed ink line);
+- a 180-day activity chart and registrations;
 - recent activity entries.
 
 Use **Refresh figures** after changing data in another tab.
@@ -54,17 +54,17 @@ Suspension does not delete data. The console does not expose member deletion or 
 
 ## Rewards & withdrawals
 
-Claims and withdrawals are shown in separate registers with independent search and status filters.
+Reward credits, legacy claims and withdrawals are shown in separate registers with independent search and status filters.
 
-### Reward claims
+### Rewards
 
-Statuses: `confirmed → verifying → processing → completed`, plus `cancelled`.
+Rewards are credited automatically. Members do not submit a claim.
 
-- The member's fixed reward balance is **$30,000**; it is created with the account.
-- `create_reward_claim()` permits one active claim per member and assigns a 5–10 hour verification window.
-- Opening a claim shows the reference, member, amount, estimate, note, status selector and internal note.
-- **Save status** updates the record. Setting `completed` also sets progress to 100, stage 4 and `completed_at`; `processing` sets 64%/stage 3; `verifying` sets 22%/stage 2.
-- A database trigger writes a member notification when the status changes. `activity_logs` records the action.
+- Every new account receives a **$30,000 welcome reward** during provisioning.
+- **Issue reward** opens a form to choose a member, enter an amount and add a description. The reward is added to the balance immediately.
+- Each credit writes a `balance_ledger` row with a unique idempotency key, a member notification titled **Reward Added Successfully!**, an activity entry and an admin audit entry.
+- The **Reward credits** register lists automatic and manual credits with member, description, amount, date and balance after.
+- The legacy claim register remains available for historical records only. New claims are not created.
 
 ### Withdrawals
 
@@ -78,7 +78,8 @@ Statuses: `pending → reviewing → approved → processing → completed`, plu
 - **Confirm payment & mark successful** requires the administrator to tick the settlement confirmation box and record the provider reference. Approval never marks a request successful on its own; only confirmed settlement does.
 - **Save note** records an internal note without changing the status.
 - The RPC deducts the amount from the member's balance only on settlement, and writes status history, a `balance_ledger` settlement entry and an `admin_audit_logs` entry. Rejections and cancellations write a release entry instead.
-- An approved request is displayed to the member as **Approved — awaiting payment**; the badge changes to **Successful** only after confirmed settlement.
+- Members see simplified labels: **Pending**, **Processing**, **Successful**, **Declined** or **Cancelled**. The badge changes to **Successful** only after confirmed settlement.
+- The member confirmation screen shows **Funds Sent Successfully!** only when the request is `completed`. A newly submitted request shows **Withdrawal Submitted**.
 
 There is no automatic status progression. Provider payouts require configured credentials; when a provider is not configured the request remains in review or processing and completion must be confirmed manually.
 
@@ -188,7 +189,7 @@ The **Reset local cache** action exists only in the development fixture (`DEMO_M
 | Entity | Values |
 | --- | --- |
 | Member | `active`, `suspended` |
-| Claim | `confirmed`, `verifying`, `processing`, `completed`, `cancelled` |
+| Legacy claim | `confirmed`, `verifying`, `processing`, `completed`, `cancelled` |
 | Withdrawal | `pending`, `reviewing`, `approved`, `processing`, `completed`, `rejected`, `cancelled` |
 | Application | `submitted`, `under_review`, `shortlisted`, `interview`, `accepted`, `rejected` |
 | Card | `submitted`, `under_review`, `approved`, `rejected` |
@@ -204,7 +205,7 @@ Changing a status where a trigger exists sends a member notification and records
 **Daily**
 
 - Review new messages and pending applications.
-- Advance claims and withdrawals that are due.
+- Advance withdrawals that are due and confirm payment only after settlement.
 - Check card requests and approve or decline with a useful note.
 
 **Weekly**
@@ -235,8 +236,8 @@ Changing a status where a trigger exists sends a member notification and records
 **Why can't I change a member's role in the console?**
 Role grants are deliberately SQL-only. Use `grant_admin` / a direct `user_roles` statement from the SQL editor. This keeps privilege escalation out of a browser session.
 
-**Why doesn't the claim progress move by itself?**
-The estimate is an informational window. An administrator advances the status. This is intentional so the register stays predictable and auditable.
+**Do members need to claim rewards?**
+No. Rewards are credited automatically. An administrator can issue an extra reward from **Rewards & withdrawals → Issue reward**, and every credit is recorded in the reward ledger.
 
 **Why is a withdrawal amount unavailable?**
 The RPC subtracts all `pending`, `reviewing`, `approved` and `processing` withdrawals from the balance. Complete or reject earlier requests to free the amount.

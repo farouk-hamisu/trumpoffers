@@ -111,7 +111,7 @@ function footerHTML() {
     <div class="footer-main">
       <div class="footer-brand">
         ${brandHTML('index.html')}
-        <p>An elevated platform for executive rewards, career discovery and bespoke digital membership cards. Built with discretion and institutional precision.</p>
+        <p>Rewards, career opportunities and digital membership cards in one simple account.</p>
         <div class="footer-contact">
           <a href="mailto:${config.supportEmail}" data-site-email>${config.supportEmail}</a>
           <a href="tel:+12125550184" data-site-phone>${config.phone}</a>
@@ -158,7 +158,7 @@ function footerHTML() {
       </div>
     </div>
     <div class="footer-disclaimer">
-      Trump Offers is an exclusive rewards and executive membership platform. Membership privileges, reward allocations, and digital credential issuance are subject to platform terms and verification standards.
+      Trump Offers is a rewards and membership platform. Membership, rewards and digital cards are subject to our terms and security checks.
     </div>
   </div>
   <div class="footer-wordmark" aria-hidden="true">TRUMP</div>`;

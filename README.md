@@ -15,9 +15,9 @@ A premium platform for **rewards, recruitment and digital cards**, built as a mu
 | `index.html` | Editorial homepage with a configurable full-screen introduction film, rewards and careers showcases, 3D card preview, FAQ and footer |
 | `register.html` | Account creation with validation and profile provisioning |
 | `login.html` | Sign in, password reset request and recovery-password mode |
-| `dashboard.html` | Member overview: balance, active claim, recent withdrawals, notifications and activity |
-| `rewards.html` | $30,000 reward balance, multi-step claim workflow, live claim progress and claim history |
-| `withdraw.html` | Bank, cryptocurrency and card withdrawals with encrypted details, validation, review, history and status tracking |
+| `dashboard.html` | Member overview: balance, latest reward, recent withdrawals, notifications and activity |
+| `rewards.html` | $30,000 reward balance, automatic reward credits and transaction history |
+| `withdraw.html` | Card withdrawals with encrypted details, validation, review, history and status tracking |
 | `careers.html` | Live vacancies pulled from the database with department and location filters |
 | `job-details.html` | Full vacancy description, responsibilities, requirements and benefits |
 | `apply.html` | Application form with CV upload, validation and a unique `TO-JB-*` reference |
@@ -30,9 +30,9 @@ A premium platform for **rewards, recruitment and digital cards**, built as a mu
 
 ### Admin console (`/admin/`)
 
-- Role-protected dashboard with key figures, a 180-day claims/registrations chart, activity feed and pending-work counts.
+- Role-protected dashboard with key figures, a 180-day reward/registration chart, activity feed and pending-work counts.
 - Member register with search, role/status filters and suspend/reinstate actions.
-- Reward claims and withdrawal requests with status workflows, notes and member notifications.
+- Reward issuance and monitoring, plus withdrawal requests with status workflows, notes and member notifications.
 - Vacancy CRUD (create, edit, publish, close, delete).
 - Application review with status changes, review notes and signed CV downloads.
 - Card request approval/rejection.
@@ -136,10 +136,10 @@ Never place a service-role key in `.env`, `js/env.js` or any browser file.
 | `profiles` | Member identity, contact details and account status |
 | `user_roles` | `user` / `admin` grants, checked by `public.is_admin()` |
 | `reward_accounts` | $30,000 reward balance and account status |
-| `reward_claims` | Claim references, stage/progress and verification window |
-| `withdrawals` | Bank, crypto and card payout requests with encrypted details and settlement state |
+| `reward_claims` | Legacy claim records retained for history |
+| `balance_ledger` | Reward credits, withdrawals and balance adjustments with duplicate protection |
+| `withdrawals` | Card payout requests with encrypted details and settlement state |
 | `withdrawal_methods` | Configurable methods, limits, fees and processing windows |
-| `crypto_networks` | Supported assets, networks and wallet-address validation |
 | `payment_accounts` | Tokenised card and payout destinations |
 | `withdrawal_status_history` | Append-only status and note history |
 | `admin_audit_logs` | Administrative action audit trail |
@@ -152,7 +152,7 @@ Never place a service-role key in `.env`, `js/env.js` or any browser file.
 | `site_settings` | Public site copy, contact details and intro video configuration |
 | `reference_sequences` | Atomic human-readable reference counters |
 
-RPCs: `create_reward_claim`, `request_withdrawal`, `admin_update_withdrawal_status`, `admin_get_withdrawal_details`, `admin_add_withdrawal_note`, `submit_job_application`, `track_application`, `create_card_application`, `verify_demo_card`. The privileged `grant_admin(email)` helper is intentionally not executable by `anon` or `authenticated`.
+RPCs: `admin_issue_reward`, `request_withdrawal`, `admin_update_withdrawal_status`, `admin_get_withdrawal_details`, `admin_add_withdrawal_note`, `submit_job_application`, `track_application`, `create_card_application`, `verify_demo_card`. Rewards are credited automatically through the provisioning trigger. The privileged `grant_admin(email)` helper is intentionally not executable by `anon` or `authenticated`.
 
 References use the format `TO-RW-26-000001`, `TO-WD-26-000001`, `TO-JB-26-000001`, `TO-CD-26-000001`.
 
