@@ -116,6 +116,36 @@ function renderApplications(applications) {
   </table></div>`;
 }
 
+function renderWithdrawals(withdrawals) {
+  const host = $('[data-withdrawals-panel]');
+  if (!host) return;
+  if (!withdrawals.length) {
+    host.innerHTML = `<div class="empty">
+      <div class="empty__title">No withdrawals yet</div>
+      <p class="empty__text">Connect a card and submit your first request to see it here.</p>
+      <a class="btn btn--ghost btn--sm" href="withdraw.html" style="margin-top:18px">Open withdrawal desk</a>
+    </div>`;
+    return;
+  }
+  host.innerHTML = `<div class="table-wrap"><table class="table">
+    <thead><tr><th>Reference</th><th>Destination</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+    <tbody>${withdrawals
+      .slice(0, 6)
+      .map(
+        (w) => `<tr>
+          <td class="cell-mono">${escapeHTML(w.reference)}</td>
+          <td><span class="cell-strong">${escapeHTML(w.destination_label || '—')}</span><span class="cell-sub">${escapeHTML(
+          w.bank_name || w.account_name || ''
+        )}</span></td>
+          <td class="cell-amount">${formatCurrency(w.amount)}</td>
+          <td>${formatDateTime(w.created_at)}</td>
+          <td>${badge('withdrawal', w.status)}</td>
+        </tr>`
+      )
+      .join('')}</tbody>
+  </table></div>`;
+}
+
 function renderActivity(activity) {
   const host = $('[data-activity-list]');
   if (!host) return;
@@ -198,7 +228,9 @@ function updateSummary({ account, claims, withdrawals, applications, cards, noti
   const activeFoot = $('[data-active-claim-foot]');
   if (activeFoot) activeFoot.textContent = active ? `${active.reference} · ${futureLabel(active.estimated_completion_at)}` : 'No request in progress';
 
-  const pendingWithdrawals = withdrawals.filter((w) => ['pending', 'reviewing', 'processing'].includes(w.status));
+  const pendingWithdrawals = withdrawals.filter((w) =>
+    ['pending', 'reviewing', 'approved', 'processing'].includes(w.status)
+  );
   const statW = $('[data-stat-withdrawals]');
   if (statW) statW.textContent = String(withdrawals.length).padStart(2, '0');
   const footW = $('[data-stat-withdrawals-foot]');
@@ -246,6 +278,7 @@ async function boot() {
 
   renderClaim(claims);
   renderApplications(applications);
+  renderWithdrawals(withdrawals);
   renderActivity(activity);
   renderNotifications(notifications);
   updateSummary({

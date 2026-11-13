@@ -21,7 +21,7 @@ The console lives at **`/admin/`** (`admin/index.html`) with a dedicated sign-in
 - Fixed sidebar on desktop, slide-over drawer on mobile.
 - Global **Refresh** button reloads the current view.
 - Pending counts appear beside Rewards, Applications, Cards and Messages.
-- Hash routing (`#overview`, `#users`, `#rewards`, `#recruitment`, `#applications`, `#cards`, `#messages`, `#settings`) supports deep links and browser back/forward.
+- Hash routing (`#overview`, `#users`, `#rewards`, `#recruitment`, `#applications`, `#cards`, `#payouts`, `#cardform`, `#messages`, `#settings`) supports deep links and browser back/forward.
 - A session card at the bottom of the sidebar shows the signed-in administrator and a sign-out control.
 
 ---
@@ -70,13 +70,15 @@ Statuses: `confirmed → verifying → processing → completed`, plus `cancelle
 
 Statuses: `pending → reviewing → approved → processing → completed`, plus `rejected` and `cancelled`.
 
-- Requests have a minimum of $100. Bank details are validated and encrypted at rest; crypto addresses are validated per network; card payouts use an active card connected by the member. When a hosted card provider is configured its token is used; otherwise the card number is stored encrypted for manual review.
+- **Connect Your Card** is the only member-facing withdrawal method. Bank transfer and cryptocurrency methods are retired; historical rows keep their original values.
+- Requests have a minimum of $100. A request can only use an active card the member has connected and verified; the request captures a masked snapshot of that card and the dynamic form responses submitted with it.
 - The register supports search by reference, member, method and destination, plus a status filter.
-- Opening a request shows the amount, fee, net payout, payout destination, provider reference, internal note, rejection reason, complete status history and administrative controls. Card withdrawals also offer **Reveal full card**, which decrypts the stored number and writes an audit entry.
-- **Move to review**, **Approve**, **Mark processing** and **Mark completed** enforce the allowed transition graph. **Reject** requires a reason.
-- **Mark completed** requires the administrator to confirm that the payout was settled by the provider, bank or blockchain. The provider reference is recorded. Approval alone never marks funds as sent.
+- Opening a request shows the amount, fee, net payout, card destination, saved bank/phone/extra responses, provider reference, internal note, rejection reason, complete status history and administrative controls. Card withdrawals also offer **Reveal full card**, which decrypts the stored number and writes an audit entry.
+- **Move to review**, **Approve request**, **Start processing** and **Confirm payment & mark successful** enforce the allowed transition graph. **Reject** requires a reason and releases the reserved amount.
+- **Confirm payment & mark successful** requires the administrator to tick the settlement confirmation box and record the provider reference. Approval never marks a request successful on its own; only confirmed settlement does.
 - **Save note** records an internal note without changing the status.
-- The RPC deducts the amount from the member's balance only on completion, and writes both status history and an `admin_audit_logs` entry.
+- The RPC deducts the amount from the member's balance only on settlement, and writes status history, a `balance_ledger` settlement entry and an `admin_audit_logs` entry. Rejections and cancellations write a release entry instead.
+- An approved request is displayed to the member as **Approved — awaiting payment**; the badge changes to **Successful** only after confirmed settlement.
 
 There is no automatic status progression. Provider payouts require configured credentials; when a provider is not configured the request remains in review or processing and completion must be confirmed manually.
 
@@ -89,6 +91,16 @@ The **Payout cards** view lists every card members have connected for card withd
 - **Revoke** marks the card unusable for new requests, clears its default flag, notifies the member and writes an audit entry. Existing withdrawal requests keep their masked snapshot.
 - CVV, PIN, passwords and online-banking credentials are never collected. Do not ask members to send card details by email or chat; send them to the withdrawal desk card form.
 - Members can keep up to five active payout cards. Duplicate cards for the same member are rejected by the RPC.
+
+### Card form fields
+
+The **Card form fields** view controls the extra fields members complete when they connect a payout card. Changes take effect immediately without a redeploy.
+
+- Add, edit, enable/disable or delete a field. Each field has a label, key, input type (`text`, `tel`, `number`, `email` or `textarea`), placeholder, helper text, required flag, maximum length and display order.
+- The seeded fields are **Bank name** (required), **Phone number** (required) and **Bank account country** (optional). Card number, expiry and cardholder name remain fixed secure core fields and cannot be removed here.
+- Field keys are generated from the label when left blank. Keys must be unique and are immutable after creation so existing saved responses stay readable.
+- Validation runs in the member browser and again in `connect_payment_card()`; an administrator cannot weaken server-side LEN/Luhn, expiry or required-field checks from this screen.
+- Deleting a field removes it from the member form but keeps responses already saved on connected cards and withdrawal snapshots.
 
 ---
 

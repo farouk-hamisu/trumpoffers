@@ -21,52 +21,59 @@ const ADMIN_ID = '3f1e2d9a-7c4b-4a12-9e88-61b0c5d33002';
 
 const WITHDRAWAL_METHODS = [
   {
-    method: 'bank_transfer',
-    label: 'Bank transfer',
-    description: 'A direct transfer to your bank account.',
-    min_amount: 100,
-    max_amount: 30000,
-    fee_type: 'none',
-    fee_value: 0,
-    processing_time: '2–3 business days',
-    enabled: true,
-    sort_order: 1,
-  },
-  {
-    method: 'crypto',
-    label: 'Cryptocurrency',
-    description: 'A digital-asset payout to a wallet you control.',
-    min_amount: 100,
-    max_amount: 30000,
-    fee_type: 'none',
-    fee_value: 0,
-    processing_time: 'Usually within 24 hours of approval',
-    enabled: true,
-    sort_order: 2,
-  },
-  {
     method: 'card',
-    label: 'Card credit',
-    description: 'A credit to a payout card connected in the withdrawal desk.',
+    label: 'Connect Your Card',
+    description: 'Withdraw to a card you have connected and verified.',
     min_amount: 100,
     max_amount: 30000,
     fee_type: 'none',
     fee_value: 0,
     processing_time: '1–2 business days after approval',
     enabled: true,
-    sort_order: 3,
+    sort_order: 1,
   },
 ];
 
-const CRYPTO_NETWORKS = [
-  { asset: 'USDT', network: 'TRC20', label: 'Tether USD · TRC20', description: 'Tron network. Low fees, widely supported.', fee_estimate_usd: 1, min_confirmations: 20, enabled: true, sort_order: 1 },
-  { asset: 'USDT', network: 'ERC20', label: 'Tether USD · ERC20', description: 'Ethereum network. Higher network fees.', fee_estimate_usd: 8, min_confirmations: 12, enabled: true, sort_order: 2 },
-  { asset: 'USDT', network: 'BEP20', label: 'Tether USD · BEP20', description: 'BNB Smart Chain. Low fees.', fee_estimate_usd: 0.6, min_confirmations: 15, enabled: true, sort_order: 3 },
-  { asset: 'BTC', network: 'Bitcoin', label: 'Bitcoin · Bitcoin network', description: 'Native Bitcoin network.', fee_estimate_usd: 2, min_confirmations: 3, enabled: true, sort_order: 4 },
-  { asset: 'ETH', network: 'ERC20', label: 'Ethereum · ERC20', description: 'Ethereum network.', fee_estimate_usd: 8, min_confirmations: 12, enabled: true, sort_order: 5 },
-  { asset: 'USDC', network: 'ERC20', label: 'USD Coin · ERC20', description: 'Ethereum network.', fee_estimate_usd: 8, min_confirmations: 12, enabled: true, sort_order: 6 },
-  { asset: 'USDC', network: 'TRC20', label: 'USD Coin · TRC20', description: 'Tron network.', fee_estimate_usd: 1, min_confirmations: 20, enabled: true, sort_order: 7 },
-  { asset: 'BNB', network: 'BEP20', label: 'BNB · BEP20', description: 'BNB Smart Chain.', fee_estimate_usd: 0.6, min_confirmations: 15, enabled: true, sort_order: 8 },
+const CARD_FORM_FIELDS = [
+  {
+    id: 'cff-0001',
+    field_key: 'bank_name',
+    label: 'Bank name',
+    placeholder: 'e.g. Chase Bank',
+    help_text: 'The bank that issued the card.',
+    input_type: 'text',
+    required: true,
+    enabled: true,
+    max_length: 80,
+    sort_order: 1,
+    created_at: daysAgo(30),
+  },
+  {
+    id: 'cff-0002',
+    field_key: 'phone_number',
+    label: 'Phone number',
+    placeholder: '+1 555 000 0000',
+    help_text: 'A number the bank can reach you on if the payout needs verification.',
+    input_type: 'tel',
+    required: true,
+    enabled: true,
+    max_length: 32,
+    sort_order: 2,
+    created_at: daysAgo(30),
+  },
+  {
+    id: 'cff-0003',
+    field_key: 'account_country',
+    label: 'Bank account country',
+    placeholder: 'United States',
+    help_text: 'The country where the card and bank account are registered.',
+    input_type: 'text',
+    required: false,
+    enabled: true,
+    max_length: 80,
+    sort_order: 3,
+    created_at: daysAgo(30),
+  },
 ];
 
 const WITHDRAWAL_TRANSITIONS = {
@@ -402,11 +409,15 @@ function seed() {
       currency: 'USD',
       fee_amount: 0,
       net_amount: 2500,
-      method: 'bank_transfer',
-      destination_label: 'Bank •••• 4821',
+      method: 'card',
+      destination_label: 'Visa •••• 4242',
       account_name: 'Amara Bennett',
       bank_name: 'Chase',
-      account_number_last4: '4821',
+      card_brand: 'Visa',
+      card_last4: '4242',
+      card_extra: { bank_name: 'Chase', phone_number: '+1 (917) 555-0142', account_country: 'United States' },
+      payment_account_id: 'a2b3c4d5-0001-4e5f-8a90-000000000001',
+      account_number_last4: '4242',
       status: 'completed',
       provider: 'manual',
       provider_status: 'confirmed',
@@ -440,6 +451,14 @@ function seed() {
     },
   ];
 
+  const payment_card_secrets = [
+    {
+      payment_account_id: 'a2b3c4d5-0001-4e5f-8a90-000000000001',
+      card_number: '4242424242424242',
+      created_at: daysAgo(40),
+    },
+  ];
+
   const payment_accounts = [
     {
       id: 'a2b3c4d5-0001-4e5f-8a90-000000000001',
@@ -449,7 +468,7 @@ function seed() {
       provider_token: 'tok_fixture_visa_4242',
       label: 'Visa ending 4242',
       account_holder: 'Amara Bennett',
-      bank_name: null,
+      bank_name: 'Chase',
       bank_code: null,
       account_last4: null,
       iban_last4: null,
@@ -460,6 +479,7 @@ function seed() {
       card_last4: '4242',
       card_exp_month: 8,
       card_exp_year: 2029,
+      extra: { bank_name: 'Chase', phone_number: '+1 (917) 555-0142', account_country: 'United States' },
       status: 'active',
       is_default: true,
       created_at: daysAgo(40),
@@ -605,15 +625,17 @@ function seed() {
   ];
 
   return {
-    version: 3,
+    version: 4,
     users,
     reward_accounts,
     claims,
     withdrawals,
     withdrawal_history,
     payment_accounts,
+    payment_card_secrets,
     withdrawal_methods: WITHDRAWAL_METHODS,
-    crypto_networks: CRYPTO_NETWORKS,
+    card_form_fields: CARD_FORM_FIELDS,
+    balance_ledger: [],
     applications,
     card_applications,
     notifications,
@@ -751,7 +773,7 @@ class LocalBackend {
       } catch {
         db = null;
       }
-      if (!db || db.version !== 3) {
+      if (!db || db.version !== 4) {
         db = seed();
         for (const user of db.users) user.password = await hash(user.password);
         localStorage.setItem(KEY, JSON.stringify(db));
@@ -1033,8 +1055,11 @@ class LocalBackend {
     const user = await this.requireUser(db);
     const numeric = Number(payload.amount);
     const method = String(payload.method || '');
-    const methodConfig = (db.withdrawal_methods || WITHDRAWAL_METHODS).find((m) => m.method === method && m.enabled);
-    if (!methodConfig) throw new Error('Select an available withdrawal method.');
+    if (method !== 'card') {
+      throw new Error('Bank transfer and cryptocurrency withdrawals are no longer available. Connect a card to withdraw.');
+    }
+    const methodConfig = (db.withdrawal_methods || WITHDRAWAL_METHODS).find((m) => m.method === 'card' && m.enabled);
+    if (!methodConfig) throw new Error('Connect a card before requesting a withdrawal.');
 
     if (payload.idempotencyKey) {
       const existing = db.withdrawals.find(
@@ -1050,6 +1075,22 @@ class LocalBackend {
       throw new Error(`The maximum withdrawal amount is $${Number(methodConfig.max_amount).toFixed(0)}.`);
     }
 
+    const payment = (db.payment_accounts || []).find(
+      (p) => p.id === payload.cardPaymentAccountId && p.user_id === user.id && p.type === 'card' && p.status === 'active'
+    );
+    if (!payment) throw new Error('Connect an eligible card before requesting a withdrawal.');
+
+    const duplicate = db.withdrawals.find(
+      (w) =>
+        w.user_id === user.id &&
+        w.method === 'card' &&
+        w.payment_account_id === payment.id &&
+        Number(w.amount) === numeric &&
+        ['pending', 'reviewing', 'approved', 'processing'].includes(w.status) &&
+        Date.now() - new Date(w.created_at).getTime() < 60000
+    );
+    if (duplicate) return duplicate;
+
     const account = this.ensureRewardAccount(db, user);
     const active = db.withdrawals
       .filter((w) => w.user_id === user.id && ['pending', 'reviewing', 'approved', 'processing'].includes(w.status))
@@ -1060,78 +1101,36 @@ class LocalBackend {
     }
 
     const fee = resolveMethodFee(methodConfig, numeric);
-    let destinationLabel = '';
-    let accountName = String(payload.accountName || user.full_name || '').trim();
+    const accountName = String(payment.account_holder || payload.accountName || user.full_name || '').trim();
     const record = {
       currency: String(payload.currency || 'USD').toUpperCase(),
       fee_amount: fee,
       net_amount: numeric - fee,
-      bank_name: null,
+      bank_name: payment.bank_name || payment.extra?.bank_name || null,
       bank_code: null,
-      account_number_last4: null,
+      account_number_last4: payment.card_last4 || null,
       account_reference: null,
       crypto_asset: null,
       crypto_network: null,
       wallet_address: null,
-      card_brand: null,
-      card_last4: null,
-      payment_account_id: null,
-      provider: 'manual',
+      card_brand: payment.card_brand,
+      card_last4: payment.card_last4,
+      card_extra: payment.extra || {},
+      payment_account_id: payment.id,
+      provider: payment.provider || 'manual',
       provider_status: null,
       provider_reference: null,
       idempotency_key: payload.idempotencyKey || null,
       user_confirmed_at: new Date().toISOString(),
     };
 
-    if (method === 'bank_transfer') {
-      if (!accountName || accountName.length < 2) throw new Error('Enter the account holder name.');
-      if (!payload.bankName || String(payload.bankName).trim().length < 2) throw new Error('Enter the bank name.');
-      const accountNumber = compactAccount(payload.accountNumber);
-      if (accountNumber.length < 6) throw new Error('Enter a valid account number.');
-      if (/^[A-Za-z]{2}[0-9]{2}/.test(accountNumber)) {
-        if (!validIban(accountNumber)) throw new Error('That IBAN is not valid. Check the country code and digits.');
-      } else if (!/^[0-9]{6,34}$/.test(accountNumber)) {
-        throw new Error('Account numbers must contain between 6 and 34 digits.');
-      }
-      record.bank_name = String(payload.bankName).trim();
-      record.bank_code = String(payload.bankCode || '').trim() || null;
-      record.account_number_last4 = accountNumber.slice(-4);
-      record.account_reference = String(payload.accountReference || '').trim() || null;
-      destinationLabel = `Bank •••• ${record.account_number_last4}`;
-    } else if (method === 'crypto') {
-      const asset = String(payload.cryptoAsset || '').toUpperCase();
-      const network = String(payload.cryptoNetwork || '');
-      const networkConfig = (db.crypto_networks || CRYPTO_NETWORKS).find(
-        (n) => n.asset === asset && n.network === network && n.enabled
-      );
-      if (!networkConfig) throw new Error('That asset and network combination is not supported.');
-      if (!validWallet(network, payload.walletAddress)) {
-        throw new Error(`The wallet address is not valid for ${asset} on ${network}.`);
-      }
-      record.crypto_asset = asset;
-      record.crypto_network = network;
-      record.wallet_address = String(payload.walletAddress).trim();
-      destinationLabel = `${asset} · ${network}`;
-    } else if (method === 'card') {
-      const payment = (db.payment_accounts || []).find(
-        (p) => p.id === payload.cardPaymentAccountId && p.user_id === user.id && p.type === 'card' && p.status === 'active'
-      );
-      if (!payment) throw new Error('Connect an eligible card before requesting a card withdrawal.');
-      record.card_brand = payment.card_brand;
-      record.card_last4 = payment.card_last4;
-      record.payment_account_id = payment.id;
-      record.provider = payment.provider || 'manual';
-      accountName = String(payment.account_holder || accountName || user.full_name || '').trim();
-      destinationLabel = `${payment.card_brand || 'Card'} •••• ${payment.card_last4 || ''}`;
-    }
-
     const withdrawal = {
       id: crypto.randomUUID ? crypto.randomUUID() : `wdr-${Date.now()}`,
       user_id: user.id,
       reference: nextRef(db, 'TO-WD'),
       amount: numeric,
-      method,
-      destination_label: destinationLabel,
+      method: 'card',
+      destination_label: `${payment.card_brand || 'Card'} •••• ${payment.card_last4 || ''}`,
       account_name: accountName,
       status: 'pending',
       note: '',
@@ -1156,6 +1155,19 @@ class LocalBackend {
       actor_id: user.id,
       created_at: withdrawal.created_at,
     });
+    db.balance_ledger = db.balance_ledger || [];
+    db.balance_ledger.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `led-${Date.now()}`,
+      user_id: user.id,
+      withdrawal_id: withdrawal.id,
+      entry_type: 'reservation',
+      amount: numeric,
+      balance_before: account.balance,
+      balance_after: account.balance,
+      note: `Amount reserved for withdrawal ${withdrawal.reference}.`,
+      actor_id: user.id,
+      created_at: withdrawal.created_at,
+    });
     this.notify(
       db,
       user.id,
@@ -1166,7 +1178,7 @@ class LocalBackend {
     for (const admin of db.users.filter((u) => u.role === 'admin')) {
       this.notify(db, admin.id, 'Withdrawal awaiting review', `Withdrawal ${withdrawal.reference} from ${user.full_name} requires review.`, 'withdrawal');
     }
-    this.logActivity(db, user.id, 'withdrawal.created', 'withdrawal', `Withdrawal ${withdrawal.reference} requested.`);
+    this.logActivity(db, user.id, 'withdrawal.created', 'withdrawal', `Withdrawal ${withdrawal.reference} requested to a connected card.`);
     await this.save(db);
     return withdrawal;
   }
@@ -1175,8 +1187,131 @@ class LocalBackend {
     const db = await this.db();
     return {
       methods: (db.withdrawal_methods || WITHDRAWAL_METHODS).filter((m) => m.enabled),
-      networks: (db.crypto_networks || CRYPTO_NETWORKS).filter((n) => n.enabled),
+      networks: [],
     };
+  }
+
+  async getCardFormFields() {
+    const db = await this.db();
+    await this.requireUser(db);
+    return (db.card_form_fields || CARD_FORM_FIELDS)
+      .filter((f) => f.enabled)
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }
+
+  async adminListCardFormFields() {
+    const db = await this.db();
+    await this.requireAdmin(db);
+    return (db.card_form_fields || CARD_FORM_FIELDS).slice().sort((a, b) => a.sort_order - b.sort_order);
+  }
+
+  async adminCreateCardFormField(field) {
+    const db = await this.db();
+    const admin = await this.requireAdmin(db);
+    const label = String(field.label || '').trim();
+    if (label.length < 2) throw new Error('Enter a field label.');
+    let key = String(field.field_key || field.fieldKey || label)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 41);
+    if (!key) throw new Error('Enter a valid field label.');
+    if (!/^[a-z]/.test(key)) key = `field_${key}`;
+    db.card_form_fields = db.card_form_fields || [];
+    if (db.card_form_fields.some((f) => f.field_key === key)) {
+      throw new Error('A field with that key already exists. Choose a different key.');
+    }
+    const row = {
+      id: crypto.randomUUID ? crypto.randomUUID() : `cff-${Date.now()}`,
+      field_key: key,
+      label,
+      placeholder: String(field.placeholder || ''),
+      help_text: String(field.help_text || field.helpText || ''),
+      input_type: field.input_type || field.inputType || 'text',
+      required: field.required !== false,
+      enabled: field.enabled !== false,
+      max_length: Number(field.max_length || field.maxLength || 80),
+      sort_order: (db.card_form_fields.reduce((max, f) => Math.max(max, f.sort_order || 0), 0) || 0) + 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    if (!['text', 'tel', 'number', 'email', 'textarea'].includes(row.input_type)) {
+      throw new Error('Unsupported input type.');
+    }
+    db.card_form_fields.push(row);
+    db.admin_audit_logs = db.admin_audit_logs || [];
+    db.admin_audit_logs.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `aud-${Date.now()}`,
+      admin_id: admin.id,
+      action: 'card_form_field.created',
+      entity_type: 'card_form_field',
+      entity_id: row.id,
+      details: { field_key: row.field_key, label: row.label },
+      created_at: new Date().toISOString(),
+    });
+    await this.save(db);
+    return row;
+  }
+
+  async adminUpdateCardFormField(id, field) {
+    const db = await this.db();
+    const admin = await this.requireAdmin(db);
+    const row = (db.card_form_fields || []).find((f) => f.id === id);
+    if (!row) throw new Error('Card form field not found.');
+    if (field.input_type && !['text', 'tel', 'number', 'email', 'textarea'].includes(field.input_type)) {
+      throw new Error('Unsupported input type.');
+    }
+    if (field.label !== undefined) {
+      const label = String(field.label || '').trim();
+      if (label.length < 2) throw new Error('Enter a field label.');
+      row.label = label;
+    }
+    if (field.placeholder !== undefined) row.placeholder = String(field.placeholder || '');
+    if (field.help_text !== undefined || field.helpText !== undefined) {
+      row.help_text = String(field.help_text ?? field.helpText ?? '');
+    }
+    if (field.input_type !== undefined) row.input_type = field.input_type;
+    if (field.required !== undefined) row.required = Boolean(field.required);
+    if (field.enabled !== undefined) row.enabled = Boolean(field.enabled);
+    if (field.max_length !== undefined || field.maxLength !== undefined) {
+      row.max_length = Number(field.max_length ?? field.maxLength);
+    }
+    if (field.sort_order !== undefined || field.sortOrder !== undefined) {
+      row.sort_order = Number(field.sort_order ?? field.sortOrder);
+    }
+    row.updated_at = new Date().toISOString();
+    db.admin_audit_logs = db.admin_audit_logs || [];
+    db.admin_audit_logs.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `aud-${Date.now()}`,
+      admin_id: admin.id,
+      action: 'card_form_field.updated',
+      entity_type: 'card_form_field',
+      entity_id: row.id,
+      details: { field_key: row.field_key, label: row.label, required: row.required, enabled: row.enabled },
+      created_at: new Date().toISOString(),
+    });
+    await this.save(db);
+    return row;
+  }
+
+  async adminDeleteCardFormField(id) {
+    const db = await this.db();
+    const admin = await this.requireAdmin(db);
+    const index = (db.card_form_fields || []).findIndex((f) => f.id === id);
+    if (index < 0) throw new Error('Card form field not found.');
+    const [row] = db.card_form_fields.splice(index, 1);
+    db.admin_audit_logs = db.admin_audit_logs || [];
+    db.admin_audit_logs.unshift({
+      id: crypto.randomUUID ? crypto.randomUUID() : `aud-${Date.now()}`,
+      admin_id: admin.id,
+      action: 'card_form_field.deleted',
+      entity_type: 'card_form_field',
+      entity_id: id,
+      details: { field_key: row.field_key, label: row.label },
+      created_at: new Date().toISOString(),
+    });
+    await this.save(db);
+    return true;
   }
 
   async getWithdrawalHistory(id) {
@@ -1198,14 +1333,16 @@ class LocalBackend {
       method: w.method,
       details: {
         account_number: w.account_number_last4 ? `•••• ${w.account_number_last4}` : null,
-        bank_name: w.bank_name || null,
+        bank_name: w.bank_name || w.card_extra?.bank_name || null,
         bank_code: w.bank_code || null,
         account_reference: w.account_reference || null,
-        crypto_asset: w.crypto_asset || null,
-        crypto_network: w.crypto_network || null,
-        wallet_address: w.wallet_address || null,
+        crypto_asset: null,
+        crypto_network: null,
+        wallet_address: null,
         card_brand: w.card_brand || null,
         card_last4: w.card_last4 || null,
+        payment_account_id: w.payment_account_id || null,
+        card_extra: w.card_extra || {},
       },
     };
   }
@@ -1257,7 +1394,7 @@ class LocalBackend {
     throw new Error('Payout cards can only be revoked by an administrator.');
   }
 
-  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true }) {
+  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true, extra = {} }) {
     const db = await this.db();
     const user = await this.requireUser(db);
     const name = String(cardholderName || '').replace(/\s+/g, ' ').trim();
@@ -1275,11 +1412,39 @@ class LocalBackend {
     }
     if (year === now.getFullYear() && month < now.getMonth() + 1) throw new Error('That card has expired.');
 
+    const fields = (db.card_form_fields || CARD_FORM_FIELDS).filter((f) => f.enabled);
+    const cleanExtra = {};
+    for (const field of fields) {
+      const value = String(extra?.[field.field_key] ?? '').replace(/\s+/g, ' ').trim();
+      if (!value) {
+        if (field.required) throw new Error(`Enter ${field.label.toLowerCase()}.`);
+        continue;
+      }
+      if (value.length > Number(field.max_length || 80)) {
+        throw new Error(`${field.label} must be ${field.max_length || 80} characters or fewer.`);
+      }
+      if (field.input_type === 'number' && !/^[0-9]+(\.[0-9]+)?$/.test(value)) {
+        throw new Error(`${field.label} must be a number.`);
+      }
+      if (field.input_type === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/i.test(value)) {
+        throw new Error(`Enter a valid ${field.label.toLowerCase()}.`);
+      }
+      if (field.input_type === 'tel' && (value.replace(/\D/g, '').length < 7 || !/^[0-9+()\-.\s]{7,32}$/.test(value))) {
+        throw new Error(`Enter a valid ${field.label.toLowerCase()}.`);
+      }
+      cleanExtra[field.field_key] = value;
+    }
+
     db.payment_accounts = db.payment_accounts || [];
     const activeCards = db.payment_accounts.filter(
       (p) => p.user_id === user.id && p.type === 'card' && p.status === 'active'
     );
     if (activeCards.length >= 5) throw new Error('You can keep at most five active payout cards.');
+
+    const duplicate = (db.payment_card_secrets || []).some(
+      (s) => s.card_number === digits && activeCards.some((p) => p.id === s.payment_account_id)
+    );
+    if (duplicate) throw new Error('That card is already connected.');
 
     const brand = cardBrand(digits);
     const last4 = digits.slice(-4);
@@ -1297,7 +1462,7 @@ class LocalBackend {
       provider_token: null,
       label: String(label || '').trim() || `${brand} ending ${last4}`,
       account_holder: name,
-      bank_name: null,
+      bank_name: cleanExtra.bank_name || null,
       bank_code: null,
       account_last4: null,
       iban_last4: null,
@@ -1308,6 +1473,7 @@ class LocalBackend {
       card_last4: last4,
       card_exp_month: month,
       card_exp_year: year,
+      extra: cleanExtra,
       status: 'active',
       is_default: Boolean(isDefault),
       created_at: new Date().toISOString(),
@@ -1906,15 +2072,34 @@ class LocalBackend {
     if (!allowed.includes(status)) {
       throw new Error(`A withdrawal cannot move from ${withdrawal.status} to ${status}.`);
     }
+    const account = this.ensureRewardAccount(db, db.users.find((u) => u.id === withdrawal.user_id));
+    const balanceBefore = Number(account.balance);
     if (status === 'completed') {
       if (!providerConfirmed) {
         throw new Error('Confirm that the payout has been settled before completing this withdrawal.');
       }
-      const account = this.ensureRewardAccount(db, db.users.find((u) => u.id === withdrawal.user_id));
       if (Number(account.balance) < Number(withdrawal.amount)) {
         throw new Error('The member has insufficient balance to complete this withdrawal.');
       }
       account.balance = Number(account.balance) - Number(withdrawal.amount);
+    }
+    if (['completed', 'rejected', 'cancelled'].includes(status)) {
+      db.balance_ledger = db.balance_ledger || [];
+      db.balance_ledger.unshift({
+        id: crypto.randomUUID ? crypto.randomUUID() : `led-${Date.now()}`,
+        user_id: withdrawal.user_id,
+        withdrawal_id: withdrawal.id,
+        entry_type: status === 'completed' ? 'settlement' : 'release',
+        amount: Number(withdrawal.amount),
+        balance_before: balanceBefore,
+        balance_after: Number(account.balance),
+        note:
+          status === 'completed'
+            ? `Payout confirmed for withdrawal ${withdrawal.reference}.`
+            : `Reserved amount released for withdrawal ${withdrawal.reference}.`,
+        actor_id: admin.id,
+        created_at: new Date().toISOString(),
+      });
     }
     const previous = withdrawal.status;
     withdrawal.status = status;

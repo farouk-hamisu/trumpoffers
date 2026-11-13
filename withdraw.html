@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Withdraw Funds — Trump Offers</title>
-  <meta name="description" content="Request a funds disbursement from your Trump Offers reward balance.">
+  <meta name="description" content="Request a funds disbursement from your Trump Offers reward balance to a connected card.">
   <meta name="theme-color" content="#0a0a0b">
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://trumpoffers.com/withdraw.html">
@@ -28,7 +28,7 @@
           <div>
             <p class="app-heading__eyebrow">Withdrawal desk</p>
             <h1>Disbursement &amp; <em>Withdrawals.</em></h1>
-            <p class="app-heading__sub">Move your available reward balance to your bank, a crypto wallet you control, or an eligible connected card.</p>
+            <p class="app-heading__sub">Move your available reward balance to a card you have connected and verified. Every request is reviewed before a payout is released.</p>
           </div>
           <div class="app-heading__actions">
             <a class="btn btn--ghost btn--sm" href="dashboard.html">Back to overview</a>
@@ -64,127 +64,33 @@
               </div>
 
               <div class="field">
-                <span class="field__label">Disbursement method</span>
-                <div class="method-grid">
-                  <label class="method">
-                    <input type="radio" name="method" value="bank_transfer" checked>
-                    <span class="method__body">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9.5 12 3l9 6.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 21h18"/></svg>
-                      <span class="method__name">Bank transfer</span>
-                      <span class="method__desc" data-method-time="bank_transfer">2–3 business days</span>
-                    </span>
-                  </label>
-                  <label class="method">
-                    <input type="radio" name="method" value="crypto">
-                    <span class="method__body">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M9.5 8.5h4.2a2.3 2.3 0 0 1 0 4.6H9.5m0 0h4.6a2.35 2.35 0 0 1 0 4.7H9.5M11 6v2.5m0 12V18m2-12v2.5m0 12V18"/></svg>
-                      <span class="method__name">Cryptocurrency</span>
-                      <span class="method__desc" data-method-time="crypto">Within 24h of approval</span>
-                    </span>
-                  </label>
-                  <label class="method">
-                    <input type="radio" name="method" value="card">
-                    <span class="method__body">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="5.5" width="19" height="13" rx="1.5"/><path d="M2.5 9.5h19M6 15h4"/></svg>
-                      <span class="method__name">Card credit</span>
-                      <span class="method__desc" data-method-time="card">1–2 business days</span>
-                    </span>
-                  </label>
+                <span class="field__label">Withdrawal method</span>
+                <div class="method method--single">
+                  <span class="method__body is-static">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2.5" y="5.5" width="19" height="13" rx="1.5"/><path d="M2.5 9.5h19M6 15h4"/></svg>
+                    <span class="method__name">Connect Your Card</span>
+                    <span class="method__desc">1–2 business days after approval</span>
+                  </span>
                 </div>
               </div>
 
-              <div class="method-panels">
-                <!-- Bank transfer -->
-                <div class="method-panel" data-method-panel="bank_transfer">
-                  <div class="field">
-                    <label class="field__label" for="bank-account-name">Account holder's full name</label>
-                    <input class="input" id="bank-account-name" name="accountName" type="text" autocomplete="name" required>
-                  </div>
-                  <div class="field-row">
-                    <div class="field">
-                      <label class="field__label" for="bank-name">Bank</label>
-                      <select class="select" id="bank-name" name="bankName" required>
-                        <option value="">Select a bank</option>
-                        <option value="Chase">Chase</option>
-                        <option value="Bank of America">Bank of America</option>
-                        <option value="Wells Fargo">Wells Fargo</option>
-                        <option value="Citibank">Citibank</option>
-                        <option value="HSBC">HSBC</option>
-                        <option value="Barclays">Barclays</option>
-                        <option value="Deutsche Bank">Deutsche Bank</option>
-                        <option value="Other">Other bank</option>
-                      </select>
-                    </div>
-                    <div class="field" data-other-bank hidden>
-                      <label class="field__label" for="bank-name-other">Bank name</label>
-                      <input class="input" id="bank-name-other" name="bankNameOther" type="text" maxlength="80">
-                    </div>
-                  </div>
-                  <div class="field-row">
-                    <div class="field">
-                      <label class="field__label" for="bank-account-number">Account number or IBAN</label>
-                      <input class="input" id="bank-account-number" name="accountNumber" type="text" inputmode="text" spellcheck="false" autocomplete="off" required>
-                      <span class="field__hint">IBANs are validated with the international mod-97 checksum.</span>
-                    </div>
-                    <div class="field">
-                      <label class="field__label" for="bank-currency">Account currency</label>
-                      <select class="select" id="bank-currency" name="currency">
-                        <option value="USD">USD — US dollar</option>
-                        <option value="EUR">EUR — Euro</option>
-                        <option value="GBP">GBP — Pound sterling</option>
-                        <option value="CAD">CAD — Canadian dollar</option>
-                        <option value="AUD">AUD — Australian dollar</option>
-                        <option value="AED">AED — UAE dirham</option>
-                        <option value="CHF">CHF — Swiss franc</option>
-                        <option value="JPY">JPY — Japanese yen</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="field">
-                    <label class="field__label" for="bank-reference">Payment reference <span class="field__optional">Optional</span></label>
-                    <input class="input" id="bank-reference" name="accountReference" type="text" maxlength="80" placeholder="Reference shown on your bank statement">
-                  </div>
+              <div class="method-panel" style="margin-top:18px">
+                <div class="notice notice--warning card-notice">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v4m0 4h.01M10.3 3.9 2.4 18a1.6 1.6 0 0 0 1.4 2.4h16.4a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0Z"/></svg>
+                  <span>Please ensure that your card details are valid and that the information provided matches your registered name. Incorrect or mismatched details may result in withdrawal delays or rejection.</span>
                 </div>
 
-                <!-- Cryptocurrency -->
-                <div class="method-panel" data-method-panel="crypto" hidden>
-                  <div class="field">
-                    <span class="field__label">Cryptocurrency</span>
-                    <div class="asset-grid" data-crypto-assets role="radiogroup" aria-label="Cryptocurrency"></div>
-                    <input type="hidden" name="cryptoAsset" value="">
+                <div class="field" style="margin-top:18px">
+                  <span class="field__label">Connected card</span>
+                  <div class="card-accounts" data-card-accounts>
+                    <div class="skeleton" style="height:74px"></div>
                   </div>
-                  <div class="field-row">
-                    <div class="field">
-                      <label class="field__label" for="crypto-network">Network</label>
-                      <select class="select" id="crypto-network" name="cryptoNetwork" required></select>
-                      <span class="field__hint" data-network-hint>Select an asset to see supported networks.</span>
-                    </div>
-                    <div class="field">
-                      <span class="field__label">Network fee estimate</span>
-                      <input class="input" data-network-fee type="text" value="—" readonly tabindex="-1">
-                    </div>
+                  <input type="hidden" name="cardPaymentAccountId" value="">
+                  <div class="card-connect">
+                    <button class="btn btn--ghost btn--sm" type="button" data-connect-card>Connect a payout card</button>
+                    <span class="field__hint">Card numbers are encrypted at rest and visible only to authorised payout administrators. We never ask for a CVV, PIN or online-banking password.</span>
                   </div>
-                  <div class="field">
-                    <label class="field__label" for="crypto-wallet">Wallet address</label>
-                    <input class="input" id="crypto-wallet" name="walletAddress" type="text" spellcheck="false" autocomplete="off" placeholder="Paste the destination wallet address" required>
-                    <span class="field__hint" data-wallet-hint>The address must be valid for the selected asset and network.</span>
-                  </div>
-                </div>
-
-                <!-- Card -->
-                <div class="method-panel" data-method-panel="card" hidden>
-                  <div class="field">
-                    <span class="field__label">Connected card</span>
-                    <div class="card-accounts" data-card-accounts>
-                      <div class="skeleton" style="height:74px"></div>
-                    </div>
-                    <input type="hidden" name="cardPaymentAccountId" value="">
-                    <div class="card-connect">
-                      <button class="btn btn--ghost btn--sm" type="button" data-connect-card>Connect a payout card</button>
-                      <span class="field__hint">Card numbers are encrypted at rest and visible only to authorised payout administrators. We never ask for a CVV, PIN or online-banking password.</span>
-                    </div>
-                    <div data-card-status></div>
-                  </div>
+                  <div data-card-status></div>
                 </div>
               </div>
 
@@ -193,7 +99,7 @@
                 <span>I authorise this withdrawal and confirm the payout details are correct. I understand the amount is reserved until the request is completed or rejected.</span>
               </label>
 
-              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px">Review withdrawal</button>
+              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px" data-submit-withdrawal>Review withdrawal</button>
               <p class="form-note">Every request is reviewed by our operations desk. You will receive a reference and can follow each status change on this page.</p>
             </form>
           </section>
@@ -203,12 +109,11 @@
             <div class="summary-panel__amount" data-summary-amount>$0 <small>USD</small></div>
             <div class="summary-rows">
               <div class="summary-row"><span>Available balance</span><strong data-summary-available>—</strong></div>
-              <div class="summary-row"><span>Method</span><strong data-summary-method>Bank transfer</strong></div>
-              <div class="summary-row"><span>Destination</span><strong data-summary-destination>Not yet entered</strong></div>
+              <div class="summary-row"><span>Method</span><strong data-summary-method>Connect Your Card</strong></div>
+              <div class="summary-row"><span>Destination</span><strong data-summary-destination>No card connected</strong></div>
               <div class="summary-row"><span>Processing fee</span><strong data-summary-fee>None</strong></div>
-              <div class="summary-row" data-summary-network-row hidden><span>Network fee (est.)</span><strong data-summary-network-fee>—</strong></div>
               <div class="summary-row"><span>Net payout</span><strong data-summary-net>—</strong></div>
-              <div class="summary-row"><span>Estimated arrival</span><strong data-summary-arrival>2–3 business days</strong></div>
+              <div class="summary-row"><span>Estimated arrival</span><strong data-summary-arrival>1–2 business days after approval</strong></div>
               <div class="summary-row"><span>Reference</span><strong>Issued on submission</strong></div>
             </div>
             <p class="summary-note">The summary updates as you edit the request. Your balance is reserved while a withdrawal is pending, approved or processing.</p>
@@ -252,6 +157,17 @@
     </div>
   </div>
 
+  <!-- Processing -->
+  <div class="processing-screen" data-processing-screen hidden aria-live="polite" aria-busy="true">
+    <div class="processing-screen__panel">
+      <span class="processing-screen__spinner" aria-hidden="true"></span>
+      <p class="processing-screen__eyebrow">Secure submission</p>
+      <h2 class="processing-screen__title">Processing Your Withdrawal<span class="processing-screen__dots" aria-hidden="true">...</span></h2>
+      <p class="processing-screen__text">We are validating your card and reserving the requested amount. Please keep this window open.</p>
+      <div class="processing-screen__bar" aria-hidden="true"><span></span></div>
+    </div>
+  </div>
+
   <!-- Submitted -->
   <div class="modal" id="withdraw-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="withdraw-modal-title">
     <div class="modal__backdrop" data-modal-close></div>
@@ -262,18 +178,20 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m4.5 12.5 5 5 10-11"/></svg>
         </span>
         <div class="claim-success__body">
-          <h2 class="modal__title" id="withdraw-modal-title" style="font-size:1.9rem">Withdrawal submitted</h2>
-          <p class="fine">Your request is now pending review. You will be notified at every status change.</p>
+          <p class="app-heading__eyebrow">Request received</p>
+          <h2 class="modal__title" id="withdraw-modal-title" style="font-size:1.9rem">Withdrawal Request <em>Submitted.</em></h2>
+          <p class="fine">Your request has been submitted successfully and is now awaiting administrative approval. No funds have been sent yet.</p>
           <div class="claim-reference"><span data-withdraw-ref>TO-WD-26-000000</span><button type="button" data-withdraw-copy aria-label="Copy reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div>
         </div>
       </div>
+      <div style="margin-top:14px" data-withdraw-status-badge></div>
       <dl class="claim-review" style="max-width:none">
         <div class="claim-review__row"><dt>Amount</dt><dd data-withdraw-amount>—</dd></div>
-        <div class="claim-review__row"><dt>Method</dt><dd data-withdraw-method>—</dd></div>
         <div class="claim-review__row"><dt>Destination</dt><dd data-withdraw-destination>—</dd></div>
-        <div class="claim-review__row"><dt>Estimated completion</dt><dd data-withdraw-estimate>—</dd></div>
+        <div class="claim-review__row"><dt>Reference</dt><dd data-withdraw-reference>—</dd></div>
+        <div class="claim-review__row"><dt>Date &amp; time</dt><dd data-withdraw-date>—</dd></div>
       </dl>
-      <div class="claim-note">Keep this reference. You can track the request on this page or from your dashboard.</div>
+      <div class="claim-note">The amount is reserved from your available balance. It will only be marked <strong>Successful</strong> after an administrator confirms the payout has actually settled. If the request is rejected, the reserved funds return to your balance.</div>
       <div class="modal__actions">
         <a class="btn btn--ghost btn--sm" href="dashboard.html">Dashboard</a>
         <button class="btn btn--gold btn--sm" type="button" data-modal-close>Done</button>
@@ -300,21 +218,21 @@
     <div class="modal__panel">
       <button class="modal__close" type="button" data-modal-close aria-label="Close">✕</button>
       <p class="app-heading__eyebrow">Payout method</p>
-      <h2 class="modal__title" id="card-connect-title" style="font-size:1.9rem">Connect a <em>payout card.</em></h2>
-      <p class="fine">Enter the card details exactly as they appear on the card. The full number is encrypted at rest and shown only to authorised payout administrators when your withdrawal is reviewed.</p>
+      <h2 class="modal__title" id="card-connect-title" style="font-size:1.9rem">Connect your <em>card.</em></h2>
+      <p class="fine">Enter the card details exactly as they appear on the card and on your bank account. The full number is encrypted at rest and shown only to authorised payout administrators when your withdrawal is reviewed.</p>
+      <div class="notice notice--warning card-notice" style="margin-bottom:18px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v4m0 4h.01M10.3 3.9 2.4 18a1.6 1.6 0 0 0 1.4 2.4h16.4a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0Z"/></svg>
+        <span>Please ensure that your card details are valid and that the information provided matches your registered name. Incorrect or mismatched details may result in withdrawal delays or rejection.</span>
+      </div>
       <form id="card-connect-form" novalidate>
         <div class="field">
-          <label class="field__label" for="card-holder-name">Cardholder name</label>
+          <label class="field__label" for="card-holder-name">Cardholder's name</label>
           <input class="input" id="card-holder-name" name="cardholderName" type="text" autocomplete="cc-name" maxlength="64" placeholder="Name embossed on the card" required>
         </div>
         <div class="field">
           <label class="field__label" for="card-number">Card number</label>
           <input class="input" id="card-number" name="cardNumber" type="text" inputmode="numeric" autocomplete="cc-number" maxlength="23" spellcheck="false" placeholder="0000 0000 0000 0000" data-card-number required>
           <span class="field__hint" data-card-brand-hint>Visa, Mastercard, American Express, Discover and other major networks.</span>
-        </div>
-        <div class="field">
-          <label class="field__label" for="card-label">Label <span class="field__optional">Optional</span></label>
-          <input class="input" id="card-label" name="label" type="text" maxlength="80" placeholder="e.g. Primary payout card">
         </div>
         <div class="form-grid">
           <div class="field">
@@ -339,6 +257,11 @@
             <label class="field__label" for="card-exp-year">Expiry year</label>
             <select class="select" id="card-exp-year" name="expYear" required></select>
           </div>
+        </div>
+        <div data-dynamic-card-fields></div>
+        <div class="field">
+          <label class="field__label" for="card-label">Label <span class="field__optional">Optional</span></label>
+          <input class="input" id="card-label" name="label" type="text" maxlength="80" placeholder="e.g. Primary payout card">
         </div>
         <div data-card-connect-alert></div>
         <div class="modal__actions">

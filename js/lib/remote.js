@@ -292,13 +292,19 @@ class SupabaseBackend {
   }
 
   async getWithdrawalMethods() {
-    const [{ data: methods, error }, { data: networks, error: networkError }] = await Promise.all([
-      this.client.from('withdrawal_methods').select('*').eq('enabled', true).order('sort_order'),
-      this.client.from('crypto_networks').select('*').eq('enabled', true).order('sort_order'),
-    ]);
+    const { data, error } = await this.client
+      .from('withdrawal_methods')
+      .select('*')
+      .eq('enabled', true)
+      .order('sort_order');
     if (error) throw friendlyError(error);
-    if (networkError) throw friendlyError(networkError);
-    return { methods: methods || [], networks: networks || [] };
+    return { methods: data || [], networks: [] };
+  }
+
+  async getCardFormFields() {
+    const { data, error } = await this.client.rpc('get_card_form_fields');
+    if (error) throw friendlyError(error);
+    return data || [];
   }
 
   async getWithdrawalDetail(id) {
@@ -358,7 +364,7 @@ class SupabaseBackend {
     throw new Error('Payout cards can only be revoked by an administrator.');
   }
 
-  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true }) {
+  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true, extra = {} }) {
     const { data, error } = await this.client.rpc('connect_payment_card', {
       p_cardholder_name: cardholderName,
       p_card_number: cardNumber,
@@ -366,9 +372,53 @@ class SupabaseBackend {
       p_exp_year: Number(expYear),
       p_label: label || '',
       p_is_default: Boolean(isDefault),
+      p_extra: extra || {},
     });
     if (error) throw friendlyError(error);
     return single(data);
+  }
+
+  async adminListCardFormFields() {
+    const { data, error } = await this.client.rpc('admin_list_card_form_fields');
+    if (error) throw friendlyError(error);
+    return data || [];
+  }
+
+  async adminCreateCardFormField(field) {
+    const { data, error } = await this.client.rpc('admin_create_card_form_field', {
+      p_label: field.label,
+      p_field_key: field.field_key || field.fieldKey || null,
+      p_placeholder: field.placeholder || '',
+      p_help_text: field.help_text || field.helpText || '',
+      p_input_type: field.input_type || field.inputType || 'text',
+      p_required: field.required !== false,
+      p_enabled: field.enabled !== false,
+      p_max_length: Number(field.max_length || field.maxLength || 80),
+    });
+    if (error) throw friendlyError(error);
+    return single(data);
+  }
+
+  async adminUpdateCardFormField(id, field) {
+    const { data, error } = await this.client.rpc('admin_update_card_form_field', {
+      p_id: id,
+      p_label: field.label ?? null,
+      p_placeholder: field.placeholder ?? null,
+      p_help_text: field.help_text ?? field.helpText ?? null,
+      p_input_type: field.input_type ?? field.inputType ?? null,
+      p_required: field.required ?? null,
+      p_enabled: field.enabled ?? null,
+      p_max_length: field.max_length ?? field.maxLength ?? null,
+      p_sort_order: field.sort_order ?? field.sortOrder ?? null,
+    });
+    if (error) throw friendlyError(error);
+    return single(data);
+  }
+
+  async adminDeleteCardFormField(id) {
+    const { data, error } = await this.client.rpc('admin_delete_card_form_field', { p_id: id });
+    if (error) throw friendlyError(error);
+    return data;
   }
 
   async getAllPaymentCardsAdmin() {

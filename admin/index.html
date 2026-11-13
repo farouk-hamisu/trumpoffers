@@ -41,6 +41,7 @@
         <a class="admin-nav__link" href="#payouts" data-view-link="payouts" data-icon="wallet"><span>Payout cards</span></a>
         <a class="admin-nav__link" href="#messages" data-view-link="messages" data-icon="mail"><span>Messages</span><span class="admin-nav__count" data-count="newMessages" hidden>0</span></a>
         <div class="admin-nav__label">Configuration</div>
+        <a class="admin-nav__link" href="#cardform" data-view-link="cardform" data-icon="card"><span>Card form fields</span></a>
         <a class="admin-nav__link" href="#settings" data-view-link="settings" data-icon="settings"><span>Website &amp; video</span></a>
       </nav>
       <div class="admin-sidebar__foot">
@@ -242,7 +243,7 @@
               <option value="reviewing">Under review</option>
               <option value="approved">Approved</option>
               <option value="processing">Processing</option>
-              <option value="completed">Completed</option>
+              <option value="completed">Successful</option>
               <option value="rejected">Rejected</option>
               <option value="cancelled">Cancelled</option>
             </select>
@@ -251,7 +252,7 @@
             <div class="admin-panel__head admin-panel__head--padded">
               <div>
                 <h2 class="admin-panel__title">Withdrawal requests</h2>
-                <p class="admin-panel__sub">Member disbursement payouts and settlement records</p>
+                <p class="admin-panel__sub">Approve a request first; only confirm payment when the payout has actually settled.</p>
               </div>
             </div>
             <div class="admin-table-wrap">
@@ -384,11 +385,35 @@
           <section class="admin-panel admin-panel--flush">
             <div class="admin-table-wrap">
               <table class="admin-table">
-                <thead><tr><th>Member</th><th>Cardholder</th><th>Card</th><th>Expiry</th><th>Status</th><th>Connected</th><th>Action</th></tr></thead>
+                <thead><tr><th>Member</th><th>Cardholder</th><th>Card</th><th>Bank</th><th>Expiry</th><th>Status</th><th>Connected</th><th>Action</th></tr></thead>
                 <tbody data-payouts-body></tbody>
               </table>
             </div>
           </section>
+        </section>
+
+        <!-- Card form fields -->
+        <section class="admin-view" data-view="cardform" aria-labelledby="cardform-title">
+          <div class="admin-heading">
+            <div>
+              <p class="admin-heading__eyebrow">Card connection form</p>
+              <h1 id="cardform-title">Card form <em>fields.</em></h1>
+              <p>Add, edit or remove the fields members complete when connecting a payout card. Changes appear immediately in the member form — no redeploy is required.</p>
+            </div>
+            <div class="admin-heading__actions">
+              <button class="btn btn--gold btn--sm" type="button" data-cardfield-new>Add field</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-admin-refresh>Refresh</button>
+            </div>
+          </div>
+          <section class="admin-panel admin-panel--flush">
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead><tr><th>Order</th><th>Label</th><th>Key</th><th>Input type</th><th>Required</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody data-cardform-body></tbody>
+              </table>
+            </div>
+          </section>
+          <p class="admin-detail__note" style="margin-top:16px">Deleting a field removes it from the member form. Existing connected cards keep the details they already submitted. Card number, expiry and cardholder name are fixed secure core fields and cannot be removed here.</p>
         </section>
 
         <!-- Messages -->

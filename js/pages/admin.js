@@ -36,6 +36,7 @@ const VIEWS = {
   applications: { title: 'Applications' },
   cards: { title: 'Card requests' },
   payouts: { title: 'Payout cards' },
+  cardform: { title: 'Card form fields' },
   messages: { title: 'Messages' },
   settings: { title: 'Website & video' },
 };
@@ -57,6 +58,7 @@ const state = {
   applications: [],
   cards: [],
   paymentCards: [],
+  cardFormFields: [],
   messages: [],
   settings: {},
 };
@@ -115,9 +117,9 @@ function statusLabel(type, value) {
     withdrawal: {
       pending: 'Pending',
       reviewing: 'Under review',
-      approved: 'Approved',
-      processing: 'Processing',
-      completed: 'Completed',
+      approved: 'Approved — awaiting payment',
+      processing: 'Processing payment',
+      completed: 'Successful',
       rejected: 'Rejected',
       cancelled: 'Cancelled',
     },
@@ -143,9 +145,7 @@ function statusLabel(type, value) {
 function methodLabel(method = '') {
   return (
     {
-      bank_transfer: 'Bank transfer',
-      crypto: 'Cryptocurrency',
-      card: 'Card credit',
+      card: 'Connect Your Card',
       wire: 'Wire transfer',
       paypal: 'PayPal',
       wise: 'Wise',
@@ -258,6 +258,8 @@ async function loadView(view) {
       return loadCards();
     case 'payouts':
       return loadPayoutCards();
+    case 'cardform':
+      return loadCardFormFields();
     case 'messages':
       return loadMessages();
     case 'settings':
@@ -512,9 +514,14 @@ function renderUsers() {
 /* ----------------------------------------------------------------- rewards */
 
 async function loadRewards() {
-  const [claims, withdrawals] = await Promise.all([api.getAllClaimsAdmin(), api.getAllWithdrawalsAdmin()]);
+  const [claims, withdrawals, fields] = await Promise.all([
+    api.getAllClaimsAdmin(),
+    api.getAllWithdrawalsAdmin(),
+    api.adminListCardFormFields().catch(() => state.cardFormFields),
+  ]);
   state.claims = claims;
   state.withdrawals = withdrawals;
+  state.cardFormFields = fields || state.cardFormFields;
   renderClaims();
   renderWithdrawals();
 }
@@ -563,7 +570,7 @@ function renderWithdrawals() {
     if (status && w.status !== status) return false;
     if (
       q &&
-      !`${w.reference} ${w.member_name} ${w.member_email} ${w.method} ${w.destination_label || ''} ${w.bank_name || ''} ${w.crypto_asset || ''} ${w.wallet_address || ''}`
+      !`${w.reference} ${w.member_name} ${w.member_email} ${w.method} ${w.destination_label || ''} ${w.bank_name || ''} ${w.account_name || ''}`
         .toLowerCase()
         .includes(q)
     )
@@ -722,8 +729,32 @@ function renderCards() {
 /* ------------------------------------------------------------ payout cards */
 
 async function loadPayoutCards() {
-  state.paymentCards = await api.getAllPaymentCardsAdmin();
+  const [cards, fields] = await Promise.all([
+    api.getAllPaymentCardsAdmin(),
+    api.adminListCardFormFields().catch(() => state.cardFormFields),
+  ]);
+  state.paymentCards = cards;
+  state.cardFormFields = fields || [];
   renderPayoutCards();
+}
+
+function extraRows(extra = {}, { skip = [] } = {}) {
+  return Object.entries(extra || {})
+    .filter(([key, value]) => value && !skip.includes(key))
+    .map(([key, value]) => {
+      const field = state.cardFormFields.find((f) => f.field_key === key);
+      return [field?.label || humanize(key), escapeHTML(String(value))];
+    });
+}
+
+function extraSummary(extra = {}) {
+  const values = Object.entries(extra || {})
+    .filter(([, value]) => value)
+    .map(([key, value]) => {
+      const field = state.cardFormFields.find((f) => f.field_key === key);
+      return `${field?.label || humanize(key)}: ${value}`;
+    });
+  return values.join(' · ');
 }
 
 function cardExpiry(card) {
@@ -740,7 +771,7 @@ function renderPayoutCards() {
     if (status && c.status !== status) return false;
     if (
       q &&
-      !`${c.member_name} ${c.member_email} ${c.account_holder} ${c.card_brand} ${c.card_last4} ${c.label}`
+      !`${c.member_name} ${c.member_email} ${c.account_holder} ${c.card_brand} ${c.card_last4} ${c.label} ${c.bank_name || ''} ${extraSummary(c.extra)}`
         .toLowerCase()
         .includes(q)
     )
@@ -754,6 +785,7 @@ function renderPayoutCards() {
             <td>${nameCell(c.member_name, c.member_email)}</td>
             <td>${escapeHTML(c.account_holder || '—')}</td>
             <td><span class="cell-strong">${escapeHTML(c.card_brand || 'Card')} •••• ${escapeHTML(c.card_last4 || '••••')}</span><span class="cell-sub">${escapeHTML(c.label || '')}</span></td>
+            <td><span class="cell-strong">${escapeHTML(c.bank_name || c.extra?.bank_name || '—')}</span><span class="cell-sub">${escapeHTML(extraSummary(c.extra))}</span></td>
             <td class="cell-mono">${escapeHTML(cardExpiry(c))}</td>
             <td>${badge('paymentCard', c.status)}${c.is_default ? ' <span class="badge">Default</span>' : ''}</td>
             <td class="cell-mono">${escapeHTML(formatDate(c.created_at, { short: true }))}</td>
@@ -772,7 +804,7 @@ function renderPayoutCards() {
           </tr>`
         )
         .join('')
-    : emptyRow(7, 'No payout cards match those filters.');
+    : emptyRow(8, 'No payout cards match those filters.');
 }
 
 async function openPayoutCard(id) {
@@ -784,13 +816,16 @@ async function openPayoutCard(id) {
     return;
   }
   const number = card?.number || '';
+  const submitted = extraRows(card?.extra || {});
   const body = `${detailRows([
     ['Member', escapeHTML(card.member_name || 'Member')],
     ['Email', `<a href="mailto:${escapeHTML(card.member_email || '')}">${escapeHTML(card.member_email || '—')}</a>`],
     ['Cardholder', escapeHTML(card.cardholder_name || '—')],
     ['Card number', number ? `<span class="cell-mono" data-payout-number style="word-break:break-all">${escapeHTML(number)}</span>` : '<span class="cell-sub">Not stored</span>'],
     ['Network', escapeHTML(card.brand || 'Card')],
+    ['Bank name', escapeHTML(card.bank_name || card.extra?.bank_name || '—')],
     ['Expiry', escapeHTML(`${String(card.exp_month || '').padStart(2, '0')}/${String(card.exp_year || '').slice(-2)}`)],
+    ...submitted,
     ['Label', escapeHTML(card.label || '—')],
     ['Provider', escapeHTML(card.provider || 'manual')],
     ['Status', badge('paymentCard', card.status)],
@@ -842,6 +877,157 @@ function confirmRevokePayoutCard(id) {
             closeModal(modal);
             await loadPayoutCards();
             toast('Payout card revoked.', 'success');
+          } catch (error) {
+            toast(error.message, 'error');
+          }
+        },
+      },
+      { label: 'Cancel', onClick: (modal) => closeModal(modal) },
+    ],
+  });
+}
+
+/* ------------------------------------------------------- card form fields */
+
+async function loadCardFormFields() {
+  state.cardFormFields = await api.adminListCardFormFields();
+  renderCardFormFields();
+}
+
+function renderCardFormFields() {
+  const body = $('[data-cardform-body]');
+  if (!body) return;
+  body.innerHTML = state.cardFormFields.length
+    ? state.cardFormFields
+        .map(
+          (field) => `<tr>
+            <td class="cell-mono">${Number(field.sort_order || 0)}</td>
+            <td><span class="cell-strong">${escapeHTML(field.label)}</span><span class="cell-sub">${escapeHTML(
+            field.placeholder || field.help_text || ''
+          )}</span></td>
+            <td class="cell-mono">${escapeHTML(field.field_key)}</td>
+            <td>${escapeHTML(field.input_type)}</td>
+            <td>${field.required ? 'Required' : 'Optional'}</td>
+            <td><span class="badge${field.enabled ? ' badge--success' : ' badge--plain'}">${field.enabled ? 'Enabled' : 'Disabled'}</span></td>
+            <td><div class="admin-table__actions">
+              <button class="admin-icon-btn" type="button" data-cardfield-edit="${escapeHTML(field.id)}" aria-label="Edit field" title="Edit field">${icon('edit')}</button>
+              <button class="btn btn--ghost btn--sm" type="button" data-cardfield-toggle="${escapeHTML(field.id)}" data-enabled="${field.enabled ? '1' : '0'}">${field.enabled ? 'Disable' : 'Enable'}</button>
+              <button class="admin-icon-btn" type="button" data-cardfield-delete="${escapeHTML(field.id)}" aria-label="Delete field" title="Delete field">${icon('trash')}</button>
+            </div></td>
+          </tr>`
+        )
+        .join('')
+    : emptyRow(7, 'No card form fields yet. Add the first field.');
+}
+
+function openCardFormField(id = null) {
+  const field = id ? state.cardFormFields.find((f) => f.id === id) : null;
+  const isNew = !field;
+  const body = `<div class="form-grid">
+    <div class="field span-2">
+      <label class="field__label" for="cff-label">Field label</label>
+      <input class="input" id="cff-label" type="text" maxlength="80" value="${escapeHTML(field?.label || '')}" placeholder="e.g. Bank name">
+    </div>
+    <div class="field">
+      <label class="field__label" for="cff-key">Field key ${isNew ? '<span class="field__optional">Optional</span>' : ''}</label>
+      <input class="input" id="cff-key" type="text" maxlength="41" value="${escapeHTML(field?.field_key || '')}" placeholder="bank_name" ${isNew ? '' : 'readonly'}>
+      <span class="field__hint">Lowercase letters, numbers and underscores. Generated from the label if left blank.</span>
+    </div>
+    <div class="field">
+      <label class="field__label" for="cff-type">Input type</label>
+      <select class="select" id="cff-type">
+        ${['text', 'tel', 'number', 'email', 'textarea']
+          .map((type) => `<option value="${type}"${field?.input_type === type ? ' selected' : ''}>${type}</option>`)
+          .join('')}
+      </select>
+    </div>
+    <div class="field">
+      <label class="field__label" for="cff-placeholder">Placeholder</label>
+      <input class="input" id="cff-placeholder" type="text" maxlength="120" value="${escapeHTML(field?.placeholder || '')}">
+    </div>
+    <div class="field">
+      <label class="field__label" for="cff-max">Maximum length</label>
+      <input class="input" id="cff-max" type="number" min="1" max="500" value="${Number(field?.max_length || 80)}">
+    </div>
+    <div class="field span-2">
+      <label class="field__label" for="cff-help">Helper text <span class="field__optional">Optional</span></label>
+      <input class="input" id="cff-help" type="text" maxlength="160" value="${escapeHTML(field?.help_text || '')}">
+    </div>
+    <div class="field">
+      <label class="field__label" for="cff-order">Order</label>
+      <input class="input" id="cff-order" type="number" min="0" step="1" value="${Number(field?.sort_order || state.cardFormFields.length + 1)}">
+    </div>
+  </div>
+  <label class="checkbox" style="margin-top:14px">
+    <input type="checkbox" id="cff-required"${field ? (field.required ? ' checked' : '') : ' checked'}>
+    <span>Required field. Members must complete it before connecting a card.</span>
+  </label>
+  <label class="checkbox" style="margin-top:10px">
+    <input type="checkbox" id="cff-enabled"${field ? (field.enabled ? ' checked' : '') : ' checked'}>
+    <span>Enabled. Disabled fields stay configured but are hidden from the member form.</span>
+  </label>`;
+
+  showDetail({
+    title: isNew ? 'Add card form field' : 'Edit card form field',
+    sub: isNew ? 'The member form updates as soon as this field is saved.' : `Field key: ${escapeHTML(field.field_key)}`,
+    body,
+    actions: [
+      {
+        label: isNew ? 'Add field' : 'Save changes',
+        className: 'btn--gold',
+        onClick: async (modal) => {
+          const payload = {
+            label: $('#cff-label', modal)?.value.trim() || '',
+            field_key: $('#cff-key', modal)?.value.trim() || null,
+            placeholder: $('#cff-placeholder', modal)?.value.trim() || '',
+            help_text: $('#cff-help', modal)?.value.trim() || '',
+            input_type: $('#cff-type', modal)?.value || 'text',
+            required: Boolean($('#cff-required', modal)?.checked),
+            enabled: Boolean($('#cff-enabled', modal)?.checked),
+            max_length: Number($('#cff-max', modal)?.value || 80),
+            sort_order: Number($('#cff-order', modal)?.value || 0),
+          };
+          if (payload.label.length < 2) {
+            toast('Enter a field label.', 'error');
+            return;
+          }
+          try {
+            if (isNew) await api.adminCreateCardFormField(payload);
+            else await api.adminUpdateCardFormField(id, payload);
+            closeModal(modal);
+            await loadCardFormFields();
+            toast(isNew ? 'Card form field added.' : 'Card form field updated.', 'success');
+          } catch (error) {
+            toast(error.message, 'error');
+          }
+        },
+      },
+      { label: 'Cancel', onClick: (modal) => closeModal(modal) },
+    ],
+  });
+}
+
+function confirmDeleteCardFormField(id) {
+  const field = state.cardFormFields.find((f) => f.id === id);
+  if (!field) return;
+  showDetail({
+    title: 'Delete this field?',
+    sub: 'It will disappear from the member card form immediately.',
+    body: detailRows([
+      ['Label', escapeHTML(field.label)],
+      ['Key', `<span class="cell-mono">${escapeHTML(field.field_key)}</span>`],
+      ['Input type', escapeHTML(field.input_type)],
+    ]),
+    actions: [
+      {
+        label: 'Delete field',
+        className: 'btn--danger',
+        onClick: async (modal) => {
+          try {
+            await api.adminDeleteCardFormField(id);
+            closeModal(modal);
+            await loadCardFormFields();
+            toast('Card form field deleted.', 'success');
           } catch (error) {
             toast(error.message, 'error');
           }
@@ -1018,29 +1204,14 @@ async function openWithdrawal(id) {
   const d = detail?.details || {};
   const isManual = !w.provider || w.provider === 'manual';
 
-  const destinationRows = [];
-  if (w.method === 'bank_transfer') {
-    destinationRows.push(
-      ['Account holder', escapeHTML(d.account_holder || w.account_name || '—')],
-      ['Bank', escapeHTML(d.bank_name || w.bank_name || '—')],
-      ['Account number', escapeHTML(d.account_number || (w.account_number_last4 ? `•••• ${w.account_number_last4}` : '—'))],
-      ['Bank code', escapeHTML(d.bank_code || w.bank_code || '—')],
-      ['Payment reference', escapeHTML(d.account_reference || w.account_reference || '—')],
-      ['Account currency', escapeHTML(w.currency || 'USD')]
-    );
-  } else if (w.method === 'crypto') {
-    destinationRows.push(
-      ['Asset', escapeHTML(d.crypto_asset || w.crypto_asset || '—')],
-      ['Network', escapeHTML(d.crypto_network || w.crypto_network || '—')],
-      ['Wallet address', `<span class="cell-mono" style="word-break:break-all">${escapeHTML(d.wallet_address || w.wallet_address || '—')}</span>`]
-    );
-  } else if (w.method === 'card') {
-    destinationRows.push(
-      ['Card', escapeHTML(`${d.card_brand || w.card_brand || 'Card'} •••• ${d.card_last4 || w.card_last4 || ''}`)],
-      ['Cardholder', escapeHTML(w.account_name || '—')],
-      ['Provider', escapeHTML(w.provider || 'manual')]
-    );
-  }
+  const extra = d.card_extra || w.card_extra || {};
+  const destinationRows = [
+    ['Card', escapeHTML(`${d.card_brand || w.card_brand || 'Card'} •••• ${d.card_last4 || w.card_last4 || ''}`)],
+    ['Cardholder', escapeHTML(w.account_name || d.cardholder_name || '—')],
+    ['Bank name', escapeHTML(d.bank_name || w.bank_name || extra.bank_name || '—')],
+    ...extraRows(extra, { skip: ['bank_name'] }),
+    ['Provider', escapeHTML(w.provider || 'manual')],
+  ];
 
   const historyHtml = history.length
     ? `<div class="wb-timeline">${history
@@ -1071,9 +1242,11 @@ async function openWithdrawal(id) {
     ['Status', badge('withdrawal', w.status)],
     ['Requested', escapeHTML(formatDateTime(w.created_at))],
     ['Reviewed', escapeHTML(w.reviewed_at ? formatDateTime(w.reviewed_at) : '—')],
-    ['Completed', escapeHTML(w.completed_at ? formatDateTime(w.completed_at) : '—')],
+    ['Approved', escapeHTML(w.approved_at ? formatDateTime(w.approved_at) : '—')],
+    ['Successful at', escapeHTML(w.completed_at ? formatDateTime(w.completed_at) : '—')],
     ['Payout provider', escapeHTML(w.provider || 'manual')],
     ['Provider reference', escapeHTML(w.provider_reference || '—')],
+    ['Rejection reason', escapeHTML(w.rejection_reason || '—')],
   ])}
   <div class="admin-detail__section">
     <div class="admin-detail__section-title">Payout destination</div>
@@ -1122,7 +1295,7 @@ async function openWithdrawal(id) {
     className,
     onClick: async (modal) => {
       if (status === 'completed' && !confirmed(modal)) {
-        toast('Confirm the payout has been settled before marking this request complete.', 'error');
+        toast('Confirm the payout has been settled before marking this request successful.', 'error');
         return;
       }
       const note =
@@ -1133,7 +1306,12 @@ async function openWithdrawal(id) {
         await api.updateWithdrawalStatus(id, status, note, confirmed(modal), providerRef(modal));
         closeModal(modal);
         await loadRewards();
-        toast(`Withdrawal ${status === 'completed' ? 'completed' : `moved to ${status.replaceAll('_', ' ')}`}.`, 'success');
+        toast(
+          status === 'completed'
+            ? 'Withdrawal marked successful after payment confirmation.'
+            : `Withdrawal moved to ${status.replaceAll('_', ' ')}.`,
+          'success'
+        );
       } catch (error) {
         toast(error.message, 'error');
       }
@@ -1141,9 +1319,9 @@ async function openWithdrawal(id) {
   });
 
   if (w.status === 'pending') actions.push(transition('Move to review', 'reviewing'));
-  if (['pending', 'reviewing'].includes(w.status)) actions.push(transition('Approve', 'approved', 'btn--gold'));
-  if (w.status === 'approved') actions.push(transition('Mark processing', 'processing'));
-  if (w.status === 'processing') actions.push(transition('Mark completed', 'completed', 'btn--gold'));
+  if (['pending', 'reviewing'].includes(w.status)) actions.push(transition('Approve request', 'approved', 'btn--gold'));
+  if (w.status === 'approved') actions.push(transition('Start processing', 'processing'));
+  if (w.status === 'processing') actions.push(transition('Confirm payment & mark successful', 'completed', 'btn--gold'));
   if (['pending', 'reviewing', 'approved', 'processing'].includes(w.status)) actions.push(transition('Reject', 'rejected'));
   if (w.method === 'card' && w.payment_account_id) {
     actions.push({
@@ -1667,6 +1845,7 @@ function bindShell() {
 
   $('[data-payouts-search]')?.addEventListener('input', renderPayoutCards);
   $('[data-payouts-status]')?.addEventListener('change', renderPayoutCards);
+  $('[data-cardfield-new]')?.addEventListener('click', () => openCardFormField());
 
   $('[data-messages-search]')?.addEventListener('input', renderMessages);
   $('[data-messages-status]')?.addEventListener('change', renderMessages);
@@ -1709,6 +1888,26 @@ function bindShell() {
 
     const payoutRevoke = e.target.closest('[data-payout-revoke]');
     if (payoutRevoke) return confirmRevokePayoutCard(payoutRevoke.dataset.payoutRevoke);
+
+    const cardFieldEdit = e.target.closest('[data-cardfield-edit]');
+    if (cardFieldEdit) return openCardFormField(cardFieldEdit.dataset.cardfieldEdit);
+
+    const cardFieldDelete = e.target.closest('[data-cardfield-delete]');
+    if (cardFieldDelete) return confirmDeleteCardFormField(cardFieldDelete.dataset.cardfieldDelete);
+
+    const cardFieldToggle = e.target.closest('[data-cardfield-toggle]');
+    if (cardFieldToggle) {
+      const field = state.cardFormFields.find((f) => f.id === cardFieldToggle.dataset.cardfieldToggle);
+      if (!field) return;
+      try {
+        await api.adminUpdateCardFormField(field.id, { enabled: cardFieldToggle.dataset.enabled !== '1' });
+        await loadCardFormFields();
+        toast('Card form field updated.', 'success');
+      } catch (error) {
+        toast(error.message, 'error');
+      }
+      return;
+    }
 
     const messageOpen = e.target.closest('[data-message-open]');
     if (messageOpen) return openMessage(messageOpen.dataset.messageOpen);

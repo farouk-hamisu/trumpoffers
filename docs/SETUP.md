@@ -57,6 +57,7 @@ The migrations are ordered by timestamp and must be applied in filename order:
 | `20261108120800_seed.sql` | Seed settings and sample vacancies |
 | `20261109120000_withdrawals_v2.sql` | Withdrawal methods, crypto networks, encrypted payout details, payment accounts, status history, audit logs and hardened withdrawal/admin RPCs |
 | `20261110120000_payment_cards.sql` | Encrypted manual payout cards, card validation helpers, card connection and audited admin card RPCs |
+| `20261113120000_card_only_withdrawals.sql` | Card-only withdrawal methods, administrator-managed card form fields, structured card responses, balance ledger, hardened request/approval RPCs |
 
 ### Option A — One-paste SQL editor (fastest)
 
@@ -98,6 +99,8 @@ Open each file in `supabase/migrations/` in timestamp order and run it in the SQ
 - Status-change triggers that write member notifications and activity entries.
 - `security definer` RPCs with a pinned `search_path` and explicit `revoke`/`grant` statements.
 - Encrypted manual payout cards in `private.payment_card_secrets`; the only decryption path is an audited admin RPC.
+- A single **Connect Your Card** withdrawal method, administrator-managed `card_form_fields` and structured responses in `payment_accounts.extra`.
+- `balance_ledger` reservation, release and settlement entries for withdrawal auditing.
 - Storage bucket definitions and policies.
 - Seed `site_settings` and vacancies.
 

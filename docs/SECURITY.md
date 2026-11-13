@@ -10,7 +10,8 @@ Keep the following accurate in any deployment:
 
 - Reward balances and claims are platform records. Money moves only when a payout provider or bank is configured and an administrator confirms settlement.
 - Withdrawals are reviewed by an administrator. Approval, processing and completion are separate states; completion must not be marked before the payout is confirmed.
-- Bank details submitted for a withdrawal are encrypted at rest with `pgcrypto`. Manual payout cards are stored with the full number encrypted in the private schema (`private.payment_card_secrets`); public tables hold only the brand, last four and expiry. When a hosted card provider is configured, tokenised provider references are used instead.
+- **Connect Your Card** is the only withdrawal method. Manual payout cards are stored with the full number encrypted in the private schema (`private.payment_card_secrets`); public tables hold only the brand, last four and expiry. When a hosted card provider is configured, tokenised provider references are used instead.
+- Structured responses to the administrator-managed card form (bank name, phone number and any added fields) live in `payment_accounts.extra` and are snapshotted into the encrypted withdrawal details at request time. `card_form_fields` defines the member-facing fields and is writable only through administrator RPCs.
 - Virtual membership cards are presentation only. The card number is generated for display and verification; it is not a payment instrument. The project never asks for a PIN, CVV, online-banking password or full banking credentials. A real payout card number is accepted only through the dedicated encrypted card-connect form.
 - Payout card numbers are never returned to members after connection. Only an administrator can decrypt a card, through `admin_get_payment_card(uuid)`, and every reveal is written to `admin_audit_logs`.
 - Careers listings in the seed data are illustrative. Replace them with real roles before using the recruitment flow publicly.
@@ -72,6 +73,8 @@ RLS is enabled on every public table. Summary:
 | `withdrawal_methods` | Public when enabled | Admin | Admin | — |
 | `crypto_networks` | Public when enabled | Admin | Admin | — |
 | `payment_accounts` | Own rows or admin | Hosted-provider token only; manual cards via **RPC** | Admin (revoke via RPC) | — |
+| `card_form_fields` | Enabled rows for members; all for admin | Admin (RPC) | Admin (RPC) | Admin (RPC) |
+| `balance_ledger` | Own entries or admin | **RPC only** | — | — |
 | `private.payment_card_secrets` | No client access | Via RPC | — | — |
 | `withdrawal_status_history` | Own rows or admin | Via RPC/trigger | — | — |
 | `admin_audit_logs` | Admin | Via RPC | — | — |
@@ -96,14 +99,19 @@ Additional controls:
 | Function | Callable by | Purpose |
 | --- | --- | --- |
 | `create_reward_claim()` | `authenticated` | Creates one active reward claim |
-| `request_withdrawal(...)` | `authenticated` | Validates amount, method, bank/crypto/card details and available balance; reserves funds and writes status history |
-| `admin_update_withdrawal_status(...)` | Admin only | Enforces status transitions, provider confirmation, balance deduction and audit logging |
-| `admin_get_withdrawal_details(uuid)` | Admin only | Decrypts bank details for review |
+| `request_withdrawal(...)` | `authenticated` | Card-only: validates amount, connected card, dynamic responses and available balance; reserves funds and writes status history and a reservation ledger entry |
+| `admin_update_withdrawal_status(...)` | Admin only | Enforces status transitions, explicit settlement confirmation, balance deduction and ledger/audit entries |
+| `admin_get_withdrawal_details(uuid)` | Admin only | Decrypts the saved card and form responses for review |
 | `admin_add_withdrawal_note(uuid,text)` | Admin only | Writes an internal note and audit entry |
-| `connect_payment_card(text,text,integer,integer,text,boolean)` | `authenticated` | Validates and Luhn-checks a payout card, stores the encrypted number privately and returns only masked account data |
-| `admin_list_payment_cards()` | Admin only | Lists payout cards with member details and masked card data |
+| `get_card_form_fields()` | `authenticated` | Returns enabled card form fields in display order |
+| `connect_payment_card(text,text,integer,integer,text,boolean,jsonb)` | `authenticated` | Validates and Luhn-checks a payout card, validates dynamic responses, stores the encrypted number privately and returns only masked account data |
+| `admin_list_payment_cards()` | Admin only | Lists payout cards with member details, masked card data and saved form responses |
 | `admin_get_payment_card(uuid)` | Admin only | Decrypts one payout card and writes an audit entry |
 | `admin_revoke_payment_card(uuid)` | Admin only | Revokes a payout card, notifies the member and writes an audit entry |
+| `admin_list_card_form_fields()` | Admin only | Lists every card form field, including disabled fields |
+| `admin_create_card_form_field(...)` | Admin only | Creates a card form field and writes an audit entry |
+| `admin_update_card_form_field(...)` | Admin only | Updates a card form field and writes an audit entry |
+| `admin_delete_card_form_field(uuid)` | Admin only | Deletes a card form field and writes an audit entry |
 | `submit_job_application(...)` | `anon`, `authenticated` | Submits an application, optionally linking the signed-in user |
 | `track_application(text,text)` | `anon`, `authenticated` | Returns limited status for an exact reference + email pair |
 | `create_card_application(text,text)` | `authenticated` | Creates a card request with a generated number |
@@ -116,7 +124,11 @@ Each RPC uses `security definer`, pins `search_path = public, pg_temp`, validate
 
 `track_application` and `verify_demo_card` intentionally require **two factors** (reference + email, reference + last four). They return only status-level data, never full CVs, virtual card numbers or other members' records.
 
-Payout cards are different from the virtual membership card studio. `connect_payment_card` stores the full number only in `private.payment_card_secrets`, encrypted with `private.payment_key()`, and never returns it to the member. `admin_get_payment_card` is the sole decryption path and requires `public.is_admin()`.
+Payout cards are different from the virtual membership card studio. `connect_payment_card` stores the full number only in `private.payment_card_secrets`, encrypted with `private.payment_key()`, and never returns it to the member. `admin_get_payment_card` is the sole decryption path and requires `public.is_admin()`. Duplicate active cards for the same member are rejected by the fingerprint check.
+
+Card form fields are configuration, not trusted input. `card_form_fields` is writable only through the administrator RPCs; members can read enabled rows and submit responses, which the server validates against the field definitions before saving to `payment_accounts.extra`. The fixed core fields (card number, expiry, cardholder) are never configurable.
+
+Withdrawals use a reservation model. `request_withdrawal` checks the member's balance minus all active withdrawals, then writes a `reservation` row to `balance_ledger`. Rejection or cancellation writes a `release` row. Only confirmed settlement writes a `settlement` row and debits `reward_accounts.balance`. Members can read their own ledger rows; inserts happen only inside the security-definer RPCs.
 
 > **PCI DSS note.** Storing card numbers directly brings the deployment into PCI DSS scope. Use a hosted, tokenising provider wherever possible. If manual payout cards are enabled, restrict database and backup access to trusted operators, keep `private.payment_key()` out of client code and logs, preserve audit-log retention, and never allow card numbers in notes, email, chat or application logs. Rotating `private.payment_key()` makes existing encrypted card numbers unreadable.
 
@@ -205,16 +217,17 @@ Practices:
 Collected data:
 
 - account: name, email, phone (optional), location (optional), password hash (Supabase);
-- rewards: balance, claims, withdrawals with encrypted bank details, encrypted payout-card numbers in the private schema, tokenised card references and masked destination labels;
+- rewards: balance, claims, withdrawals with encrypted card and form-response details, tokenised card references and masked destination labels;
 - recruitment: application details and an uploaded CV;
 - cards: chosen design, cardholder name, generated display number;
-- payout cards: cardholder name, brand, last four, expiry and an encrypted full number for administrator-reviewed card withdrawals;
+- payout cards: cardholder name, brand, last four, expiry, administrator-defined form responses (for example bank name and phone number) and an encrypted full number for administrator-reviewed card withdrawals;
 - contact: name, email, phone, subject and message.
 
 Guidelines:
 
-- Do not add fields for PINs, CVVs, government IDs or banking passwords. Bank account details are accepted only through the withdrawal RPC and stored encrypted. Payout card numbers are accepted only through `connect_payment_card` and stored encrypted in the private schema.
-- The withdrawal form validates IBAN checksums and wallet-address formats. Keep that validation. The card form validates Luhn check digits and expiry dates client-side and again in the RPC.
+- Do not add fields for PINs, CVVs, government IDs or banking passwords. Card and withdrawal details are accepted only through the RPCs and stored encrypted. Payout card numbers are accepted only through `connect_payment_card` and stored encrypted in the private schema.
+- The card form validates Luhn check digits, expiry dates and each administrator-defined field client-side and again in the RPC. Keep both layers; the browser checks are a convenience, not the security boundary.
+- Do not place full card numbers, CVVs or banking passwords in card form fields, internal notes, email or chat. The configured fields are for ordinary payout-routing details only.
 - Publish a privacy notice with lawful basis, retention periods, processors (Supabase, hosting, email) and contact details. Review the supplied `privacy.html` with counsel.
 - Define CV retention (for example, six months after a decision) and delete objects and records on schedule.
 - Support access and deletion requests: delete the auth user to cascade member data; remove stored CVs separately.
@@ -231,6 +244,8 @@ Guidelines:
 | Member calls an admin mutation directly | No update policy for non-admins; RPCs check ownership; role grants are SQL-only |
 | Member forges a claim amount | `create_reward_claim()` ignores client input and reads the account balance |
 | Member requests more than available | RPC sums in-flight withdrawals and rejects excess |
+| Member tries to mark their own withdrawal successful | `withdrawals` updates are admin-only; settlement requires `admin_update_withdrawal_status` with explicit provider confirmation |
+| Member submits a duplicate withdrawal or reconnects the same card | 60-second idempotency/duplicate guard on requests and an encrypted-fingerprint duplicate check on cards |
 | User uploads a CV to a public path | Bucket is private; only admin select policy exists |
 | User guesses a virtual card number | Verification requires reference + last four and returns only status-level data |
 | Member tries to read a stored payout card | RLS exposes masked metadata only; full numbers live in `private.payment_card_secrets` with no API grant |
@@ -269,7 +284,9 @@ A service-role key in client code is a critical incident: rotate it immediately,
 - [ ] Site-media writes restricted to admins.
 - [ ] CSP, HSTS, nosniff, frame denial and permissions policy present in production.
 - [ ] No inline scripts added; console clean on every page.
-- [ ] Withdrawal validation rejects invalid IBANs, malformed wallet addresses and missing payout details.
+- [ ] Withdrawal validation rejects missing connected cards, invalid Luhn/expiry values, missing required dynamic fields and amounts above the available balance.
+- [ ] `card_form_fields` changes are audited; only `admin_*` RPCs can write them and members can read enabled rows only.
+- [ ] `balance_ledger` records reservation, release and settlement entries; settlement debits the balance and rejection/cancellation does not.
 - [ ] Payment provider keys are configured server-side when hosted-card connection or automated settlement is required. Without them, manual payout cards remain available and provider payouts fail closed.
 - [ ] `private.payment_card_secrets` has no grants to `anon` or `authenticated`; only the audited admin RPC decrypts card numbers.
 - [ ] Administrator completion requires explicit payout confirmation and writes an audit entry.

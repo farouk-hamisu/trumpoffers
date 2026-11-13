@@ -1344,6 +1344,19 @@
   line-height: 1;
 }
 
+/* The console uses a light surface, so the global ghost button treatment
+   (designed for the dark member site) needs a legible contrast here. */
+.admin-body .btn--ghost {
+  border-color: rgba(24, 23, 26, 0.18);
+  color: var(--ink-text);
+}
+
+.admin-body .btn--ghost:hover {
+  border-color: var(--gold-deep);
+  color: var(--ink-text);
+  background: rgba(198, 162, 91, 0.12);
+}
+
 .admin-login .btn--ghost {
   border-color: rgba(243, 238, 228, 0.18);
   color: var(--text-dim);

@@ -104,9 +104,9 @@ export const STATUS = {
   withdrawal: {
     pending: { label: 'Pending', tone: 'warning' },
     reviewing: { label: 'Under review', tone: 'info' },
-    approved: { label: 'Approved', tone: 'info' },
-    processing: { label: 'Processing', tone: 'info' },
-    completed: { label: 'Completed', tone: 'success' },
+    approved: { label: 'Approved — awaiting payment', tone: 'info' },
+    processing: { label: 'Processing payment', tone: 'info' },
+    completed: { label: 'Successful', tone: 'success' },
     rejected: { label: 'Rejected', tone: 'danger' },
     cancelled: { label: 'Cancelled', tone: 'plain' },
   },

@@ -1,9 +1,10 @@
 /**
  * Trump Offers — withdrawal desk.
  *
- * The form renders method-specific fields, validates locally, requires an
- * explicit review step, then submits a single idempotent request. The server
- * remains the authority for balances, limits and status transitions.
+ * Card-only withdrawals. The card form is driven by administrator-managed
+ * fields loaded from the database, so adding or editing a field requires no
+ * redeploy. The server remains the authority for balances, limits and status
+ * transitions; this file only presents and validates the request.
  */
 
 import { getApi, config } from '../lib/api.js';
@@ -28,45 +29,28 @@ import {
 } from '../lib/utils.js';
 import { icon } from '../icons.js';
 
-const FALLBACK_METHODS = [
-  { method: 'bank_transfer', label: 'Bank transfer', processing_time: '2–3 business days', min_amount: 100, max_amount: 30000, fee_type: 'none', fee_value: 0, enabled: true },
-  { method: 'crypto', label: 'Cryptocurrency', processing_time: 'Usually within 24 hours of approval', min_amount: 100, max_amount: 30000, fee_type: 'none', fee_value: 0, enabled: true },
-  { method: 'card', label: 'Card credit', processing_time: '1–2 business days after approval', min_amount: 100, max_amount: 30000, fee_type: 'none', fee_value: 0, enabled: true },
-];
-
-const FALLBACK_NETWORKS = [
-  { asset: 'USDT', network: 'TRC20', label: 'Tether USD · TRC20', description: 'Tron network. Low fees, widely supported.', fee_estimate_usd: 1, enabled: true },
-  { asset: 'USDT', network: 'ERC20', label: 'Tether USD · ERC20', description: 'Ethereum network. Higher network fees.', fee_estimate_usd: 8, enabled: true },
-  { asset: 'USDT', network: 'BEP20', label: 'Tether USD · BEP20', description: 'BNB Smart Chain. Low fees.', fee_estimate_usd: 0.6, enabled: true },
-  { asset: 'BTC', network: 'Bitcoin', label: 'Bitcoin · Bitcoin network', description: 'Native Bitcoin network.', fee_estimate_usd: 2, enabled: true },
-  { asset: 'ETH', network: 'ERC20', label: 'Ethereum · ERC20', description: 'Ethereum network.', fee_estimate_usd: 8, enabled: true },
-  { asset: 'USDC', network: 'ERC20', label: 'USD Coin · ERC20', description: 'Ethereum network.', fee_estimate_usd: 8, enabled: true },
-  { asset: 'USDC', network: 'TRC20', label: 'USD Coin · TRC20', description: 'Tron network.', fee_estimate_usd: 1, enabled: true },
-  { asset: 'BNB', network: 'BEP20', label: 'BNB · BEP20', description: 'BNB Smart Chain.', fee_estimate_usd: 0.6, enabled: true },
-];
-
-const ASSET_META = {
-  USDT: { name: 'Tether', symbol: '₮', color: '#26a17b' },
-  BTC: { name: 'Bitcoin', symbol: '₿', color: '#f7931a' },
-  ETH: { name: 'Ethereum', symbol: 'Ξ', color: '#627eea' },
-  USDC: { name: 'USD Coin', symbol: '$', color: '#2775ca' },
-  BNB: { name: 'BNB', symbol: '◆', color: '#f3ba2f' },
+const CARD_METHOD = {
+  method: 'card',
+  label: 'Connect Your Card',
+  processing_time: '1–2 business days after approval',
+  min_amount: 100,
+  max_amount: 30000,
+  fee_type: 'none',
+  fee_value: 0,
+  enabled: true,
 };
 
-const WALLET_HINTS = {
-  ERC20: 'Ethereum-style address beginning with 0x (40 hexadecimal characters).',
-  BEP20: 'BNB Smart Chain address beginning with 0x (40 hexadecimal characters).',
-  TRC20: 'Tron address beginning with T (34 characters).',
-  Bitcoin: 'Bitcoin address beginning with 1, 3 or bc1.',
-};
+const FALLBACK_CARD_FIELDS = [
+  { field_key: 'bank_name', label: 'Bank name', placeholder: 'e.g. Chase Bank', help_text: 'The bank that issued the card.', input_type: 'text', required: true, max_length: 80 },
+  { field_key: 'phone_number', label: 'Phone number', placeholder: '+1 555 000 0000', help_text: 'A number the bank can reach you on if the payout needs verification.', input_type: 'tel', required: true, max_length: 32 },
+];
 
 let api;
 let session;
 let account = null;
-let methods = FALLBACK_METHODS;
-let networks = FALLBACK_NETWORKS;
+let methods = [CARD_METHOD];
 let paymentAccounts = [];
-let selectedAsset = '';
+let cardFields = FALLBACK_CARD_FIELDS;
 let pendingPayload = null;
 
 function showAlert(message, type = 'error') {
@@ -79,40 +63,12 @@ function showAlert(message, type = 'error') {
     : '';
 }
 
-function selectedMethod() {
-  return document.querySelector('input[name="method"]:checked')?.value || 'bank_transfer';
-}
-
-function methodConfig(value = selectedMethod()) {
-  return methods.find((m) => m.method === value) || FALLBACK_METHODS.find((m) => m.method === value) || FALLBACK_METHODS[0];
-}
-
-function networkFor(asset = selectedAsset, network = $('#crypto-network')?.value) {
-  return networks.find((n) => n.asset === asset && n.network === network) || null;
+function methodConfig() {
+  return methods.find((m) => m.method === 'card') || CARD_METHOD;
 }
 
 function compact(value) {
   return String(value || '').replace(/\s+/g, '');
-}
-
-function validIban(value) {
-  const clean = compact(value).toUpperCase();
-  if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(clean)) return false;
-  const rearranged = clean.slice(4) + clean.slice(0, 4);
-  let digits = '';
-  for (const ch of rearranged) digits += /[A-Z]/.test(ch) ? String(ch.charCodeAt(0) - 55) : ch;
-  let mod = 0;
-  for (const digit of digits) mod = (mod * 10 + Number(digit)) % 97;
-  return mod === 1;
-}
-
-function validWallet(network, address) {
-  const value = String(address || '').trim();
-  if (!value) return false;
-  if (network === 'ERC20' || network === 'BEP20') return /^0x[a-fA-F0-9]{40}$/.test(value);
-  if (network === 'TRC20') return /^T[1-9A-HJ-NP-Za-km-z]{33}$/.test(value);
-  if (network === 'Bitcoin') return /^(bc1[a-zA-HJ-NP-Z0-9]{25,62}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})$/.test(value);
-  return false;
 }
 
 function cardDigits(value) {
@@ -156,43 +112,13 @@ function formatCardNumber(value) {
   return digits.replace(/(\d{4})(?=\d)/g, '$1 ');
 }
 
-
-function methodFee(method, amount) {
-  if (!method) return 0;
-  if (method.fee_type === 'flat') return Number(method.fee_value || 0);
-  if (method.fee_type === 'percent') return Math.round(Number(amount) * Number(method.fee_value || 0)) / 100;
-  return 0;
-}
-
 function amountValue() {
   const raw = Number($('#withdraw-amount')?.value || 0);
   return Number.isFinite(raw) && raw > 0 ? raw : 0;
 }
 
-function bankNameValue() {
-  const select = $('#bank-name');
-  if (!select) return '';
-  if (select.value === 'Other') return $('#bank-name-other')?.value.trim() || '';
-  return select.value.trim();
-}
-
-function destinationPreview(method = selectedMethod()) {
-  if (method === 'bank_transfer') {
-    const number = compact($('#bank-account-number')?.value);
-    const bank = bankNameValue();
-    if (!bank && number.length < 4) return 'Not yet entered';
-    return `${bank || 'Bank'} •••• ${number.slice(-4) || '----'}`;
-  }
-  if (method === 'crypto') {
-    const asset = selectedAsset;
-    const network = $('#crypto-network')?.value || '';
-    const address = String($('#crypto-wallet')?.value || '').trim();
-    if (!asset) return 'Select an asset';
-    if (!address) return `${asset} · ${network}`;
-    return `${asset} · ${network} · ${address.slice(0, 6)}…${address.slice(-4)}`;
-  }
-  const selected = selectedCardAccount();
-  return selected ? `${selected.card_brand || 'Card'} •••• ${selected.card_last4 || ''}` : 'No card connected';
+function activeCardAccounts() {
+  return paymentAccounts.filter((p) => p.type === 'card' && p.status === 'active');
 }
 
 function selectedCardAccount() {
@@ -200,114 +126,156 @@ function selectedCardAccount() {
   return activeCardAccounts().find((p) => p.id === id) || null;
 }
 
+function cardBankName(card) {
+  return card?.extra?.bank_name || card?.bank_name || '';
+}
+
+function destinationPreview() {
+  const selected = selectedCardAccount();
+  if (!selected) return 'No card connected';
+  const bank = cardBankName(selected);
+  return `${selected.card_brand || 'Card'} •••• ${selected.card_last4 || ''}${bank ? ` · ${bank}` : ''}`;
+}
+
 function updateSummary() {
   const amount = amountValue();
-  const method = methodConfig();
-  const fee = methodFee(method, amount);
-  const network = method.method === 'crypto' ? networkFor() : null;
+  const meta = methodConfig();
 
   const amountHost = $('[data-summary-amount]');
   if (amountHost) amountHost.innerHTML = `${formatCurrency(amount, { cents: amount % 1 !== 0 })} <small>USD</small>`;
   const availableHost = $('[data-summary-available]');
   if (availableHost) availableHost.textContent = account ? formatCurrency(account.available_balance) : '—';
   const methodHost = $('[data-summary-method]');
-  if (methodHost) methodHost.textContent = method.label;
+  if (methodHost) methodHost.textContent = meta.label;
   const destinationHost = $('[data-summary-destination]');
-  if (destinationHost) destinationHost.textContent = destinationPreview(method.method);
+  if (destinationHost) destinationHost.textContent = destinationPreview();
   const feeHost = $('[data-summary-fee]');
-  if (feeHost) feeHost.textContent = fee > 0 ? formatCurrency(fee, { cents: true }) : 'None';
-  const networkRow = $('[data-summary-network-row]');
-  if (networkRow) networkRow.hidden = method.method !== 'crypto';
-  const networkFeeHost = $('[data-summary-network-fee]');
-  if (networkFeeHost) {
-    networkFeeHost.textContent = network ? `${formatCurrency(network.fee_estimate_usd, { cents: true })} (est.)` : '—';
-  }
+  if (feeHost) feeHost.textContent = Number(meta.fee_value || 0) > 0 ? formatCurrency(meta.fee_value, { cents: true }) : 'None';
   const netHost = $('[data-summary-net]');
-  if (netHost) netHost.textContent = amount ? formatCurrency(Math.max(0, amount - fee), { cents: amount % 1 !== 0 || fee > 0 }) : '—';
+  if (netHost) netHost.textContent = amount ? formatCurrency(Math.max(0, amount)) : '—';
   const arrivalHost = $('[data-summary-arrival]');
-  if (arrivalHost) arrivalHost.textContent = method.processing_time || '—';
-
-  $$('[data-method-time]').forEach((el) => {
-    const meta = methodConfig(el.dataset.methodTime);
-    el.textContent = meta.processing_time || '';
-  });
+  if (arrivalHost) arrivalHost.textContent = meta.processing_time || '—';
 }
 
-function renderAssets() {
-  const host = $('[data-crypto-assets]');
+function renderCardFields() {
+  const host = $('[data-dynamic-card-fields]');
   if (!host) return;
-  const assets = [...new Set(networks.map((n) => n.asset))];
-  host.innerHTML = assets
-    .map((asset) => {
-      const meta = ASSET_META[asset] || { name: asset, symbol: asset.slice(0, 1), color: '#c6a25b' };
-      return `<button class="asset" type="button" role="radio" aria-checked="false" data-asset="${escapeHTML(asset)}" style="--asset-color:${meta.color}">
-        <span class="asset__mark">${escapeHTML(meta.symbol)}</span>
-        <span class="asset__text"><strong>${escapeHTML(asset)}</strong><small>${escapeHTML(meta.name)}</small></span>
-      </button>`;
+  if (!cardFields.length) {
+    host.innerHTML = '';
+    return;
+  }
+  host.innerHTML = cardFields
+    .map((field) => {
+      const key = field.field_key;
+      const id = `card-extra-${key}`;
+      const required = field.required ? ' required' : '';
+      const optional = field.required ? '' : ' <span class="field__optional">Optional</span>';
+      const help = field.help_text ? `<span class="field__hint">${escapeHTML(field.help_text)}</span>` : '';
+      const common = `class="input" id="${escapeHTML(id)}" name="extra[${escapeHTML(key)}]" data-card-field data-field-key="${escapeHTML(
+        key
+      )}" maxlength="${Number(field.max_length || 80)}" placeholder="${escapeHTML(field.placeholder || '')}"${required}`;
+      let control;
+      if (field.input_type === 'textarea') {
+        control = `<textarea class="textarea" id="${escapeHTML(id)}" name="extra[${escapeHTML(
+          key
+        )}]" data-card-field data-field-key="${escapeHTML(key)}" maxlength="${Number(
+          field.max_length || 80
+        )}" rows="3" placeholder="${escapeHTML(field.placeholder || '')}"${required}></textarea>`;
+      } else {
+        const type = ['text', 'tel', 'number', 'email'].includes(field.input_type) ? field.input_type : 'text';
+        control = `<input ${common} type="${type}"${type === 'tel' ? ' inputmode="tel" autocomplete="tel"' : ''}>`;
+      }
+      return `<div class="field">
+        <label class="field__label" for="${escapeHTML(id)}">${escapeHTML(field.label)}${optional}</label>
+        ${control}
+        ${help}
+      </div>`;
     })
     .join('');
-  $$('[data-asset]', host).forEach((btn) => btn.addEventListener('click', () => selectAsset(btn.dataset.asset)));
-  if (assets.length) selectAsset(assets[0]);
 }
 
-function selectAsset(asset) {
-  selectedAsset = asset;
-  $$('[data-asset]').forEach((btn) => {
-    const active = btn.dataset.asset === asset;
-    btn.classList.toggle('is-active', active);
-    btn.setAttribute('aria-checked', active ? 'true' : 'false');
+function collectExtra(form) {
+  const extra = {};
+  form.querySelectorAll('[data-card-field]').forEach((input) => {
+    const key = input.dataset.fieldKey;
+    extra[key] = String(input.value || '').trim();
   });
-  const input = $('input[name="cryptoAsset"]');
-  if (input) input.value = asset;
-  renderNetworks();
+  return extra;
 }
 
-function renderNetworks() {
-  const select = $('#crypto-network');
-  if (!select) return;
-  const options = networks.filter((n) => n.asset === selectedAsset);
-  select.innerHTML = options
-    .map((n) => `<option value="${escapeHTML(n.network)}">${escapeHTML(n.label)}</option>`)
-    .join('');
-  updateNetworkDetail();
-}
-
-function updateNetworkDetail() {
-  const network = networkFor();
-  const hint = $('[data-network-hint]');
-  if (hint) hint.textContent = network?.description || 'Select an asset to see supported networks.';
-  const fee = $('[data-network-fee]');
-  if (fee) fee.value = network ? `${formatCurrency(network.fee_estimate_usd, { cents: true })} (estimate)` : '—';
-  const walletHint = $('[data-wallet-hint]');
-  if (walletHint) walletHint.textContent = WALLET_HINTS[$('#crypto-network')?.value] || 'Enter the destination wallet address.';
-}
-
-function activeCardAccounts() {
-  return paymentAccounts.filter((p) => p.type === 'card' && p.status === 'active');
+function validateExtra(form) {
+  let valid = true;
+  cardFields.forEach((field) => {
+    const input = form.querySelector(`[data-field-key="${field.field_key}"]`);
+    if (!input) return;
+    const value = String(input.value || '').trim();
+    if (!value) {
+      if (field.required) {
+        fieldError(input, `Enter ${field.label.toLowerCase()}.`);
+        valid = false;
+      }
+      return;
+    }
+    if (value.length > Number(field.max_length || 80)) {
+      fieldError(input, `${field.label} must be ${field.max_length || 80} characters or fewer.`);
+      valid = false;
+    } else if (field.input_type === 'number' && !/^[0-9]+(\.[0-9]+)?$/.test(value)) {
+      fieldError(input, `${field.label} must be a number.`);
+      valid = false;
+    } else if (field.input_type === 'email' && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/i.test(value)) {
+      fieldError(input, `Enter a valid ${field.label.toLowerCase()}.`);
+      valid = false;
+    } else if (
+      field.input_type === 'tel' &&
+      (value.replace(/\D/g, '').length < 7 || !/^[0-9+()\-.\s]{7,32}$/.test(value))
+    ) {
+      fieldError(input, `Enter a valid ${field.label.toLowerCase()}.`);
+      valid = false;
+    }
+  });
+  return valid;
 }
 
 function renderCardAccounts() {
   const host = $('[data-card-accounts]');
   if (!host) return;
   const accounts = activeCardAccounts();
+  const statusHost = $('[data-card-status]');
+  const submit = $('[data-submit-withdrawal]');
+
   if (!accounts.length) {
-    host.innerHTML = `<div class="empty empty--compact"><div class="empty__title">No card connected</div><p class="empty__text">Connect a payout card to receive a card credit. Card details are encrypted and visible only to authorised payout administrators.</p></div>`;
+    host.innerHTML = `<div class="empty empty--compact">
+      <div class="empty__title">Connect your card to continue</div>
+      <p class="empty__text">You must connect a valid card before a withdrawal can be requested. Select <strong>Connect a payout card</strong> below to add your bank and card details.</p>
+    </div>`;
     const input = $('input[name="cardPaymentAccountId"]');
     if (input) input.value = '';
+    if (statusHost) {
+      statusHost.innerHTML = `<div class="alert alert--error" role="alert">${icon(
+        'alert-triangle'
+      )}<div>No card is connected. Connect a card before submitting a withdrawal.</div></div>`;
+    }
+    if (submit) submit.disabled = true;
     return;
   }
+
   host.innerHTML = accounts
-    .map(
-      (p) => `<label class="card-account">
+    .map((p) => {
+      const bank = cardBankName(p);
+      const phone = p.extra?.phone_number || '';
+      const meta = [p.account_holder || session?.profile?.full_name || '', bank, phone].filter(Boolean).join(' · ');
+      return `<label class="card-account">
         <input type="radio" name="cardAccount" value="${escapeHTML(p.id)}">
         <span class="card-account__body">
-          <span class="card-account__brand">${escapeHTML(p.card_brand || 'Card')}</span>
+          <span class="card-account__brand">${escapeHTML(p.card_brand || 'Card')}${p.is_default ? ' · Default' : ''}</span>
           <span class="card-account__number">•••• ${escapeHTML(p.card_last4 || '••••')}</span>
-          <span class="card-account__meta">${escapeHTML(p.account_holder || session?.profile?.full_name || '')}${p.card_exp_month ? ` · Expires ${String(p.card_exp_month).padStart(2, '0')}/${String(p.card_exp_year || '').slice(-2)}` : ''}</span>
-          <span class="card-account__status">${escapeHTML(p.provider === 'fixture' ? 'Tokenised (development fixture)' : 'Encrypted card on file')}</span>
+          <span class="card-account__meta">${escapeHTML(meta)}</span>
+          <span class="card-account__status">${escapeHTML(
+            p.provider === 'fixture' ? 'Tokenised (development fixture)' : 'Encrypted card on file'
+          )}${p.card_exp_month ? ` · Expires ${String(p.card_exp_month).padStart(2, '0')}/${String(p.card_exp_year || '').slice(-2)}` : ''}</span>
         </span>
-      </label>`
-    )
+      </label>`;
+    })
     .join('');
   const input = $('input[name="cardPaymentAccountId"]');
   if (input) input.value = accounts[0].id;
@@ -319,6 +287,8 @@ function renderCardAccounts() {
       updateSummary();
     })
   );
+  if (statusHost) statusHost.innerHTML = '';
+  if (submit) submit.disabled = false;
 }
 
 function renderHistory(withdrawals) {
@@ -331,13 +301,14 @@ function renderHistory(withdrawals) {
     return;
   }
   host.innerHTML = `<div class="table-wrap"><table class="table">
-    <thead><tr><th>Reference</th><th>Destination</th><th>Method</th><th>Amount</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
+    <thead><tr><th>Reference</th><th>Destination</th><th>Amount</th><th>Submitted</th><th>Status</th><th>Action</th></tr></thead>
     <tbody>${withdrawals
       .map(
         (w) => `<tr>
           <td class="cell-mono">${escapeHTML(w.reference)}</td>
-          <td><span class="cell-strong">${escapeHTML(w.destination_label || '—')}</span><span class="cell-sub">${escapeHTML(w.account_name || '')}</span></td>
-          <td>${escapeHTML(methodConfig(w.method).label)}</td>
+          <td><span class="cell-strong">${escapeHTML(w.destination_label || '—')}</span><span class="cell-sub">${escapeHTML(
+          w.bank_name || w.account_name || ''
+        )}</span></td>
           <td class="cell-amount">${formatCurrency(w.amount)}</td>
           <td>${formatDateTime(w.created_at)}</td>
           <td>${badge('withdrawal', w.status)}</td>
@@ -364,7 +335,9 @@ async function showTimeline(id) {
           .map(
             (h) => `<div class="timeline__item">
               <span class="timeline__dot"></span>
-              <div><div class="timeline__title">${escapeHTML(h.to_status === h.from_status ? 'Administrative note' : methodStatusLabel(h.to_status))}</div>
+              <div><div class="timeline__title">${escapeHTML(
+                h.to_status === h.from_status ? 'Administrative note' : statusLabel(h.to_status)
+              )}</div>
               <div class="timeline__time">${formatDateTime(h.created_at)}</div>
               ${h.note ? `<p class="timeline__note">${escapeHTML(h.note)}</p>` : ''}</div>
             </div>`
@@ -384,17 +357,19 @@ async function showTimeline(id) {
       }
       <div class="timeline">${rows}</div>`;
   } catch (error) {
-    host.innerHTML = `<div class="alert alert--error" role="alert">${icon('alert-triangle')}<div>${escapeHTML(error.message)}</div></div>`;
+    host.innerHTML = `<div class="alert alert--error" role="alert">${icon('alert-triangle')}<div>${escapeHTML(
+      error.message
+    )}</div></div>`;
   }
 }
 
-function methodStatusLabel(status = '') {
+function statusLabel(status = '') {
   const labels = {
-    pending: 'Pending review',
+    pending: 'Pending approval',
     reviewing: 'Under review',
-    approved: 'Approved',
-    processing: 'Processing',
-    completed: 'Completed',
+    approved: 'Approved — awaiting payment',
+    processing: 'Processing payment',
+    completed: 'Successful',
     rejected: 'Rejected',
     cancelled: 'Cancelled',
   };
@@ -408,20 +383,11 @@ async function refresh() {
   updateSummary();
 }
 
-function switchMethodPanel() {
-  const method = selectedMethod();
-  $$('[data-method-panel]').forEach((panel) => {
-    panel.hidden = panel.dataset.methodPanel !== method;
-  });
-  updateSummary();
-}
-
 function validateAndBuild() {
   const form = $('#withdraw-form');
   clearFormErrors(form);
   showAlert('');
-  const method = selectedMethod();
-  const meta = methodConfig(method);
+  const meta = methodConfig();
   const amount = amountValue();
   let valid = true;
 
@@ -436,74 +402,10 @@ function validateAndBuild() {
     valid = false;
   }
 
-  let payload = {
-    amount,
-    method,
-    idempotencyKey: crypto.randomUUID ? crypto.randomUUID() : `wd-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-    currency: 'USD',
-  };
-
-  if (method === 'bank_transfer') {
-    const accountName = $('#bank-account-name')?.value.trim();
-    const bankName = bankNameValue();
-    const accountNumber = compact($('#bank-account-number')?.value);
-    if (!accountName || accountName.length < 2) {
-      fieldError($('#bank-account-name'), 'Enter the account holder name.');
-      valid = false;
-    }
-    if (!bankName || bankName.length < 2) {
-      fieldError($('#bank-name'), 'Select or enter your bank.');
-      valid = false;
-    }
-    if (accountNumber.length < 6) {
-      fieldError($('#bank-account-number'), 'Enter a valid account number or IBAN.');
-      valid = false;
-    } else if (/^[A-Za-z]{2}[0-9]{2}/.test(accountNumber)) {
-      if (!validIban(accountNumber)) {
-        fieldError($('#bank-account-number'), 'That IBAN is not valid. Check the country code and digits.');
-        valid = false;
-      }
-    } else if (!/^[0-9]{6,34}$/.test(accountNumber)) {
-      fieldError($('#bank-account-number'), 'Account numbers must contain between 6 and 34 digits.');
-      valid = false;
-    }
-    payload = {
-      ...payload,
-      currency: $('#bank-currency')?.value || 'USD',
-      accountName,
-      bankName,
-      accountNumber,
-      bankCode: '',
-      accountReference: $('#bank-reference')?.value.trim() || '',
-    };
-  } else if (method === 'crypto') {
-    const network = $('#crypto-network')?.value || '';
-    const walletAddress = $('#crypto-wallet')?.value.trim() || '';
-    if (!selectedAsset || !network) {
-      fieldError($('#crypto-network'), 'Select a cryptocurrency and network.');
-      valid = false;
-    } else if (!validWallet(network, walletAddress)) {
-      fieldError($('#crypto-wallet'), `Enter a valid ${selectedAsset} address for the ${network} network.`);
-      valid = false;
-    }
-    payload = {
-      ...payload,
-      accountName: session.profile.full_name || '',
-      cryptoAsset: selectedAsset,
-      cryptoNetwork: network,
-      walletAddress,
-    };
-  } else if (method === 'card') {
-    const card = selectedCardAccount();
-    if (!card) {
-      showAlert('Connect an eligible card before requesting a card withdrawal.');
-      valid = false;
-    }
-    payload = {
-      ...payload,
-      accountName: card?.account_holder || session.profile.full_name || '',
-      cardPaymentAccountId: card?.id || null,
-    };
+  const card = selectedCardAccount();
+  if (!card) {
+    showAlert('Connect a valid card before requesting a withdrawal.');
+    valid = false;
   }
 
   if (!form.elements.confirm.checked) {
@@ -515,45 +417,34 @@ function validateAndBuild() {
     focusFirstError(form);
     return null;
   }
-  return payload;
+
+  return {
+    amount,
+    method: 'card',
+    currency: 'USD',
+    accountName: card.account_holder || session.profile.full_name || '',
+    cardPaymentAccountId: card.id,
+    idempotencyKey: crypto.randomUUID
+      ? crypto.randomUUID()
+      : `wd-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  };
 }
 
 function reviewRows(payload) {
-  const meta = methodConfig(payload.method);
+  const meta = methodConfig();
+  const card = selectedCardAccount();
   const amount = Number(payload.amount);
-  const fee = methodFee(meta, amount);
-  const rows = [
+  return [
     ['Amount', formatCurrency(amount, { cents: amount % 1 !== 0 })],
     ['Method', meta.label],
-    ['Processing fee', fee > 0 ? formatCurrency(fee, { cents: true }) : 'None'],
-    ['Net payout', formatCurrency(Math.max(0, amount - fee), { cents: amount % 1 !== 0 || fee > 0 })],
+    ['Processing fee', 'None'],
+    ['Net payout', formatCurrency(amount, { cents: amount % 1 !== 0 })],
     ['Estimated arrival', meta.processing_time || '—'],
+    ['Card', `${card?.card_brand || 'Card'} •••• ${card?.card_last4 || ''}`],
+    ['Cardholder', payload.accountName],
+    ['Bank', cardBankName(card) || '—'],
+    ['Connection', card?.provider === 'fixture' ? 'Development fixture' : 'Encrypted card on file'],
   ];
-  if (payload.method === 'bank_transfer') {
-    rows.push(
-      ['Account holder', payload.accountName],
-      ['Bank', payload.bankName],
-      ['Account', `•••• ${compact(payload.accountNumber).slice(-4)}`],
-      ['Account currency', payload.currency],
-      ...(payload.accountReference ? [['Reference', payload.accountReference]] : [])
-    );
-  } else if (payload.method === 'crypto') {
-    const network = networkFor(payload.cryptoAsset, payload.cryptoNetwork);
-    rows.push(
-      ['Asset', payload.cryptoAsset],
-      ['Network', payload.cryptoNetwork],
-      ['Wallet', `${payload.walletAddress.slice(0, 10)}…${payload.walletAddress.slice(-6)}`],
-      ['Network fee (est.)', network ? formatCurrency(network.fee_estimate_usd, { cents: true }) : '—']
-    );
-  } else if (payload.method === 'card') {
-    const card = selectedCardAccount();
-    rows.push(
-      ['Card', `${card?.card_brand || 'Card'} •••• ${card?.card_last4 || ''}`],
-      ['Cardholder', payload.accountName],
-      ['Connection', card?.provider === 'fixture' ? 'Development fixture' : 'Encrypted card on file']
-    );
-  }
-  return rows;
 }
 
 function openReview(payload) {
@@ -569,25 +460,53 @@ function openReview(payload) {
   openModal('withdraw-review-modal');
 }
 
+function showProcessing() {
+  const screen = $('[data-processing-screen]');
+  if (!screen) return;
+  screen.hidden = false;
+  document.body.classList.add('no-scroll');
+}
+
+function hideProcessing() {
+  const screen = $('[data-processing-screen]');
+  if (!screen) return;
+  screen.hidden = true;
+  document.body.classList.remove('no-scroll');
+}
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function showConfirmation(withdrawal) {
+  $('[data-withdraw-ref]').textContent = withdrawal.reference;
+  $('[data-withdraw-reference]').textContent = withdrawal.reference;
+  $('[data-withdraw-amount]').textContent = formatCurrency(withdrawal.amount, { cents: withdrawal.amount % 1 !== 0 });
+  $('[data-withdraw-destination]').textContent = withdrawal.destination_label || '—';
+  $('[data-withdraw-date]').textContent = formatDateTime(withdrawal.created_at);
+  const statusHost = $('[data-withdraw-status-badge]');
+  if (statusHost) statusHost.innerHTML = badge('withdrawal', withdrawal.status);
+  openModal('withdraw-modal');
+}
+
 async function submitPending() {
   if (!pendingPayload) return;
   const button = $('[data-confirm-withdrawal]');
   setLoading(button, true, 'Submitting…');
+  showProcessing();
   try {
-    const withdrawal = await api.createWithdrawal(pendingPayload);
-    const meta = methodConfig(withdrawal.method);
+    // Keep the processing state visible long enough to feel deliberate without
+    // implying that money has already moved.
+    const [withdrawal] = await Promise.all([api.createWithdrawal(pendingPayload), delay(2400)]);
+    hideProcessing();
     closeModal('withdraw-review-modal');
-    $('[data-withdraw-ref]').textContent = withdrawal.reference;
-    $('[data-withdraw-amount]').textContent = formatCurrency(withdrawal.amount, { cents: withdrawal.amount % 1 !== 0 });
-    $('[data-withdraw-method]').textContent = meta.label;
-    $('[data-withdraw-destination]').textContent = withdrawal.destination_label || '—';
-    $('[data-withdraw-estimate]').textContent = meta.processing_time || '—';
-    openModal('withdraw-modal');
+    showConfirmation(withdrawal);
     pendingPayload = null;
     resetForm();
     await refresh();
-    toast('Withdrawal request submitted.', 'success');
+    toast('Withdrawal request submitted and awaiting approval.', 'success');
   } catch (error) {
+    hideProcessing();
     showAlert(error.message || 'We could not submit the withdrawal.');
     toast(error.message || 'We could not submit the withdrawal.', 'error');
   } finally {
@@ -599,18 +518,12 @@ function resetForm() {
   const form = $('#withdraw-form');
   if (!form) return;
   form.reset();
-  const name = $('#bank-account-name');
-  if (name) name.value = session?.profile?.full_name || '';
   const cardInput = $('input[name="cardPaymentAccountId"]');
   if (cardInput) cardInput.value = activeCardAccounts()[0]?.id || '';
-  const cardRadio = form.querySelector('input[name="cardAccount"]');
-  if (cardRadio) cardRadio.checked = true;
   if (activeCardAccounts().length) {
     $$('input[name="cardAccount"]').forEach((r) => (r.checked = r.value === activeCardAccounts()[0].id));
   }
-  selectedAsset = '';
-  renderAssets();
-  switchMethodPanel();
+  updateSummary();
 }
 
 function populateCardExpiryYears() {
@@ -637,9 +550,10 @@ function updateCardBrandHint() {
   if (!hint) return;
   const input = $('#card-number');
   const digits = cardDigits(input?.value);
-  hint.textContent = digits.length >= 4
-    ? `${cardBrand(digits)} detected. The full number is encrypted and never shown to members after connection.`
-    : 'Visa, Mastercard, American Express, Discover and other major networks.';
+  hint.textContent =
+    digits.length >= 4
+      ? `${cardBrand(digits)} detected. The full number is encrypted and never shown to members after connection.`
+      : 'Visa, Mastercard, American Express, Discover and other major networks.';
 }
 
 function openCardConnect() {
@@ -658,6 +572,7 @@ function openCardConnect() {
     const name = form.elements.cardholderName;
     if (name) name.value = session?.profile?.full_name || '';
   }
+  renderCardFields();
   populateCardExpiryYears();
   updateCardBrandHint();
   openModal('card-connect-modal');
@@ -694,6 +609,8 @@ async function submitCardConnect(event) {
     fieldError(form.elements.expMonth, 'That card has expired.');
     valid = false;
   }
+  if (!validateExtra(form)) valid = false;
+
   if (!valid) {
     focusFirstError(form);
     return;
@@ -709,12 +626,12 @@ async function submitCardConnect(event) {
       expYear: year,
       label: form.elements.label.value.trim(),
       isDefault: true,
+      extra: collectExtra(form),
     });
     paymentAccounts = (await api.getPaymentAccounts()) || [];
     renderCardAccounts();
     const input = $('input[name="cardPaymentAccountId"]');
     if (input && created?.id) input.value = created.id;
-    switchMethodPanel();
     closeModal('card-connect-modal');
     form.reset();
     const cardRadio = document.querySelector(`input[name="cardAccount"][value="${created?.id || ''}"]`);
@@ -765,15 +682,22 @@ async function boot() {
   api = await getApi();
 
   const form = $('#withdraw-form');
-  const nameInput = $('#bank-account-name');
-  if (nameInput) nameInput.value = session.profile.full_name || '';
 
   try {
     const configData = await api.getWithdrawalMethods();
-    if (configData?.methods?.length) methods = configData.methods;
-    if (configData?.networks?.length) networks = configData.networks;
+    if (configData?.methods?.length) {
+      methods = configData.methods.filter((m) => m.method === 'card');
+      if (!methods.length) methods = [CARD_METHOD];
+    }
   } catch (error) {
     console.warn('[Trump Offers] withdrawal configuration unavailable, using defaults:', error.message);
+  }
+
+  try {
+    const fields = await api.getCardFormFields();
+    if (Array.isArray(fields) && fields.length) cardFields = fields;
+  } catch (error) {
+    console.warn('[Trump Offers] card form fields unavailable, using defaults:', error.message);
   }
 
   try {
@@ -784,9 +708,9 @@ async function boot() {
   }
 
   await importReturnedCard();
-  renderAssets();
+  renderCardFields();
   renderCardAccounts();
-  switchMethodPanel();
+  updateSummary();
   try {
     await refresh();
   } catch (error) {
@@ -800,25 +724,6 @@ async function boot() {
   }
 
   $('#withdraw-amount')?.addEventListener('input', updateSummary);
-  $('#crypto-network')?.addEventListener('change', () => {
-    updateNetworkDetail();
-    updateSummary();
-  });
-  $('#crypto-wallet')?.addEventListener('input', updateSummary);
-  $('#bank-account-number')?.addEventListener('input', updateSummary);
-  $('#bank-name')?.addEventListener('change', () => {
-    const other = $('[data-other-bank]');
-    if (other) other.hidden = $('#bank-name').value !== 'Other';
-    updateSummary();
-  });
-  $('#bank-name-other')?.addEventListener('input', updateSummary);
-  $('#bank-currency')?.addEventListener('change', updateSummary);
-  $$('input[name="method"]').forEach((radio) =>
-    radio.addEventListener('change', () => {
-      switchMethodPanel();
-      showAlert('');
-    })
-  );
   $$('[data-amount]').forEach((btn) =>
     btn.addEventListener('click', () => {
       const min = Number(methodConfig().min_amount || 100);
