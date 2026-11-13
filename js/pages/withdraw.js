@@ -471,11 +471,16 @@ function delay(ms) {
 
 function showConfirmation(withdrawal) {
   const paid = withdrawal.status === 'completed';
-  $('[data-withdraw-ref]').textContent = withdrawal.reference;
-  $('[data-withdraw-reference]').textContent = withdrawal.reference;
-  $('[data-withdraw-amount]').textContent = formatCurrency(withdrawal.amount, { cents: withdrawal.amount % 1 !== 0 });
-  $('[data-withdraw-destination]').textContent = withdrawal.destination_label || '—';
-  $('[data-withdraw-date]').textContent = formatDateTime(withdrawal.created_at);
+  const ref = $('[data-withdraw-ref]');
+  if (ref) ref.textContent = withdrawal.reference;
+  const reference = $('[data-withdraw-reference]');
+  if (reference) reference.textContent = withdrawal.reference;
+  const amount = $('[data-withdraw-amount]');
+  if (amount) amount.textContent = formatCurrency(withdrawal.amount, { cents: withdrawal.amount % 1 !== 0 });
+  const destination = $('[data-withdraw-destination]');
+  if (destination) destination.textContent = withdrawal.destination_label || '—';
+  const date = $('[data-withdraw-date]');
+  if (date) date.textContent = formatDateTime(withdrawal.created_at);
   const eyebrow = $('[data-withdraw-modal-eyebrow]');
   if (eyebrow) eyebrow.textContent = paid ? 'Payment sent' : 'Request received';
   const title = $('[data-withdraw-modal-title]');

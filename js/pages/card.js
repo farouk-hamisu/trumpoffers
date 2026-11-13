@@ -157,7 +157,7 @@ async function boot() {
 
   if (session) {
     const hint = $('[data-card-auth-hint]');
-    if (hint) hint.textContent = 'Your request will be reviewed by our member services desk.';
+    if (hint) hint.textContent = 'We will review your request before issuing your card.';
     try {
       const cards = await api.getCardApplications();
       renderApplications(cards);
@@ -170,7 +170,7 @@ async function boot() {
     }
   } else {
     const hint = $('[data-card-auth-hint]');
-    if (hint) hint.textContent = 'You will be asked to sign in before the request is submitted.';
+    if (hint) hint.textContent = 'You will need to sign in before submitting.';
   }
 
   form.addEventListener('submit', async (e) => {
@@ -202,7 +202,7 @@ async function boot() {
         cardholderName: name.toUpperCase().slice(0, 26),
       });
       resultFor(card);
-      toast('Digital membership card request submitted.', 'success');
+      toast('Card created.', 'success');
       const cards = await api.getCardApplications();
       renderApplications(cards);
       $('#card-result')?.scrollIntoView({ behavior: 'smooth', block: 'center' });

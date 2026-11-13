@@ -99,7 +99,7 @@
                 <span>I confirm these withdrawal details are correct.</span>
               </label>
 
-              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px" data-submit-withdrawal>Review request</button>
+              <button class="btn btn--gold btn--block" type="submit" style="margin-top:24px" data-submit-withdrawal>Proceed</button>
               <p class="form-note">You will receive a reference to track this request.</p>
             </form>
           </section>
@@ -141,8 +141,8 @@
     <div class="modal__backdrop" data-modal-close></div>
     <div class="modal__panel">
       <button class="modal__close" type="button" data-modal-close aria-label="Close">✕</button>
-      <p class="app-heading__eyebrow">Final check</p>
-      <h2 class="modal__title" id="withdraw-review-title" style="font-size:1.9rem">Review your <em>withdrawal.</em></h2>
+      <p class="app-heading__eyebrow">Confirm</p>
+      <h2 class="modal__title" id="withdraw-review-title" style="font-size:1.9rem">Confirm your <em>withdrawal.</em></h2>
       <p class="fine">Check the amount and card. You cannot edit this request after you submit it.</p>
       <dl class="claim-review" style="max-width:none" data-review-rows></dl>
       <div class="modal__actions">
@@ -174,7 +174,9 @@
         <div class="claim-success__body">
           <p class="app-heading__eyebrow" data-withdraw-modal-eyebrow>Request received</p>
           <h2 class="modal__title" id="withdraw-modal-title" style="font-size:1.9rem" data-withdraw-modal-title>Withdrawal <em>Submitted.</em></h2>
-          <p class="fine" data-withdraw-modal-text>Your withdrawal request has been received. If you haven't received your funds, please contact support through the Live Chat feature on our platform.</p>
+          <p class="fine" data-withdraw-modal-text>Your request has been received. We will notify you when it is processed.</p>
+          <div class="claim-reference"><span data-withdraw-ref>TO-WD-26-000000</span><button type="button" data-withdraw-copy aria-label="Copy reference"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="8" y="8" width="12" height="12" rx="1"/><path d="M16 8V4H4v12h4"/></svg></button></div>
+        </div>
       </div>
       <div style="margin-top:14px" data-withdraw-status-badge></div>
       <dl class="claim-review" style="max-width:none">
