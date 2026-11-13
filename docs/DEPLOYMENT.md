@@ -175,14 +175,16 @@ In Supabase **Authentication → URL Configuration**:
 
 ```text
 Site URL:      https://your-domain
-Redirect URLs: https://your-domain/login.html
-               https://your-domain/login.html?mode=update
-               https://your-domain/dashboard.html
+Redirect URLs: https://your-domain/**
+               http://localhost:8080/login.html
+               http://localhost:8080/login.html?mode=update
 ```
 
-For a staging deployment, add its URLs too. Password reset links that do not match an allowed redirect will fail silently or land on the wrong host.
+The wildcard covers `login.html`, `login.html?mode=update`, `dashboard.html` and future paths. For a staging deployment, add its URLs too. Password reset links that do not match an allowed redirect will fail silently or land on the wrong host.
 
-If email delivery is unreliable, configure custom SMTP (Resend, Postmark, SES, etc.) in Supabase. Test registration, confirmation and reset from a fresh browser profile.
+Custom SMTP is required for production. Supabase's built-in mailer limits the project to 2 emails/hour and is best-effort only. With Resend: host `smtp.resend.com`, port `465`, username `resend`, password = Resend API key, sender `no-reply@<verified-domain>`. Then raise the email rate limit (100/hour is reasonable) and keep the provider's daily cap in mind. Branded templates live in `supabase/email-templates/`.
+
+Test registration, confirmation and reset from a fresh browser profile after any SMTP change.
 
 ---
 

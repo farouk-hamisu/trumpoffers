@@ -156,9 +156,7 @@ In **Authentication → URL Configuration**:
 
 - **Site URL:** your canonical origin, e.g. `https://trumpoffers.com`.
 - **Redirect URLs:**
-  - `https://trumpoffers.com/login.html`
-  - `https://trumpoffers.com/login.html?mode=update`
-  - `https://trumpoffers.com/dashboard.html`
+  - `https://trumpoffers.com/**` (covers `login.html`, `login.html?mode=update`, `dashboard.html` and any future path)
   - `http://localhost:8080/login.html` and `http://localhost:8080/login.html?mode=update` for local use.
 
 The password reset flow sends the user to `login.html?mode=update`, where `js/pages/login.js` presents the new-password form.
@@ -166,11 +164,32 @@ The password reset flow sends the user to `login.html?mode=update`, where `js/pa
 **Production recommendations**
 
 - Enable email confirmation.
-- Configure a branded SMTP sender or Supabase's email provider.
+- Configure custom SMTP before launch. Supabase's built-in mailer caps the whole project at 2 emails/hour, only reliably delivers to project team addresses, and is not intended for production. See **Email delivery** below.
 - Set a minimum password length of 8+ and enable leaked-password protection if available.
 - Keep anonymous sign-ins disabled; public application and contact submissions use RPCs and RLS insert policies, not anonymous accounts.
 
 `supabase/config.toml` disables email confirmation only for local development. Dashboard settings take precedence in the hosted project.
+
+### Email delivery (Resend)
+
+Supabase → **Authentication → Emails → SMTP Settings**:
+
+| Field | Value |
+| --- | --- |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | Resend API key (`re_…`, server-side only) |
+| Sender email | `no-reply@<verified-domain>` |
+| Sender name | `Trump Offers` |
+
+Verify the sending domain in Resend first (DKIM + SPF, DMARC recommended). Until it is verified Resend only delivers to your own account address.
+
+Then raise **Authentication → Rate Limits → Emails per hour**. Custom SMTP starts at 30/hour; 100/hour is safe below Resend's throughput. The provider plan's daily cap still applies, so size the Resend plan for expected signup volume.
+
+The branded confirmation and recovery templates are kept in [`supabase/email-templates/`](../supabase/email-templates/) and must be pasted into **Authentication → Emails** or applied through the Management API. A confirmation email should never contain marketing copy, attachments or more than one call to action.
+
+The email-link redirect is driven by `SITE_URL`. If it is left at `http://localhost:8080` in a production build, confirmation and reset links point at the wrong host; `js/config.js` falls back to the browser origin when that mismatch is detected, but the deployment variable should still be corrected.
 
 ---
 
