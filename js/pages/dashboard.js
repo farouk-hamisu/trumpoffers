@@ -2,8 +2,8 @@
  * Trump Offers — member overview.
  */
 
-import { getApi } from '../lib/api.js';
-import { initAppShell } from '../lib/shell.js';
+import {getApi} from '../lib/api.js';
+import {initAppShell} from '../lib/shell.js';
 import {
   $,
   $$,
@@ -23,7 +23,7 @@ import {
   fieldError,
   focusFirstError,
 } from '../lib/utils.js';
-import { icon } from '../icons.js';
+import {icon} from '../icons.js';
 
 function renderRewards(entries) {
   const host = $('[data-reward-panel]');
@@ -74,7 +74,7 @@ function renderApplications(applications) {
         (a) => `<tr>
           <td><span class="cell-strong">${escapeHTML(a.job_title || 'Role')}</span><span class="cell-sub">${escapeHTML(a.location || 'Trump Offers')}</span></td>
           <td class="cell-mono">${escapeHTML(a.reference)}</td>
-          <td>${formatDate(a.created_at, { short: true })}</td>
+          <td>${formatDate(a.created_at, {short: true})}</td>
           <td>${badge('application', a.status)}</td>
           <td><a class="icon-btn" href="${a.job_slug ? `job-details.html?slug=${encodeURIComponent(a.job_slug)}` : 'careers.html'}" aria-label="View role">${icon('arrow-up-right')}</a></td>
         </tr>`
@@ -176,14 +176,14 @@ function renderAccount(profile) {
     <div class="detail-row"><dt>Member since</dt><dd>${formatDate(profile.created_at)}</dd></div>`;
 }
 
-function updateSummary({ account, rewards, withdrawals, applications, cards, notifications, profile }) {
+function updateSummary({account, rewards, withdrawals, applications, cards, notifications, profile}) {
   const first = (profile.full_name || 'Member').split(' ')[0];
   $$('[data-first-name]').forEach((el) => (el.textContent = `${first}.`));
 
   if (account) {
     const balance = Number(account.available_balance ?? account.balance ?? 0);
     const host = $('[data-balance]');
-    if (host) host.innerHTML = `${formatCurrency(balance)}<sup>USD</sup>`;
+    if (host) host.innerHTML = `${formatCurrency(balance)}`;
     const note = $('[data-balance-note]');
     if (note) note.textContent = 'Available to withdraw.';
   }
@@ -192,13 +192,13 @@ function updateSummary({ account, rewards, withdrawals, applications, cards, not
   const rewardHost = $('[data-latest-reward]');
   if (rewardHost) {
     rewardHost.textContent = latestReward
-      ? `+${formatCurrency(latestReward.amount, { cents: Number(latestReward.amount) % 1 !== 0 })}`
+      ? `+${formatCurrency(latestReward.amount, {cents: Number(latestReward.amount) % 1 !== 0})}`
       : '—';
   }
   const rewardFoot = $('[data-latest-reward-foot]');
   if (rewardFoot) {
     rewardFoot.textContent = latestReward
-      ? `${latestReward.note || 'Reward added'} · ${formatDate(latestReward.created_at, { short: true })}`
+      ? `${latestReward.note || 'Reward added'} · ${formatDate(latestReward.created_at, {short: true})}`
       : 'No rewards yet';
   }
 
@@ -240,7 +240,7 @@ function announceLatestReward(entries, userId) {
 }
 
 async function boot() {
-  const session = await initAppShell({ page: 'dashboard', title: 'Overview', crumb: 'Member' });
+  const session = await initAppShell({page: 'dashboard', title: 'Overview', crumb: 'Member'});
   if (!session) return;
   renderAccount(session.profile);
 
@@ -349,7 +349,7 @@ async function boot() {
   // Deep links from the shell: #notifications and #account.
   if (location.hash === '#notifications' || location.hash === '#account') {
     const target = document.querySelector(location.hash);
-    window.setTimeout(() => target?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 350);
+    window.setTimeout(() => target?.scrollIntoView({behavior: 'smooth', block: 'start'}), 350);
   }
 }
 
