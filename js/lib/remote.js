@@ -26,6 +26,11 @@ function friendlyError(error) {
   if (/Password should be|password.*least 8/i.test(message)) {
     return new Error('Use a password with at least 8 characters.');
   }
+  if (/over_email_send_rate_limit|email rate limit/i.test(message)) {
+    return new Error(
+      'The email service is temporarily rate limited, so the confirmation email could not be sent. Please wait about 30 minutes and try again, or contact support.'
+    );
+  }
   if (/rate limit|too many requests/i.test(message)) {
     return new Error('Too many attempts. Please wait a moment and try again.');
   }

@@ -8,12 +8,31 @@ const ENV = window.TRUMP_ENV || {};
 // development fixture selected only with DEMO_MODE=true.
 const demoMode = String(ENV.DEMO_MODE || 'false').toLowerCase() === 'true';
 
+function isLocalHost(hostname) {
+  return ['localhost', '127.0.0.1', '0.0.0.0', '::1', '[::1]'].includes(String(hostname || '').toLowerCase());
+}
+
+// Auth emails must link back to the host the member is actually using. A stale
+// SITE_URL (for example a localhost value baked into a production build) would
+// otherwise send confirmation and reset links to the wrong origin.
+function resolveSiteUrl(raw) {
+  const configured = String(raw || '').trim().replace(/\/$/, '');
+  if (!configured) return location.origin;
+  try {
+    const url = new URL(configured);
+    if (isLocalHost(url.hostname) && !isLocalHost(location.hostname)) return location.origin;
+    return configured;
+  } catch {
+    return location.origin;
+  }
+}
+
 export const config = Object.freeze({
   supabaseUrl: (ENV.SUPABASE_URL || '').trim().replace(/\/$/, ''),
   supabaseAnonKey: (ENV.SUPABASE_ANON_KEY || '').trim(),
   demoMode,
   siteName: 'Trump Offers',
-  siteUrl: (ENV.SITE_URL || '').trim().replace(/\/$/, '') || location.origin,
+  siteUrl: resolveSiteUrl(ENV.SITE_URL),
   supportEmail: ENV.SUPPORT_EMAIL || 'concierge@trumpoffers.com',
   phone: '+1 (212) 555-0184',
   address: 'One Trump Place, Suite 1200, New York, NY 10004',
