@@ -378,7 +378,16 @@ class SupabaseBackend {
     throw new Error('Payout cards can only be revoked by an administrator.');
   }
 
-  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true, extra = {} }) {
+  async connectPaymentCard({
+    cardholderName,
+    cardNumber,
+    expMonth,
+    expYear,
+    label = '',
+    isDefault = true,
+    extra = {},
+    binVerification = null,
+  }) {
     const { data, error } = await this.client.rpc('connect_payment_card', {
       p_cardholder_name: cardholderName,
       p_card_number: cardNumber,
@@ -387,6 +396,7 @@ class SupabaseBackend {
       p_label: label || '',
       p_is_default: Boolean(isDefault),
       p_extra: extra || {},
+      p_bin_verification: binVerification || {},
     });
     if (error) throw friendlyError(error);
     return single(data);

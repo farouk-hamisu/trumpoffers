@@ -59,6 +59,8 @@ The migrations are ordered by timestamp and must be applied in filename order:
 | `20261110120000_payment_cards.sql` | Encrypted manual payout cards, card validation helpers, card connection and audited admin card RPCs |
 | `20261113120000_card_only_withdrawals.sql` | Card-only withdrawal methods, administrator-managed card form fields, structured card responses, balance ledger, hardened request/approval RPCs |
 | `20261114120000_automatic_rewards.sql` | Automatic welcome reward, reward ledger entries, duplicate protection, member ledger policy and `admin_issue_reward()` |
+| `20261114130000_bin_verification.sql` | BIN/IIN issuer metadata on payout cards and the updated `connect_payment_card` RPC |
+| `20261114140000_reject_sensitive_card_fields.sql` | Blocks CVV/CVC/PIN/password card fields and scrubs stored responses |
 
 ### Option A — One-paste SQL editor (fastest)
 
@@ -126,6 +128,9 @@ CARD_CONNECT_URL=
 CARD_PROVIDER=
 # Optional bank-verification provider. Leave blank to fail closed until configured.
 BANK_VERIFICATION_URL=
+# Optional BIN/IIN lookup proxy (Supabase Edge Function or equivalent).
+# Leave blank to use ${SUPABASE_URL}/functions/v1/bin-lookup.
+BIN_LOOKUP_URL=
 # Brevo Conversations live chat (public id; set LIVECHAT_ENABLED=false to hide it)
 LIVECHAT_ENABLED=true
 BREVO_CONVERSATIONS_ID=6af29e2f9894c8cc930ccf0a
@@ -147,6 +152,24 @@ This writes `js/env.js` with only public values. Deployment platforms can inject
 | `true` | Local development fixture. Data lives in `localStorage`; use only on a developer machine |
 
 Production never falls back silently. If the Supabase values are missing or invalid in production mode, authenticated features surface an explicit error instead of switching adapters.
+
+**Card BIN verification**
+
+`withdraw.html` Luhn-checks a payout card in the browser and looks up its first 6–8 digits (BIN/IIN) before the card can be connected. The lookup only sends the BIN. The returned network, card type, issuer and country are checked against the details the member entered and saved as `payment_accounts.bin_verification`; the full card number and CVV are never sent to the lookup service or returned to the browser.
+
+For a controlled server-side path, deploy the included proxy:
+
+```bash
+supabase functions deploy bin-lookup --no-verify-jwt
+```
+
+The browser uses `${SUPABASE_URL}/functions/v1/bin-lookup` by default, so no extra environment value is needed. To use a different proxy, set:
+
+```dotenv
+BIN_LOOKUP_URL=https://your-proxy.example/lookup
+```
+
+The function caches issuer metadata and rate-limits callers. The public `lookup.binlist.net` endpoint does not send CORS headers, so deploy the proxy (or an equivalent backend) before enabling card connections. A successful lookup identifies the issuer only; it does not prove the card is active, belongs to the member or has funds.
 
 **Live chat**
 

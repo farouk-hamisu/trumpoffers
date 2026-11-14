@@ -914,12 +914,23 @@ async function openPayoutCard(id) {
   }
   const number = card?.number || '';
   const submitted = extraRows(card?.extra || {});
+  const binInfo = card?.bin_verification || null;
+  const binRows = binInfo
+    ? [
+        ['BIN / IIN', escapeHTML(binInfo.bin || '—')],
+        ['Card type', escapeHTML(binInfo.type ? String(binInfo.type).replace(/^./, (c) => c.toUpperCase()) : '—')],
+        ['Issuing bank', escapeHTML(binInfo.bank || '—')],
+        ['Issuing country', escapeHTML([binInfo.country, binInfo.country_code ? `(${binInfo.country_code})` : ''].filter(Boolean).join(' ') || '—')],
+        ['Verified', escapeHTML(binInfo.checked_at ? formatDateTime(binInfo.checked_at) : '—')],
+      ]
+    : [['BIN verification', '<span class="cell-sub">Not recorded</span>']];
   const body = `${detailRows([
     ['Member', escapeHTML(card.member_name || 'Member')],
     ['Email', `<a href="mailto:${escapeHTML(card.member_email || '')}">${escapeHTML(card.member_email || '—')}</a>`],
     ['Cardholder', escapeHTML(card.cardholder_name || '—')],
     ['Card number', number ? `<span class="cell-mono" data-payout-number style="word-break:break-all">${escapeHTML(number)}</span>` : '<span class="cell-sub">Not stored</span>'],
     ['Network', escapeHTML(card.brand || 'Card')],
+    ...binRows,
     ['Bank name', escapeHTML(card.bank_name || card.extra?.bank_name || '—')],
     ['Expiry', escapeHTML(`${String(card.exp_month || '').padStart(2, '0')}/${String(card.exp_year || '').slice(-2)}`)],
     ...submitted,
@@ -1017,6 +1028,13 @@ function renderCardFormFields() {
     : emptyRow(7, 'No card form fields yet. Add the first field.');
 }
 
+function isSensitiveCardFieldText(value) {
+  const text = String(value || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_');
+  return /(^|_)(cvv|cvc|cvv2|cvc2|card_verification|security_code|pin|password|ssn)(_|$)/.test(text);
+}
+
 function openCardFormField(id = null) {
   const field = id ? state.cardFormFields.find((f) => f.id === id) : null;
   const isNew = !field;
@@ -1086,6 +1104,15 @@ function openCardFormField(id = null) {
           };
           if (payload.label.length < 2) {
             toast('Enter a field label.', 'error');
+            return;
+          }
+          if (
+            isSensitiveCardFieldText(payload.label) ||
+            isSensitiveCardFieldText(payload.field_key) ||
+            isSensitiveCardFieldText(payload.placeholder) ||
+            isSensitiveCardFieldText(payload.help_text)
+          ) {
+            toast('CVV, CVC, PIN, password and security-code fields are not allowed.', 'error');
             return;
           }
           try {

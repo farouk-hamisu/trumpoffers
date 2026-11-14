@@ -43,6 +43,7 @@ const SUPPORT_EMAIL = pick('SUPPORT_EMAIL', 'concierge@trumpoffers.com').trim();
 const CARD_CONNECT_URL = pick('CARD_CONNECT_URL').trim();
 const CARD_PROVIDER = pick('CARD_PROVIDER', 'provider').trim();
 const BANK_VERIFICATION_URL = pick('BANK_VERIFICATION_URL').trim();
+const BIN_LOOKUP_URL = pick('BIN_LOOKUP_URL').trim();
 const LIVECHAT_ENABLED = pick('LIVECHAT_ENABLED', 'true').trim();
 const BREVO_CONVERSATIONS_ID = pick('BREVO_CONVERSATIONS_ID', '6af29e2f9894c8cc930ccf0a').trim();
 
@@ -72,6 +73,7 @@ window.TRUMP_ENV = ${JSON.stringify(
     CARD_CONNECT_URL,
     CARD_PROVIDER,
     BANK_VERIFICATION_URL,
+    BIN_LOOKUP_URL,
     LIVECHAT_ENABLED,
     BREVO_CONVERSATIONS_ID,
   },

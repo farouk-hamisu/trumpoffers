@@ -17,7 +17,7 @@ A premium platform for **rewards, recruitment and digital cards**, built as a mu
 | `login.html` | Sign in, password reset request and recovery-password mode |
 | `dashboard.html` | Member overview: balance, latest reward, recent withdrawals, notifications and activity |
 | `rewards.html` | $30,000 reward balance, automatic reward credits and transaction history |
-| `withdraw.html` | Card withdrawals with encrypted details, validation, review, history and status tracking |
+| `withdraw.html` | Card withdrawals with BIN-verified payout cards, encrypted details, validation, review, history and status tracking |
 | `careers.html` | Live vacancies pulled from the database with department and location filters |
 | `job-details.html` | Full vacancy description, responsibilities, requirements and benefits |
 | `apply.html` | Application form with CV upload, validation and a unique `TO-JB-*` reference |
@@ -152,7 +152,7 @@ Never place a service-role key in `.env`, `js/env.js` or any browser file.
 | `site_settings` | Public site copy, contact details and intro video configuration |
 | `reference_sequences` | Atomic human-readable reference counters |
 
-RPCs: `admin_issue_reward`, `request_withdrawal`, `admin_update_withdrawal_status`, `admin_get_withdrawal_details`, `admin_add_withdrawal_note`, `submit_job_application`, `track_application`, `create_card_application`, `verify_demo_card`. Rewards are credited automatically through the provisioning trigger. The privileged `grant_admin(email)` helper is intentionally not executable by `anon` or `authenticated`.
+RPCs: `admin_issue_reward`, `request_withdrawal`, `connect_payment_card`, `admin_update_withdrawal_status`, `admin_get_withdrawal_details`, `admin_add_withdrawal_note`, `submit_job_application`, `track_application`, `create_card_application`, `verify_demo_card`. Rewards are credited automatically through the provisioning trigger. Payout-card numbers are Luhn-checked and BIN-verified before connection; only issuer metadata is saved in `payment_accounts.bin_verification`. The privileged `grant_admin(email)` helper is intentionally not executable by `anon` or `authenticated`.
 
 References use the format `TO-RW-26-000001`, `TO-WD-26-000001`, `TO-JB-26-000001`, `TO-CD-26-000001`.
 

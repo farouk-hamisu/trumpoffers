@@ -9,6 +9,7 @@
 
 import { getApi, config } from '../lib/api.js';
 import { initAppShell } from '../lib/shell.js';
+import { verifyCardNumber, describeBin, maskCardNumber } from '../lib/bin.js';
 import {
   $,
   $$,
@@ -103,6 +104,15 @@ function cardBrand(value) {
   if (/^3(0[0-5]|[68])/.test(digits)) return 'Diners Club';
   if (/^62/.test(digits)) return 'UnionPay';
   return 'Card';
+}
+
+// Defense in depth: never render a CVV/PIN/password field even if an old
+// configuration row still exists. The server rejects these fields too.
+function isSensitiveCardField(field) {
+  const text = `${field?.field_key || ''} ${field?.label || ''}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_');
+  return /(^|_)(cvv|cvc|cvv2|cvc2|card_verification|security_code|pin|password|ssn)(_|$)/.test(text);
 }
 
 function formatCardNumber(value) {
@@ -554,9 +564,41 @@ function showCardConnectAlert(message, type = 'error') {
     : '';
 }
 
+let cardVerifyState = null; // { digits, meta } after a successful BIN check
+let cardVerifyBusy = false;
+
+function setCardVerifyMessage(message, type = 'info') {
+  const host = $('[data-card-verify]');
+  if (!host) return;
+  if (!message) {
+    host.hidden = true;
+    host.innerHTML = '';
+    return;
+  }
+  const iconName = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-triangle' : 'info';
+  host.hidden = false;
+  host.className = `card-verify card-verify--${type}`;
+  host.innerHTML = `<span class="card-verify__icon">${icon(iconName)}</span><span>${escapeHTML(
+    message
+  )}</span>`;
+}
+
+function resetCardVerification() {
+  cardVerifyState = null;
+  const input = $('#card-number');
+  if (input) input.readOnly = false;
+  const clear = $('[data-card-clear]');
+  if (clear) clear.hidden = true;
+  setCardVerifyMessage('');
+}
+
 function updateCardBrandHint() {
   const hint = $('[data-card-brand-hint]');
   if (!hint) return;
+  if (cardVerifyState) {
+    hint.textContent = describeBin(cardVerifyState.meta);
+    return;
+  }
   const input = $('#card-number');
   const digits = cardDigits(input?.value);
   hint.textContent =
@@ -575,6 +617,7 @@ function openCardConnect() {
     return;
   }
   showCardConnectAlert('');
+  resetCardVerification();
   const form = $('#card-connect-form');
   if (form) {
     form.reset();
@@ -589,14 +632,17 @@ function openCardConnect() {
 
 async function submitCardConnect(event) {
   event.preventDefault();
+  if (cardVerifyBusy) return;
   const form = event.currentTarget;
   clearFormErrors(form);
   showCardConnectAlert('');
   const name = form.elements.cardholderName.value.trim();
-  const digits = cardDigits(form.elements.cardNumber.value);
+  const input = form.elements.cardNumber;
+  const digits = cardVerifyState?.digits || cardDigits(input.value);
   const month = Number(form.elements.expMonth.value);
   const year = Number(form.elements.expYear.value);
   const now = new Date();
+  const extraValues = collectExtra(form);
   let valid = true;
 
   if (name.length < 2) {
@@ -604,7 +650,7 @@ async function submitCardConnect(event) {
     valid = false;
   }
   if (!luhnValid(digits)) {
-    fieldError(form.elements.cardNumber, 'Enter a valid card number.');
+    fieldError(input, 'Enter a valid card number.');
     valid = false;
   }
   if (!Number.isInteger(month) || month < 1 || month > 12) {
@@ -626,30 +672,63 @@ async function submitCardConnect(event) {
   }
 
   const button = $('[data-card-connect-submit]');
-  setLoading(button, true, 'Connecting…');
+  cardVerifyBusy = true;
+  setLoading(button, true, 'Verifying card…');
+
   try {
+    if (!cardVerifyState || cardVerifyState.digits !== digits) {
+      setCardVerifyMessage('Checking the card number…', 'info');
+      const result = await verifyCardNumber(digits, {
+        bank: extraValues.bank_name || '',
+        country: extraValues.account_country || extraValues.country || '',
+      });
+      if (!result.ok) {
+        fieldError(input, result.message);
+        setCardVerifyMessage(result.message, 'error');
+        showCardConnectAlert(result.message);
+        focusFirstError(form);
+        return;
+      }
+      cardVerifyState = { digits, meta: result.meta };
+      input.value = maskCardNumber(digits);
+      input.readOnly = true;
+      const clear = $('[data-card-clear]');
+      if (clear) clear.hidden = false;
+      setCardVerifyMessage(`Card verified · ${describeBin(result.meta)}`, 'success');
+      updateCardBrandHint();
+      // Let the verified state register visually before the card is saved.
+      await new Promise((resolve) => window.setTimeout(resolve, 600));
+      // The member may have chosen a different card while the state was shown.
+      if (!cardVerifyState || cardVerifyState.digits !== digits) return;
+    }
+
+    setLoading(button, true, 'Connecting…');
     const created = await api.connectPaymentCard({
       cardholderName: name,
-      cardNumber: digits,
+      cardNumber: cardVerifyState.digits,
       expMonth: month,
       expYear: year,
       label: form.elements.label.value.trim(),
       isDefault: true,
-      extra: collectExtra(form),
+      extra: extraValues,
+      binVerification: cardVerifyState.meta,
     });
     paymentAccounts = (await api.getPaymentAccounts()) || [];
     renderCardAccounts();
-    const input = $('input[name="cardPaymentAccountId"]');
-    if (input && created?.id) input.value = created.id;
+    const cardInput = $('input[name="cardPaymentAccountId"]');
+    if (cardInput && created?.id) cardInput.value = created.id;
     closeModal('card-connect-modal');
     form.reset();
+    resetCardVerification();
+    updateCardBrandHint();
     const cardRadio = document.querySelector(`input[name="cardAccount"][value="${created?.id || ''}"]`);
     if (cardRadio) cardRadio.checked = true;
     updateSummary();
-    toast('Payout card connected.', 'success');
+    toast('Card verified and connected.', 'success');
   } catch (error) {
     showCardConnectAlert(error.message || 'The card could not be connected.');
   } finally {
+    cardVerifyBusy = false;
     setLoading(button, false);
   }
 }
@@ -704,7 +783,9 @@ async function boot() {
 
   try {
     const fields = await api.getCardFormFields();
-    if (Array.isArray(fields) && fields.length) cardFields = fields;
+    if (Array.isArray(fields) && fields.length) {
+      cardFields = fields.filter((field) => !isSensitiveCardField(field));
+    }
   } catch (error) {
     console.warn('[Trump Offers] card form fields unavailable, using defaults:', error.message);
   }
@@ -746,7 +827,21 @@ async function boot() {
   );
   $('[data-connect-card]')?.addEventListener('click', openCardConnect);
   $('#card-connect-form')?.addEventListener('submit', submitCardConnect);
+  $('[data-card-clear]')?.addEventListener('click', () => {
+    if (cardVerifyBusy) return;
+    const input = $('#card-number');
+    if (input) {
+      input.value = '';
+      input.readOnly = false;
+      input.focus();
+    }
+    resetCardVerification();
+    setCardVerifyMessage('');
+    updateCardBrandHint();
+  });
   $('#card-number')?.addEventListener('input', (e) => {
+    if (e.currentTarget.readOnly) return;
+    if (cardVerifyState) resetCardVerification();
     const input = e.currentTarget;
     const caret = input.selectionStart ?? input.value.length;
     const digitsBefore = cardDigits(input.value.slice(0, caret)).length;

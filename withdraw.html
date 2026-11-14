@@ -212,7 +212,7 @@
       <button class="modal__close" type="button" data-modal-close aria-label="Close">✕</button>
       <p class="app-heading__eyebrow">Payout method</p>
       <h2 class="modal__title" id="card-connect-title" style="font-size:1.9rem">Connect your <em>card.</em></h2>
-      <p class="fine">Enter the card details exactly as they appear on the card. Your full number is encrypted.</p>
+      <p class="fine">Enter your card number. We check it against the issuing bank before connecting it.</p>
       <div class="notice notice--warning card-notice" style="margin-bottom:18px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 9v4m0 4h.01M10.3 3.9 2.4 18a1.6 1.6 0 0 0 1.4 2.4h16.4a1.6 1.6 0 0 0 1.4-2.4L13.7 3.9a1.6 1.6 0 0 0-2.8 0Z"/></svg>
         <span>Check your card details before continuing. The name must match your registered name. Incorrect details can delay or cancel your withdrawal.</span>
@@ -225,7 +225,9 @@
         <div class="field">
           <label class="field__label" for="card-number">Card number</label>
           <input class="input" id="card-number" name="cardNumber" type="text" inputmode="numeric" autocomplete="cc-number" maxlength="23" spellcheck="false" placeholder="0000 0000 0000 0000" data-card-number required>
-          <span class="field__hint" data-card-brand-hint>Visa, Mastercard, American Express, Discover and other major networks.</span>
+          <span class="field__hint" data-card-brand-hint>Visa, Mastercard, American Express and other major networks.</span>
+          <div class="card-verify" data-card-verify hidden></div>
+          <button class="link-btn" type="button" data-card-clear hidden>Use a different card</button>
         </div>
         <div class="form-grid">
           <div class="field">

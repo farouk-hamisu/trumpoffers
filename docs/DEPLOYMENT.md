@@ -17,6 +17,7 @@ Set these variables in the hosting platform (or in `.env` for a manual deploy):
 | `SITE_URL` | Yes | `https://trumpoffers.com` |
 | `DEMO_MODE` | No | `false` (default and required for production); `true` is a development-only fixture |
 | `SUPPORT_EMAIL` | No | `concierge@trumpoffers.com` |
+| `BIN_LOOKUP_URL` | No | Optional proxy override. Blank uses `${SUPABASE_URL}/functions/v1/bin-lookup` |
 
 Then generate the browser config:
 
@@ -146,7 +147,8 @@ Notes:
 - `script-src 'self' https://conversations-widget.brevo.com` means **no inline `<script>` blocks**. The only third-party script is the Brevo Conversations loader, injected by `js/livechat.js`; `frame-src` allows its chat iframe. Adding analytics or another embed requires updating the CSP deliberately.
 - The official Brevo inline snippet is intentionally not pasted into the HTML. `js/livechat.js` performs the same bootstrap from a local file. Set `LIVECHAT_ENABLED=false` in the public environment to disable chat without changing the CSP.
 - `style-src 'unsafe-inline'` is required by the existing inline `style` attributes used for layout details. Do not loosen `script-src`.
-- Connect/image/media directives allow any Supabase project over HTTPS and WSS. If you use a custom Supabase domain, replace `*.supabase.co`.
+- Connect/image/media directives allow any Supabase project over HTTPS and WSS. If you use a custom Supabase domain, replace `*.supabase.co`. BIN lookups use the project Edge Function, so the public BINList origin is not allowed in the browser CSP.
+- Payout-card BIN lookups must only carry the first 6–8 digits. The lookup service is not an authorisation check: a hit identifies the issuer, not an active card or available funds. Deploy `supabase/functions/bin-lookup` before enabling card connections; it provides the server-side cache, CORS control and per-caller rate limiting. If you point `BIN_LOOKUP_URL` at another host, add that host to `connect-src`.
 - HSTS is safe only once the domain is permanently HTTPS. Start with a shorter `max-age` if you are migrating, then raise it.
 - `frame-ancestors 'none'` and `X-Frame-Options: DENY` prevent embedding. Keep both for compatibility.
 

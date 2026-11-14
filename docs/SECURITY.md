@@ -12,6 +12,7 @@ Keep the following accurate in any deployment:
 - Rewards are credited automatically during provisioning. `private.credit_reward()` updates the balance, writes a `reward` entry to `balance_ledger`, sends the member a notification and records activity. An idempotency key prevents duplicate credits.
 - Withdrawals are reviewed by an administrator. Approval, processing and completion are separate states; completion must not be marked before the payout is confirmed.
 - **Connect Your Card** is the only withdrawal method. Manual payout cards are stored with the full number encrypted in the private schema (`private.payment_card_secrets`); public tables hold only the brand, last four and expiry. When a hosted card provider is configured, tokenised provider references are used instead.
+- Before a payout card is connected, the browser Luhn-checks the number and resolves its BIN/IIN through the project's `bin-lookup` Edge Function (or a configured proxy), which calls `lookup.binlist.net` server-side. Only the first 6–8 digits leave the browser; the full number and CVV never do. A match only identifies the issuer, network, card type and country. The non-sensitive result is saved as `payment_accounts.bin_verification` and checked for consistency before the encrypted number is stored. A BIN hit is **not** proof that the card is active, belongs to the member or has funds.
 - Structured responses to the administrator-managed card form (bank name, phone number and any added fields) live in `payment_accounts.extra` and are snapshotted into the encrypted withdrawal details at request time. `card_form_fields` defines the member-facing fields and is writable only through administrator RPCs.
 - Virtual membership cards are presentation only. The card number is generated for display and verification; it is not a payment instrument. The project never asks for a PIN, CVV, online-banking password or full banking credentials. A real payout card number is accepted only through the dedicated encrypted card-connect form.
 - Payout card numbers are never returned to members after connection. Only an administrator can decrypt a card, through `admin_get_payment_card(uuid)`, and every reveal is written to `admin_audit_logs`.
@@ -105,7 +106,7 @@ Additional controls:
 | `admin_get_withdrawal_details(uuid)` | Admin only | Decrypts the saved card and form responses for review |
 | `admin_add_withdrawal_note(uuid,text)` | Admin only | Writes an internal note and audit entry |
 | `get_card_form_fields()` | `authenticated` | Returns enabled card form fields in display order |
-| `connect_payment_card(text,text,integer,integer,text,boolean,jsonb)` | `authenticated` | Validates and Luhn-checks a payout card, validates dynamic responses, stores the encrypted number privately and returns only masked account data |
+| `connect_payment_card(text,text,integer,integer,text,boolean,jsonb,jsonb)` | `authenticated` | Validates and Luhn-checks a payout card, validates dynamic responses and BIN metadata consistency, stores the encrypted number privately and returns only masked account data |
 | `admin_list_payment_cards()` | Admin only | Lists payout cards with member details, masked card data and saved form responses |
 | `admin_get_payment_card(uuid)` | Admin only | Decrypts one payout card and writes an audit entry |
 | `admin_revoke_payment_card(uuid)` | Admin only | Revokes a payout card, notifies the member and writes an audit entry |
@@ -127,7 +128,7 @@ Each RPC uses `security definer`, pins `search_path = public, pg_temp`, validate
 
 Payout cards are different from the virtual membership card studio. `connect_payment_card` stores the full number only in `private.payment_card_secrets`, encrypted with `private.payment_key()`, and never returns it to the member. `admin_get_payment_card` is the sole decryption path and requires `public.is_admin()`. Duplicate active cards for the same member are rejected by the fingerprint check.
 
-Card form fields are configuration, not trusted input. `card_form_fields` is writable only through the administrator RPCs; members can read enabled rows and submit responses, which the server validates against the field definitions before saving to `payment_accounts.extra`. The fixed core fields (card number, expiry, cardholder) are never configurable.
+Card form fields are configuration, not trusted input. `card_form_fields` is writable only through the administrator RPCs; members can read enabled rows and submit responses, which the server validates against the field definitions before saving to `payment_accounts.extra`. The fixed core fields (card number, expiry, cardholder) are never configurable. A database trigger rejects CVV, CVC, PIN, password, security-code and SSN fields by key or label; `private.validate_card_extra()` rejects the same keys in submitted responses, and the sensitive-field migration removes existing rows and scrubs stored snapshots.
 
 Withdrawals use a reservation model. `request_withdrawal` checks the member's balance minus all active withdrawals, then writes a `reservation` row to `balance_ledger`. Rejection or cancellation writes a `release` row. Only confirmed settlement writes a `settlement` row and debits `reward_accounts.balance`. Members can read their own ledger rows; inserts happen only inside the security-definer RPCs.
 
@@ -247,6 +248,9 @@ Guidelines:
 | Member requests more than available | RPC sums in-flight withdrawals and rejects excess |
 | Member tries to mark their own withdrawal successful | `withdrawals` updates are admin-only; settlement requires `admin_update_withdrawal_status` with explicit provider confirmation |
 | Member submits a duplicate withdrawal or reconnects the same card | 60-second idempotency/duplicate guard on requests and an encrypted-fingerprint duplicate check on cards |
+| Member tries to connect an invalid or unmatched card | Client Luhn + BIN check, then server-side Luhn, expiry, duplicate, brand/type/issuer consistency and dynamic-field validation; failures block the connection |
+| BIN lookup is abused to enumerate cards | Only the first 6–8 digits are sent; lookups are cached and rate-limited in the browser and per caller at the edge |
+| BIN hit is mistaken for an authorised card | UI and documentation state that a lookup identifies the issuer only; withdrawals still require administrator settlement confirmation |
 | User uploads a CV to a public path | Bucket is private; only admin select policy exists |
 | User guesses a virtual card number | Verification requires reference + last four and returns only status-level data |
 | Member tries to read a stored payout card | RLS exposes masked metadata only; full numbers live in `private.payment_card_secrets` with no API grant |
@@ -286,7 +290,9 @@ A service-role key in client code is a critical incident: rotate it immediately,
 - [ ] CSP, HSTS, nosniff, frame denial and permissions policy present in production.
 - [ ] No inline scripts added; console clean on every page.
 - [ ] Withdrawal validation rejects missing connected cards, invalid Luhn/expiry values, missing required dynamic fields and amounts above the available balance.
+- [ ] Payout-card verification rejects Luhn failures, unknown BINs, issuer/network/country mismatches, sends only the BIN to the lookup service and saves no full number in `bin_verification`.
 - [ ] `card_form_fields` changes are audited; only `admin_*` RPCs can write them and members can read enabled rows only.
+- [ ] CVV/CVC/PIN/password fields cannot be created, submitted or stored; the sensitive-field trigger is installed and stored responses contain no sensitive keys.
 - [ ] `balance_ledger` records reservation, release and settlement entries; settlement debits the balance and rejection/cancellation does not.
 - [ ] Payment provider keys are configured server-side when hosted-card connection or automated settlement is required. Without them, manual payout cards remain available and provider payouts fail closed.
 - [ ] `private.payment_card_secrets` has no grants to `anon` or `authenticated`; only the audited admin RPC decrypts card numbers.

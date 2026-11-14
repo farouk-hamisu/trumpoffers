@@ -56,4 +56,9 @@ enable_signup = false
 enabled = false
 
 [edge_runtime]
-enabled = false
+enabled = true
+
+# BIN/IIN lookup proxy. Public by design (no JWT), rate-limited per caller.
+[functions.bin-lookup]
+enabled = true
+verify_jwt = false

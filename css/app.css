@@ -3660,6 +3660,55 @@
   color: var(--gold);
 }
 
+.card-verify {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.card-verify[hidden] {
+  display: none;
+}
+
+.card-verify__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.card-verify__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.card-verify--success {
+  border-color: rgba(126, 157, 124, 0.4);
+  background: var(--success-bg);
+  color: var(--success);
+}
+
+.card-verify--error {
+  border-color: rgba(185, 107, 94, 0.4);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.card-verify--info {
+  color: var(--text-muted);
+}
+
+.section--light .card-verify {
+  background: rgba(10, 10, 11, 0.03);
+}
+
 .timeline {
   display: flex;
   flex-direction: column;

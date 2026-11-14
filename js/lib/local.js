@@ -1420,7 +1420,16 @@ class LocalBackend {
     throw new Error('Payout cards can only be revoked by an administrator.');
   }
 
-  async connectPaymentCard({ cardholderName, cardNumber, expMonth, expYear, label = '', isDefault = true, extra = {} }) {
+  async connectPaymentCard({
+    cardholderName,
+    cardNumber,
+    expMonth,
+    expYear,
+    label = '',
+    isDefault = true,
+    extra = {},
+    binVerification = null,
+  }) {
     const db = await this.db();
     const user = await this.requireUser(db);
     const name = String(cardholderName || '').replace(/\s+/g, ' ').trim();
@@ -1474,6 +1483,13 @@ class LocalBackend {
 
     const brand = cardBrand(digits);
     const last4 = digits.slice(-4);
+    const binInfo = binVerification && typeof binVerification === 'object' ? binVerification : null;
+    if (binInfo) {
+      const bin = String(binInfo.bin || '').replace(/\D/g, '');
+      if (bin.length < 6 || bin.length > 8 || digits.slice(0, bin.length) !== bin) {
+        throw new Error('The verified card number does not match the card you entered.');
+      }
+    }
     if (isDefault) {
       activeCards.forEach((p) => {
         p.is_default = false;
@@ -1500,6 +1516,17 @@ class LocalBackend {
       card_exp_month: month,
       card_exp_year: year,
       extra: cleanExtra,
+      bin_verification: binInfo
+        ? {
+            bin: String(binInfo.bin || '').replace(/\D/g, ''),
+            scheme: String(binInfo.scheme || '').slice(0, 40),
+            type: String(binInfo.type || '').slice(0, 10),
+            bank: String(binInfo.bank || '').slice(0, 120),
+            country: String(binInfo.country || '').slice(0, 80),
+            country_code: String(binInfo.country_code || '').slice(0, 2),
+            checked_at: String(binInfo.checked_at || ''),
+          }
+        : null,
       status: 'active',
       is_default: Boolean(isDefault),
       created_at: new Date().toISOString(),

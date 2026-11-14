@@ -352,7 +352,9 @@ export function validateRequired(form, fields) {
 export function setLoading(button, loading, label) {
   if (!button) return;
   if (loading) {
-    button.dataset.label = button.innerHTML;
+    // Keep the original label when a flow updates its progress text more than
+    // once (for example "Verifying…" then "Connecting…").
+    if (!button.dataset.label) button.dataset.label = button.innerHTML;
     button.classList.add('btn--loading');
     button.disabled = true;
     if (label) {

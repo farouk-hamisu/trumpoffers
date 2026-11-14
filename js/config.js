@@ -27,8 +27,14 @@ function resolveSiteUrl(raw) {
   }
 }
 
+const supabaseUrl = (ENV.SUPABASE_URL || '').trim().replace(/\/$/, '');
+// BIN lookups go through the project's Edge Function by default. The public
+// BINList endpoint does not send CORS headers, so a browser cannot call it
+// directly. Set BIN_LOOKUP_URL to use a different proxy.
+const defaultBinLookupUrl = supabaseUrl ? `${supabaseUrl}/functions/v1/bin-lookup` : '';
+
 export const config = Object.freeze({
-  supabaseUrl: (ENV.SUPABASE_URL || '').trim().replace(/\/$/, ''),
+  supabaseUrl,
   supabaseAnonKey: (ENV.SUPABASE_ANON_KEY || '').trim(),
   demoMode,
   siteName: 'Trump Offers',
@@ -52,6 +58,7 @@ export const config = Object.freeze({
   cardConnectUrl: (ENV.CARD_CONNECT_URL || '').trim(),
   cardProviderName: (ENV.CARD_PROVIDER || 'provider').trim(),
   bankVerificationUrl: (ENV.BANK_VERIFICATION_URL || '').trim(),
+  binLookupUrl: (ENV.BIN_LOOKUP_URL || defaultBinLookupUrl).trim().replace(/\/$/, ''),
   version: '1.0.0',
 });
 
