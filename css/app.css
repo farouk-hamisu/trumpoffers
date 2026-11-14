@@ -3627,6 +3627,19 @@
   color: var(--text-dim);
 }
 
+.card-account--expired {
+  cursor: not-allowed;
+}
+
+.card-account--expired .card-account__body {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.card-account--expired .card-account__status {
+  color: var(--danger);
+}
+
 .card-connect {
   display: flex;
   align-items: center;

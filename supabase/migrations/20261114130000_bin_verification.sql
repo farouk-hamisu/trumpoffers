@@ -73,12 +73,15 @@ begin
     raise exception 'Select a valid expiry month.';
   end if;
   if p_exp_year is null
-     or p_exp_year < extract(year from now())::integer
+     or p_exp_year < 2000
      or p_exp_year > extract(year from now())::integer + 20 then
     raise exception 'Select a valid expiry year.';
   end if;
-  if p_exp_year = extract(year from now())::integer
-     and p_exp_month < extract(month from now())::integer then
+  if p_exp_year < extract(year from now())::integer
+     or (
+       p_exp_year = extract(year from now())::integer
+       and p_exp_month < extract(month from now())::integer
+     ) then
     raise exception 'That card has expired.';
   end if;
 

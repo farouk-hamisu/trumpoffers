@@ -1106,6 +1106,17 @@ class LocalBackend {
     );
     if (!payment) throw new Error('Connect an eligible card before requesting a withdrawal.');
 
+    const expMonth = Number(payment.card_exp_month);
+    const expYear = Number(payment.card_exp_year);
+    const now = new Date();
+    if (
+      Number.isInteger(expMonth) &&
+      Number.isInteger(expYear) &&
+      (expYear < now.getFullYear() || (expYear === now.getFullYear() && expMonth < now.getMonth() + 1))
+    ) {
+      throw new Error('That payout card has expired. Connect a new card to continue.');
+    }
+
     const duplicate = db.withdrawals.find(
       (w) =>
         w.user_id === user.id &&
@@ -1442,10 +1453,12 @@ class LocalBackend {
     if (name.length > 64) throw new Error('Cardholder names are limited to 64 characters.');
     if (!luhnValid(digits)) throw new Error('That card number is not valid.');
     if (!Number.isInteger(month) || month < 1 || month > 12) throw new Error('Select a valid expiry month.');
-    if (!Number.isInteger(year) || year < now.getFullYear() || year > now.getFullYear() + 20) {
+    if (!Number.isInteger(year) || year < 2000 || year > now.getFullYear() + 20) {
       throw new Error('Select a valid expiry year.');
     }
-    if (year === now.getFullYear() && month < now.getMonth() + 1) throw new Error('That card has expired.');
+    if (year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)) {
+      throw new Error('That card has expired.');
+    }
 
     const fields = (db.card_form_fields || CARD_FORM_FIELDS).filter((f) => f.enabled);
     const cleanExtra = {};

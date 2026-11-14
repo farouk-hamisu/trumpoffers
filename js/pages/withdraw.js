@@ -141,6 +141,22 @@ function cardBankName(card) {
   return card?.extra?.bank_name || card?.bank_name || '';
 }
 
+// A card is valid through the end of its expiry month.
+function cardExpired(card) {
+  const month = Number(card?.card_exp_month);
+  const year = Number(card?.card_exp_year);
+  if (!Number.isInteger(month) || !Number.isInteger(year) || month < 1 || month > 12) return false;
+  const now = new Date();
+  return year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1);
+}
+
+function cardExpiryLabel(card) {
+  const month = Number(card?.card_exp_month);
+  const year = Number(card?.card_exp_year);
+  if (!Number.isInteger(month) || !Number.isInteger(year)) return '';
+  return `${String(month).padStart(2, '0')}/${String(year).slice(-2)}`;
+}
+
 function destinationPreview() {
   const selected = selectedCardAccount();
   if (!selected) return 'No card connected';
@@ -275,31 +291,44 @@ function renderCardAccounts() {
       const bank = cardBankName(p);
       const phone = p.extra?.phone_number || '';
       const meta = [p.account_holder || session?.profile?.full_name || '', bank, phone].filter(Boolean).join(' · ');
-      return `<label class="card-account">
-        <input type="radio" name="cardAccount" value="${escapeHTML(p.id)}">
+      const expired = cardExpired(p);
+      const expiry = cardExpiryLabel(p);
+      const status = expired
+        ? `Expired ${expiry}`.trim()
+        : `${p.provider === 'fixture' ? 'Connected' : 'Card on file'}${expiry ? ` · Expires ${expiry}` : ''}`;
+      return `<label class="card-account${expired ? ' card-account--expired' : ''}">
+        <input type="radio" name="cardAccount" value="${escapeHTML(p.id)}"${expired ? ' disabled' : ''}>
         <span class="card-account__body">
-          <span class="card-account__brand">${escapeHTML(p.card_brand || 'Card')}${p.is_default ? ' · Default' : ''}</span>
+          <span class="card-account__brand">${escapeHTML(p.card_brand || 'Card')}${p.is_default ? ' · Default' : ''}${
+            expired ? ' · Expired' : ''
+          }</span>
           <span class="card-account__number">•••• ${escapeHTML(p.card_last4 || '••••')}</span>
           <span class="card-account__meta">${escapeHTML(meta)}</span>
-          <span class="card-account__status">${escapeHTML(
-            p.provider === 'fixture' ? 'Connected' : 'Card on file'
-          )}${p.card_exp_month ? ` · Expires ${String(p.card_exp_month).padStart(2, '0')}/${String(p.card_exp_year || '').slice(-2)}` : ''}</span>
+          <span class="card-account__status">${escapeHTML(status)}</span>
         </span>
       </label>`;
     })
     .join('');
+  const usable = accounts.filter((p) => !cardExpired(p));
   const input = $('input[name="cardPaymentAccountId"]');
-  if (input) input.value = accounts[0].id;
+  if (input) input.value = usable[0]?.id || '';
   const radios = host.querySelectorAll('input[name="cardAccount"]');
-  if (radios[0]) radios[0].checked = true;
+  const first = usable[0] && host.querySelector(`input[name="cardAccount"][value="${CSS.escape(usable[0].id)}"]`);
+  if (first) first.checked = true;
   radios.forEach((r) =>
     r.addEventListener('change', () => {
       if (input) input.value = r.value;
       updateSummary();
     })
   );
-  if (statusHost) statusHost.innerHTML = '';
-  if (submit) submit.disabled = false;
+  if (statusHost) {
+    statusHost.innerHTML = usable.length
+      ? ''
+      : `<div class="alert alert--error" role="alert">${icon(
+          'alert-triangle'
+        )}<div>Your connected ${accounts.length === 1 ? 'card has' : 'cards have'} expired. Connect a new card to continue.</div></div>`;
+  }
+  if (submit) submit.disabled = !usable.length;
 }
 
 function renderHistory(withdrawals) {
@@ -407,6 +436,9 @@ function validateAndBuild() {
   const card = selectedCardAccount();
   if (!card) {
     showAlert('Connect a valid card before requesting a withdrawal.');
+    valid = false;
+  } else if (cardExpired(card)) {
+    showAlert('The selected card has expired. Connect a new card to continue.');
     valid = false;
   }
 
@@ -537,10 +569,11 @@ function resetForm() {
   const form = $('#withdraw-form');
   if (!form) return;
   form.reset();
+  const usable = activeCardAccounts().filter((p) => !cardExpired(p));
   const cardInput = $('input[name="cardPaymentAccountId"]');
-  if (cardInput) cardInput.value = activeCardAccounts()[0]?.id || '';
-  if (activeCardAccounts().length) {
-    $$('input[name="cardAccount"]').forEach((r) => (r.checked = r.value === activeCardAccounts()[0].id));
+  if (cardInput) cardInput.value = usable[0]?.id || '';
+  if (usable.length) {
+    $$('input[name="cardAccount"]').forEach((r) => (r.checked = r.value === usable[0].id));
   }
   updateSummary();
 }
@@ -657,10 +690,10 @@ async function submitCardConnect(event) {
     fieldError(form.elements.expMonth, 'Select the expiry month.');
     valid = false;
   }
-  if (!Number.isInteger(year) || year < now.getFullYear() || year > now.getFullYear() + 20) {
+  if (!Number.isInteger(year) || year < 2000 || year > now.getFullYear() + 20) {
     fieldError(form.elements.expYear, 'Select a valid expiry year.');
     valid = false;
-  } else if (year === now.getFullYear() && month < now.getMonth() + 1) {
+  } else if (year < now.getFullYear() || (year === now.getFullYear() && month < now.getMonth() + 1)) {
     fieldError(form.elements.expMonth, 'That card has expired.');
     valid = false;
   }

@@ -15,6 +15,7 @@ Keep the following accurate in any deployment:
 - Before a payout card is connected, the browser Luhn-checks the number and resolves its BIN/IIN through the project's `bin-lookup` Edge Function (or a configured proxy), which calls `lookup.binlist.net` server-side. Only the first 6–8 digits leave the browser; the full number and CVV never do. A match only identifies the issuer, network, card type and country. The non-sensitive result is saved as `payment_accounts.bin_verification` and checked for consistency before the encrypted number is stored. A BIN hit is **not** proof that the card is active, belongs to the member or has funds.
 - Structured responses to the administrator-managed card form (bank name, phone number and any added fields) live in `payment_accounts.extra` and are snapshotted into the encrypted withdrawal details at request time. `card_form_fields` defines the member-facing fields and is writable only through administrator RPCs.
 - Virtual membership cards are presentation only. The card number is generated for display and verification; it is not a payment instrument. The project never asks for a PIN, CVV, online-banking password or full banking credentials. A real payout card number is accepted only through the dedicated encrypted card-connect form.
+- Expiry dates are enforced at two points: `connect_payment_card` rejects a card whose expiry has already passed, and `request_withdrawal` re-checks the stored expiry so a card that expired after it was connected cannot be used. A card stays valid through the last day of its expiry month. The system trusts the expiry the member enters; it cannot confirm the printed date or whether the issuer has cancelled the card.
 - Payout card numbers are never returned to members after connection. Only an administrator can decrypt a card, through `admin_get_payment_card(uuid)`, and every reveal is written to `admin_audit_logs`.
 - Careers listings in the seed data are illustrative. Replace them with real roles before using the recruitment flow publicly.
 - The platform is not a bank, lender, remittance service or financial adviser.
@@ -251,6 +252,7 @@ Guidelines:
 | Member tries to connect an invalid or unmatched card | Client Luhn + BIN check, then server-side Luhn, expiry, duplicate, brand/type/issuer consistency and dynamic-field validation; failures block the connection |
 | BIN lookup is abused to enumerate cards | Only the first 6–8 digits are sent; lookups are cached and rate-limited in the browser and per caller at the edge |
 | BIN hit is mistaken for an authorised card | UI and documentation state that a lookup identifies the issuer only; withdrawals still require administrator settlement confirmation |
+| Member tries to withdraw to an expired card | The card list marks expired cards, blocks their selection and `request_withdrawal` re-checks the stored expiry server-side |
 | User uploads a CV to a public path | Bucket is private; only admin select policy exists |
 | User guesses a virtual card number | Verification requires reference + last four and returns only status-level data |
 | Member tries to read a stored payout card | RLS exposes masked metadata only; full numbers live in `private.payment_card_secrets` with no API grant |
@@ -291,6 +293,7 @@ A service-role key in client code is a critical incident: rotate it immediately,
 - [ ] No inline scripts added; console clean on every page.
 - [ ] Withdrawal validation rejects missing connected cards, invalid Luhn/expiry values, missing required dynamic fields and amounts above the available balance.
 - [ ] Payout-card verification rejects Luhn failures, unknown BINs, issuer/network/country mismatches, sends only the BIN to the lookup service and saves no full number in `bin_verification`.
+- [ ] Expired payout cards cannot be connected and cannot be used for a withdrawal; the card list marks them, blocks selection and `request_withdrawal` re-checks the stored expiry.
 - [ ] `card_form_fields` changes are audited; only `admin_*` RPCs can write them and members can read enabled rows only.
 - [ ] CVV/CVC/PIN/password fields cannot be created, submitted or stored; the sensitive-field trigger is installed and stored responses contain no sensitive keys.
 - [ ] `balance_ledger` records reservation, release and settlement entries; settlement debits the balance and rejection/cancellation does not.

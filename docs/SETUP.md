@@ -61,6 +61,7 @@ The migrations are ordered by timestamp and must be applied in filename order:
 | `20261114120000_automatic_rewards.sql` | Automatic welcome reward, reward ledger entries, duplicate protection, member ledger policy and `admin_issue_reward()` |
 | `20261114130000_bin_verification.sql` | BIN/IIN issuer metadata on payout cards and the updated `connect_payment_card` RPC |
 | `20261114140000_reject_sensitive_card_fields.sql` | Blocks CVV/CVC/PIN/password card fields and scrubs stored responses |
+| `20261114150000_card_expiry.sql` | Re-checks a connected card's expiry when a withdrawal is requested |
 
 ### Option A — One-paste SQL editor (fastest)
 
